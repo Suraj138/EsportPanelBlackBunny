@@ -1,0 +1,20 @@
+CRITICAL - 2026-08-21 07:38:01 --> Call to undefined function CodeIgniter\locale_set_default()
+#0 /mnt/data/panel_work/vendor/codeigniter4/framework/system/bootstrap.php(146): CodeIgniter\CodeIgniter->initialize()
+#1 /mnt/data/panel_work/spark(46): require('...')
+#2 {main}
+CRITICAL - 2026-08-21 07:38:01 --> Uncaught Error: Call to undefined function CodeIgniter\CLI\mb_strpos() in /mnt/data/panel_work/vendor/codeigniter4/framework/system/CLI/CLI.php:758
+Stack trace:
+#0 /mnt/data/panel_work/vendor/codeigniter4/framework/system/CLI/CLI.php(161): CodeIgniter\CLI\CLI::parseCommandLine()
+#1 /mnt/data/panel_work/vendor/codeigniter4/framework/system/CLI/CLI.php(998): CodeIgniter\CLI\CLI::init()
+#2 /mnt/data/panel_work/vendor/codeigniter4/framework/system/Autoloader/Autoloader.php(264): include_once('...')
+#3 /mnt/data/panel_work/vendor/codeigniter4/framework/system/Autoloader/Autoloader.php(241): CodeIgniter\Autoloader\Autoloader->includeFile()
+#4 /mnt/data/panel_work/vendor/codeigniter4/framework/system/Autoloader/Autoloader.php(219): CodeIgniter\Autoloader\Autoloader->loadInNamespace()
+#5 /mnt/data/panel_work/app/Views/errors/cli/error_exception.php(6): CodeIgniter\Autoloader\Autoloader->loadClass()
+#6 /mnt/data/panel_work/vendor/codeigniter4/framework/system/Debug/Exceptions.php(229): include('...')
+#7 /mnt/data/panel_work/vendor/codeigniter4/framework/system/Debug/Exceptions.php(232): CodeIgniter\Debug\Exceptions->{closure:CodeIgniter\Debug\Exceptions::render():224}()
+#8 /mnt/data/panel_work/vendor/codeigniter4/framework/system/Debug/Exceptions.php(116): CodeIgniter\Debug\Exceptions->render()
+#9 [internal function]: CodeIgniter\Debug\Exceptions->exceptionHandler()
+#10 {main}
+  thrown
+#0 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
+#1 {main}
