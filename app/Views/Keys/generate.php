@@ -37,14 +37,11 @@
                     </div>
                     
                     <div class="mt-6">
-                        <p class="text-sm text-gray-600 mb-2">License Key</p>
+                        <p class="text-sm text-gray-600 mb-2">License Key<?= session()->getFlashdata('bulk_count') ? 's ('.session()->getFlashdata('bulk_count').')' : '' ?></p>
                         <div class="flex items-center space-x-3 bg-white rounded-lg p-4">
-                            <input type="text" id="mytext" value="<?= session()->getFlashdata('user_key') ?>" class="flex-1 bg-transparent font-mono text-lg font-bold text-purple-600" readonly>
-                            <button onclick="copyText()" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-500 hover:to-pink-500 transition-all">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                                </svg>
-                            </button>
+                            <textarea id="mytext" class="flex-1 bg-transparent font-mono text-lg font-bold text-purple-600" rows="<?= min(8, (int) (session()->getFlashdata('bulk_count') ?: 1)) ?>" readonly><?= esc(session()->getFlashdata('generated_keys') ?: session()->getFlashdata('user_key')) ?></textarea>
+                            <button type="button" onclick="copyText()" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg">Copy</button>
+                            <button type="button" onclick="shareText()" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg">Share</button>
                         </div>
                         <p class="text-xs text-gray-500 mt-2"><i>Duration will start when license login.</i></p>
                     </div>
@@ -115,14 +112,14 @@
                 <!-- Bulk Keys -->
                 <div id="bulk-section">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Bulk Keys</label>
-                    <select name="loopcount" id="hulala" class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all">
-                        <option value="5">1 Keys</option>
-                        <option value="1">5 Keys</option>
-                        <option value="2">10 Keys</option>
-                        <option value="3">25 Keys</option>
-                        <option value="3">50 Keys</option>
-                        <option value="4">100 Keys</option>
-                    </select>
+                     <select name="loopcount" id="hulala" class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all">
+                         <option value="1">1 Keys</option>
+                         <option value="5">5 Keys</option>
+                         <option value="10">10 Keys</option>
+                         <option value="25">25 Keys</option>
+                         <option value="50">50 Keys</option>
+                         <option value="100">100 Keys</option>
+                     </select>
                 </div>
                 
                 <input type="text" id="textinput" name="custominput" hidden>
@@ -158,20 +155,6 @@
         animation: fadeInUp 0.6s ease-out forwards;
     }
     
-    .glass-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-    }
-    
-    .gradient-bg {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    
-    .gradient-bg-3 {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    }
 </style>
 
 <?= $this->endSection() ?>
@@ -181,15 +164,16 @@
     $(document).ready(function() {
         var price = JSON.parse('<?= $price ?>');
         getPrice(price);
-        $("#max_devices, #duration, #game").change(function() {
+        $("#max_devices, #duration, #game, #hulala").change(function() {
             getPrice(price);
         });
         function getPrice(price) {
             var device = $("#max_devices").val();
             var durate = $("#duration").val();
+            var bulk = parseInt($("#hulala").val() || '1', 10);
             var gprice = price[durate];
-            if (gprice != NaN) {
-                var result = (device * gprice);
+            if (!isNaN(gprice)) {
+                var result = (device * gprice * bulk);
                 $("#estimation").val(result);
             } else {
                 $("#estimation").val('Estimation error');
@@ -213,7 +197,16 @@
         var copyText = document.getElementById("mytext");
         copyText.select();
         document.execCommand("copy");
+        if (navigator.clipboard) navigator.clipboard.writeText(copyText.value);
         alert("Key copied to clipboard!");
+    }
+    function shareText() {
+        var text = document.getElementById("mytext").value;
+        if (navigator.share) {
+            navigator.share({ title: 'BLACK BUNNY KEY', text: text });
+        } else {
+            copyText();
+        }
     }
 </script>
 <?= $this->endSection() ?>

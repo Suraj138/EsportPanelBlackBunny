@@ -2,52 +2,34 @@
 
 namespace App\Controllers;
 
+use App\Models\Feature;
 use App\Models\KeysModel;
+use App\Models\Server;
+use App\Models\_ftext;
+use App\Models\onoff;
 
 class Connect extends BaseController
 {
-    protected $model, $game, $uKey, $sDev;
+    protected $model, $game, $uKey, $sDev, $maintenance, $staticWords;
 
     public function __construct()
     {
-        include('conn.php');
-//=================================================
-        $sql1 ="select * from onoff where id=1";
-        $result1 = mysqli_query($conn, $sql1);
-        $userDetails1 = mysqli_fetch_assoc($result1);
-//=================================================
         $this->model = new KeysModel();
-//=================================================
-        if($userDetails1['status'] == 'on')
-        {
-            $this->maintenance = true;
-        } else {
-            $this->maintenance = false;
-        }
-//=================================================
-       $this->staticWords = "Vm8Lk7Uj2JmsjCPVPVjrLa7zgfx3uz9E";
+        $onoff = (new onoff())->find(1);
+        $this->maintenance = $onoff && isset($onoff['status']) && $onoff['status'] === 'on';
+        $this->staticWords = "Vm8Lk7Uj2JmsjCPVPVjrLa7zgfx3uz9E";
     }
 
     public function index()
     {
         if ($this->request->getPost()) {
             return $this->index_post();
-        } else {
-            $nata = [
-                "web_info" => [
-                    "_client" => BASE_NAME,
-                    "license" => "Qp5KSGTquetnUkjX6UVBAURH8hTkZuLM",
-                    "version" => "1.0.0",
-                ],
-                "web__dev" => [
-                    "author" => "@Mr_Lezend_Op",
-                    "telegram" => "https://t.me/Lezend_Cheats"
-                           ],
-            ];
-            
-            return "<h1><strong><center><font size='10' color='red' face='arial'><marquee direction='right' scrollamount='15'>WANT OWN KURO PANEL?<br> DM HERE - @Mr_Lezend_Op </marquee></font></center></strong></h1>";
-            $this->response->setJSON($nata);
         }
+        return $this->response->setStatusCode(405)->setJSON([
+            'status' => false,
+            'reason' => 'POST required',
+            'client' => BASE_NAME,
+        ]);
     }
 
     public function index_post()
@@ -64,160 +46,129 @@ class Connect extends BaseController
         ];
 
         if (!$this->validate($form_rules)) {
-            $data = [
+            return $this->response->setJSON([
                 'status' => false,
-                'reason' => "Bad Parameter",
-            ];
-            return $this->response->setJSON($data);
+                'reason' => 'Bad Parameter',
+            ]);
         }
 
         if ($isMT) {
-            
-            include('conn.php');
-        
-            $sql1 ="select * from onoff where id=1";
-            $result1 = mysqli_query($conn, $sql1);
-            $userDetails1 = mysqli_fetch_assoc($result1);
-        
-            
-            $data = [
+            $onoff = (new onoff())->find(1);
+            return $this->response->setJSON([
                 'status' => true,
-                'reason' => $userDetails1['myinput']
-            ];
-        } else {
-            if (!$game or !$uKey or !$sDev) {
-                $data = [
-                    'status' => false,
-                    'reason' => 'INVALID PARAMETER'
-                ];
-            } else {
-                $time = new \CodeIgniter\I18n\Time;
-                $model = $this->model;
-                $findKey = $model
-                    ->getKeysGame(['user_key' => $uKey, 'game' => $game]);
-
-                if ($findKey) {
-                    if ($findKey->status != 1) {
-                        $data = [
-                            'status' => false,
-                            'reason' => 'USER BLOCKED'
-                        ];
-                    } else {
-                        $id_keys = $findKey->id_keys;
-                        $duration = $findKey->duration;
-                        $expired = $findKey->expired_date;
-                        $max_dev = $findKey->max_devices;
-                        $devices = $findKey->devices;
-    
-                        function checkDevicesAdd($serial, $devices, $max_dev)
-                        {
-                            $lsDevice = explode(",", $devices);
-                            $cDevices = isset($devices) ? count($lsDevice) : 0;
-                            $serialOn = in_array($serial, $lsDevice);
-    
-                            if ($serialOn) {
-                                return true;
-                            } else {
-                                if ($cDevices < $max_dev) {
-                                    array_push($lsDevice, $serial);
-                                    $setDevice = reduce_multiples(implode(",", $lsDevice), ",", true);
-                                    return ['devices' => $setDevice];
-                                } else {
-                                    // ! false - devices max
-                                    return false;
-                                }
-                            }
-                        }
-    
-                        if (!$expired) {
-                            $setExpired = $time::now()->addHours($duration);
-                            $model->update($id_keys, ['expired_date' => $setExpired]);
-                            $data['status'] = true;
-                        } else {
-                            if ($time::now()->isBefore($expired)) {
-                                $data['status'] = true;
-                            } else {
-                                $data = [
-                                    'status' => false,
-                                    'reason' => 'EXPIRED KEY'
-                                ];
-                            }
-                        }
-    
-                        if ($data['status']) {
-                            
-                            include('conn.php');
-        
-                            $sql2 ="select * from modname where id=1";
-                            $result2 = mysqli_query($conn, $sql2);
-                            $userDetails2 = mysqli_fetch_assoc($result2);
-                            
-                            $sql3 ="select * from _ftext where id=1";
-                            $result3 = mysqli_query($conn, $sql3);
-                            $userDetails3 = mysqli_fetch_assoc($result3);
-                            
-                            $sql4 = "SELECT expired_date FROM keys_code WHERE user_key='$uKey'";
-                            $result4 = mysqli_query($conn, $sql4);
-                            $userDetails4 = mysqli_fetch_assoc($result4);
-//=================================================
-        $sql = "SELECT * FROM Feature WHERE id=1";
-        $result = mysqli_query($conn, $sql);
-        $ModFeatureStatus = mysqli_fetch_assoc($result);
-//=================================================
-        $rngcnt = $time->getTimestamp();
-//=================================================
-                            $devicesAdd = checkDevicesAdd($sDev, $devices, $max_dev);
-                            if ($devicesAdd) {
-                                if (is_array($devicesAdd)) {
-                                    $model->update($id_keys, $devicesAdd);
-                                }
-                                // ? game-user_key-serial-word di line 15
-                                $real = "$game-$uKey-$sDev-$this->staticWords";
-                                
-                                $expiry = $findKey->expired_date;
-                            if ($expiry == null) {
-                                 $expiry = $time::now()->addDays($duration);
-                            }
-                            
-                                $data = [
-                                    'status' => true,
-                                    'data' => [
-                                        'real' => $real,
-                                        'token' => md5($real),
-                                        'modname' => $userDetails2['modname'],
-                                        'mod_status' => $userDetails3['_status'],
-                                        'credit' => $userDetails3['_ftext'],
-                                        'ESP' => $ModFeatureStatus['ESP'],
-                                        'Item' => $ModFeatureStatus['Item'],
-                                        'AIM' => $ModFeatureStatus['AIM'],
-                                        'SilentAim' => $ModFeatureStatus['SilentAim'],
-                                        'BulletTrack' => $ModFeatureStatus['BulletTrack'],
-                                        'Floating' => $ModFeatureStatus['Floating'],
-                                        'Memory' => $ModFeatureStatus['Memory'],
-                                        'Setting' => $ModFeatureStatus['Setting'],
-                                        'expired_date' => $userDetails4['expired_date'],
-                                        'EXP' => $expiry,
-                                        'exdate' => $expiry,
-                                        'device'=> $max_dev,
-                                        'rng' => $rngcnt
-                                    ],
-                                ];
-                            } else {
-                                $data = [
-                                    'status' => false,
-                                    'reason' => 'MAX DEVICE REACHED'
-                                ];
-                            }
-                        }
-                    }
-                } else {
-                    $data = [
-                        'status' => false,
-                        'reason' => 'USER OR GAME NOT REGISTERED'
-                    ];
-                }
-            }
+                'reason' => $onoff ? $onoff['myinput'] : 'UNDER MAINTENANCE',
+            ]);
         }
-        return $this->response->setJSON($data);
+
+        if (!$game or !$uKey or !$sDev) {
+            return $this->response->setJSON([
+                'status' => false,
+                'reason' => 'INVALID PARAMETER'
+            ]);
+        }
+
+        $time = new \CodeIgniter\I18n\Time;
+        $model = $this->model;
+        $findKey = $model->getKeysGame(['user_key' => $uKey, 'game' => $game]);
+        $data = ['status' => false];
+
+        if (!$findKey) {
+            return $this->response->setJSON([
+                'status' => false,
+                'reason' => 'USER OR GAME NOT REGISTERED'
+            ]);
+        }
+
+        if ($findKey->status != 1) {
+            return $this->response->setJSON([
+                'status' => false,
+                'reason' => 'USER BLOCKED'
+            ]);
+        }
+
+        $id_keys = $findKey->id_keys;
+        $duration = $findKey->duration;
+        $expired = $findKey->expired_date;
+        $max_dev = $findKey->max_devices;
+        $devices = $findKey->devices;
+
+        if (!$expired) {
+            $setExpired = $time::now()->addHours($duration);
+            $model->update($id_keys, ['expired_date' => $setExpired]);
+            $data['status'] = true;
+        } elseif ($time::now()->isBefore($expired)) {
+            $data['status'] = true;
+        } else {
+            return $this->response->setJSON([
+                'status' => false,
+                'reason' => 'EXPIRED KEY'
+            ]);
+        }
+
+        $devicesAdd = $this->checkDevicesAdd($sDev, $devices, $max_dev);
+        if (!$devicesAdd) {
+            return $this->response->setJSON([
+                'status' => false,
+                'reason' => 'MAX DEVICE REACHED'
+            ]);
+        }
+        if (is_array($devicesAdd)) {
+            $model->update($id_keys, $devicesAdd);
+        }
+
+        $mod = (new Server())->find(1);
+        $ftext = (new _ftext())->find(1);
+        $feature = (new Feature())->find(1);
+        $rngcnt = $time->getTimestamp();
+        $real = "$game-$uKey-$sDev-$this->staticWords";
+        $expiry = $findKey->expired_date;
+        if ($expiry == null) {
+            $expiry = $time::now()->addHours($duration);
+        }
+
+        $model->update($id_keys, ['last_ping' => date('Y-m-d H:i:s')]);
+
+        return $this->response->setJSON([
+            'status' => true,
+            'data' => [
+                'real' => $real,
+                'token' => md5($real),
+                'modname' => $mod ? $mod['modname'] : BASE_NAME,
+                'mod_status' => $ftext ? $ftext['_status'] : '',
+                'credit' => $ftext ? $ftext['_ftext'] : '',
+                'ESP' => $feature ? $feature['ESP'] : 'off',
+                'Item' => $feature ? $feature['Item'] : 'off',
+                'AIM' => $feature ? $feature['AIM'] : 'off',
+                'SilentAim' => $feature ? $feature['SilentAim'] : 'off',
+                'BulletTrack' => $feature ? $feature['BulletTrack'] : 'off',
+                'Floating' => $feature ? $feature['Floating'] : 'off',
+                'Memory' => $feature ? $feature['Memory'] : 'off',
+                'Setting' => $feature ? $feature['Setting'] : 'off',
+                'expired_date' => $expiry,
+                'EXP' => $expiry,
+                'exdate' => $expiry,
+                'device' => $max_dev,
+                'rng' => $rngcnt,
+                'ping' => date('Y-m-d H:i:s'),
+            ],
+        ]);
+    }
+
+    private function checkDevicesAdd($serial, $devices, $max_dev)
+    {
+        $lsDevice = $devices ? explode(',', $devices) : [];
+        $lsDevice = array_values(array_filter($lsDevice, function ($v) {
+            return $v !== '';
+        }));
+        $cDevices = count($lsDevice);
+        if (in_array($serial, $lsDevice)) {
+            return true;
+        }
+        if ($cDevices < $max_dev) {
+            $lsDevice[] = $serial;
+            $setDevice = reduce_multiples(implode(',', $lsDevice), ',', true);
+            return ['devices' => $setDevice];
+        }
+        return false;
     }
 }

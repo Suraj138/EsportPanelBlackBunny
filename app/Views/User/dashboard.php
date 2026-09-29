@@ -1,505 +1,290 @@
-<?php
-
-include('conn.php');
-include('mail.php');
-include('UserMail.php');
-
-// For Credits
-$sql = "SELECT * FROM credit where id=1";
-$result = mysqli_query($conn, $sql);
-$credit = mysqli_fetch_assoc($result);
-
-// For Keys count
-$sql = "SELECT COUNT(*) as id_keys FROM keys_code";
-$result = mysqli_query($conn, $sql);
-$keycount = mysqli_fetch_assoc($result);
-
-// For Active Keys count
-$sql = "SELECT COUNT(devices) as devices FROM keys_code";
-$result = mysqli_query($conn, $sql);
-$active = mysqli_fetch_assoc($result);
-
-// For In-Active Keys Count
-$sql = "SELECT COUNT(*) as devices FROM keys_code where devices IS NULL";
-$result = mysqli_query($conn, $sql);
-$inactive = mysqli_fetch_assoc($result);
-
-// For Users Count
-$sql = "SELECT COUNT(*) as id_users FROM users";
-$result = mysqli_query($conn, $sql);
-$users = mysqli_fetch_assoc($result);
-
-$userid = session()->userid;
-$sql = "SELECT `expiration_date` FROM `users` WHERE `id_users` = '".$userid."'";
-$query = mysqli_query($conn, $sql);
-$period = mysqli_fetch_assoc($query);
-
-function HoursToDays($value)
-{
-    if($value == 1) {
-       return "$value Hour";
-    } else if($value >= 2 && $value < 24) {
-       return "$value Hours";
-    } else if($value == 24) {
-       $darkespyt = $value/24;
-       return "$darkespyt Day";
-    } else if($value > 24) {
-       $darkespyt = $value/24;
-       return "$darkespyt Days";
-    }
-}
-
-$dateTime = strtotime($period['expiration_date']);
-$getDateTime = date("F d, Y H:i:s", $dateTime);
-?>
-
 <?= $this->extend('Layout/Starter') ?>
-<?= $this->section('content') ?>
-
-<!-- Tailwind CSS CDN -->
-<script src="https://cdn.tailwindcss.com"></script>
-<!-- Chart.js CDN -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<!-- Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
+<?= $this->section('css') ?>
 <style>
-    * {
-        font-family: 'Inter', sans-serif;
-    }
-    
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    @keyframes fadeInLeft {
-        from {
-            opacity: 0;
-            transform: translateX(-30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-    
-    @keyframes fadeInRight {
-        from {
-            opacity: 0;
-            transform: translateX(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-    
-    @keyframes pulse {
-        0%, 100% {
-            transform: scale(1);
-        }
-        50% {
-            transform: scale(1.05);
-        }
-    }
-    
-    @keyframes shimmer {
-        0% {
-            background-position: -1000px 0;
-        }
-        100% {
-            background-position: 1000px 0;
-        }
-    }
-    
-    .animate-fade-in-up {
-        animation: fadeInUp 0.6s ease-out forwards;
-    }
-    
-    .animate-fade-in-left {
-        animation: fadeInLeft 0.6s ease-out forwards;
-    }
-    
-    .animate-fade-in-right {
-        animation: fadeInRight 0.6s ease-out forwards;
-    }
-    
-    .animate-pulse-slow {
-        animation: pulse 3s ease-in-out infinite;
-    }
-    
-    .glass-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-    }
-    
-    .gradient-bg {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    
-    .gradient-bg-2 {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    }
-    
-    .gradient-bg-3 {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    }
-    
-    .gradient-bg-4 {
-        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-    }
-    
-    .shimmer {
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-        background-size: 200% 100%;
-        animation: shimmer 2s infinite;
-    }
-    
-    #exp {
-        font-family: 'Inter', sans-serif;
-        font-weight: 800;
-        font-size: clamp(1.5rem, 5vw, 3rem);
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
+.deck-wrap{padding:18px 22px 48px!important;position:relative;z-index:3}
+.cmd-hero{position:relative!important;overflow:hidden!important;min-height:240px!important;margin:0 0 18px!important;padding:28px 32px!important;display:grid!important;grid-template-columns:1.4fr .6fr!important;align-items:center!important;border:1px solid rgba(0,255,208,.32)!important;background:radial-gradient(420px 180px at 12% 0%,rgba(0,255,208,.16),transparent 60%),linear-gradient(135deg,rgba(4,12,24,.96),rgba(8,16,36,.92))!important}
+.cmd-hero h1{margin:0 0 8px!important;font-family:Orbitron,sans-serif!important;font-size:clamp(1.8rem,4vw,3.2rem)!important;letter-spacing:.1em!important;color:#e8f6ff!important}
+.cmd-hero h1 span{color:#00ffd0!important}
+.cmd-hero p{max-width:540px!important;color:#8aa3c2!important;margin:0!important}
+.cmd-clocks{display:flex!important;gap:28px!important;margin-top:18px!important}
+.cmd-clocks small{display:block!important;letter-spacing:.2em!important;color:#b6ff3b!important;font-size:10px!important;font-family:Orbitron,sans-serif!important}
+.cmd-clocks strong{display:block!important;font-family:Orbitron,sans-serif!important;font-size:18px!important;color:#00ffd0!important}
+.cmd-orbit{position:relative!important;width:180px!important;height:180px!important;justify-self:end!important;display:grid!important;place-items:center!important}
+.cmd-orbit small{position:absolute!important;bottom:18px!important;letter-spacing:.16em!important;font-size:9px!important;color:#8aa3c2!important}
+.orb-ring{position:absolute!important;border-radius:50%!important;border:1px solid rgba(0,255,208,.28)!important}
+.orb-ring.r1{inset:8%!important}
+.orb-ring.r2{inset:22%!important;border-color:rgba(255,45,106,.35)!important}
+.orb-ring.r3{inset:36%!important}
+.orb-core{width:64px!important;height:64px!important;display:grid!important;place-items:center!important;font-family:Orbitron,sans-serif!important;font-size:22px!important;color:#031018!important;background:linear-gradient(135deg,#00ffd0,#b6ff3b)!important;clip-path:polygon(50% 0,95% 25%,95% 75%,50% 100%,5% 75%,5% 25%)!important}
+.cmd-strip{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:10px!important;margin:0 0 18px!important}
+.cmd-strip article{display:flex!important;gap:10px!important;align-items:center!important;padding:14px 12px!important;margin:0!important;border:1px solid rgba(0,255,208,.18)!important;background:rgba(4,12,24,.92)!important}
+.cmd-strip i{display:block!important;width:8px!important;height:28px!important;background:#00ffd0!important;box-shadow:0 0 10px #00ffd0!important}
+.cmd-strip i.lime{background:#b6ff3b!important}
+.cmd-strip i.rose{background:#ff2d6a!important}
+.cmd-strip i.gold{background:#7dffea!important}
+.cmd-strip small{display:block!important;font-size:9px!important;letter-spacing:.16em!important;color:#8aa3c2!important;font-family:Orbitron,sans-serif!important}
+.cmd-strip b{font-size:22px!important;display:block!important}
+.cmd-grid{display:grid!important;grid-template-columns:1.4fr .8fr!important;gap:14px!important}
+.cmd-panel{padding:18px!important;margin:0!important;border:1px solid rgba(0,255,208,.22)!important;background:linear-gradient(160deg,rgba(6,16,32,.96),rgba(4,10,20,.94))!important}
+.cmd-panel header{display:flex!important;justify-content:space-between!important;align-items:baseline!important;margin:0 0 14px!important;font-family:Orbitron,sans-serif!important;letter-spacing:.16em!important;font-size:12px!important;color:#00ffd0!important}
+.cmd-panel header em{color:#8aa3c2!important;font-style:normal!important;font-size:10px!important}
+.flow-row{display:grid!important;grid-template-columns:70px 1fr 48px!important;gap:10px!important;align-items:center!important;margin:0 0 10px!important;font-size:11px!important;letter-spacing:.12em!important}
+.flow-track{height:8px!important;background:rgba(0,255,208,.08)!important}
+.flow-track b{display:block!important;height:8px!important;background:#00ffd0!important}
+.flow-track b.lime{background:#b6ff3b!important}
+.flow-track b.rose{background:#ff2d6a!important}
+.flow-track b.gold{background:#7dffea!important}
+.op-list{list-style:none!important;margin:0!important;padding:0!important;display:grid!important;gap:8px!important}
+.op-list li{display:flex!important;justify-content:space-between!important;padding:8px 0!important;border-bottom:1px solid rgba(0,255,208,.1)!important}
+.op-actions,.lane-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;margin-top:14px!important}
+.op-actions a,.lane-grid a{text-decoration:none!important;color:#031018!important;background:#00ffd0!important;padding:10px!important;font-family:Orbitron,sans-serif!important;font-size:11px!important;letter-spacing:.08em!important;text-align:center!important}
+.lane-grid a{background:transparent!important;color:#e8f6ff!important;border:1px solid rgba(0,255,208,.25)!important;text-align:left!important}
+.lane-grid a b{color:#00ffd0!important;margin-right:8px!important;display:inline!important}
+.drop-feed{display:grid!important;gap:8px!important}
+.drop-row{display:flex!important;gap:10px!important;align-items:center!important;padding:8px 0!important;border-bottom:1px solid rgba(0,255,208,.1)!important}
+.drop-row i{display:block!important;width:8px!important;height:8px!important;background:#b6ff3b!important}
+@media (max-width:1100px){.cmd-strip{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media (max-width:980px){.cmd-hero,.cmd-grid{grid-template-columns:1fr!important}.cmd-orbit{display:none!important}.cmd-strip{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+</style>
+<?= $this->endSection() ?>
+<?= $this->section('content') ?>
+<style>
+.deck-wrap{padding:18px 22px 48px!important;position:relative;z-index:3}
+.cmd-hero{position:relative!important;overflow:hidden!important;min-height:240px!important;margin:0 0 18px!important;padding:28px 32px!important;display:grid!important;grid-template-columns:1.4fr .6fr!important;align-items:center!important;border:1px solid rgba(0,255,208,.32)!important;background:radial-gradient(420px 180px at 12% 0%,rgba(0,255,208,.16),transparent 60%),linear-gradient(135deg,#071422,#0b1c30)!important}
+.cmd-hero h1{margin:0 0 8px!important;font-family:Orbitron,sans-serif!important;font-size:clamp(1.8rem,4vw,3.2rem)!important;letter-spacing:.1em!important;color:#e8f6ff!important}
+.cmd-hero h1 span{color:#00ffd0!important}
+.cmd-hero p{max-width:540px!important;color:#8aa3c2!important;margin:0!important}
+.cmd-clocks{display:flex!important;gap:28px!important;margin-top:18px!important}
+.cmd-clocks small{display:block!important;letter-spacing:.2em!important;color:#b6ff3b!important;font-size:10px!important;font-family:Orbitron,sans-serif!important}
+.cmd-clocks strong{display:block!important;font-family:Orbitron,sans-serif!important;font-size:18px!important;color:#00ffd0!important}
+.cmd-orbit{position:relative!important;width:180px!important;height:180px!important;justify-self:end!important;display:grid!important;place-items:center!important}
+.cmd-orbit small{position:absolute!important;bottom:18px!important;letter-spacing:.16em!important;font-size:9px!important;color:#8aa3c2!important}
+.orb-ring{position:absolute!important;border-radius:50%!important;border:1px solid rgba(0,255,208,.28)!important}
+.orb-ring.r1{inset:8%!important}
+.orb-ring.r2{inset:22%!important;border-color:rgba(255,45,106,.35)!important}
+.orb-ring.r3{inset:36%!important}
+.orb-core{width:64px!important;height:64px!important;display:grid!important;place-items:center!important;font-family:Orbitron,sans-serif!important;font-size:22px!important;color:#031018!important;background:linear-gradient(135deg,#00ffd0,#b6ff3b)!important;clip-path:polygon(50% 0,95% 25%,95% 75%,50% 100%,5% 75%,5% 25%)!important}
+.cmd-strip{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:10px!important;margin:0 0 18px!important}
+.cmd-strip article{display:flex!important;gap:10px!important;align-items:center!important;padding:14px 12px!important;margin:0!important;border:1px solid rgba(0,255,208,.18)!important;background:#071422!important}
+.cmd-strip i{display:block!important;width:8px!important;height:28px!important;background:#00ffd0!important}
+.cmd-strip i.lime{background:#b6ff3b!important}
+.cmd-strip i.rose{background:#ff2d6a!important}
+.cmd-strip i.gold{background:#7dffea!important}
+.cmd-strip small{display:block!important;font-size:9px!important;letter-spacing:.16em!important;color:#8aa3c2!important;font-family:Orbitron,sans-serif!important}
+.cmd-strip b{font-size:22px!important;display:block!important}
+.cmd-grid{display:grid!important;grid-template-columns:1.4fr .8fr!important;gap:14px!important}
+.cmd-panel{padding:18px!important;margin:0!important;border:1px solid rgba(0,255,208,.22)!important;background:#071422!important}
+.cmd-panel header{display:flex!important;justify-content:space-between!important;align-items:baseline!important;margin:0 0 14px!important;font-family:Orbitron,sans-serif!important;letter-spacing:.16em!important;font-size:12px!important;color:#00ffd0!important}
+.cmd-panel header em{color:#8aa3c2!important;font-style:normal!important;font-size:10px!important}
+.flow-row{display:grid!important;grid-template-columns:70px 1fr 48px!important;gap:10px!important;align-items:center!important;margin:0 0 10px!important;font-size:11px!important}
+.flow-track{height:8px!important;background:rgba(0,255,208,.08)!important}
+.flow-track b{display:block!important;height:8px!important;background:#00ffd0!important}
+.flow-track b.lime{background:#b6ff3b!important}
+.flow-track b.rose{background:#ff2d6a!important}
+.flow-track b.gold{background:#7dffea!important}
+.op-list{list-style:none!important;margin:0!important;padding:0!important;display:grid!important;gap:8px!important}
+.op-list li{display:flex!important;justify-content:space-between!important;padding:8px 0!important;border-bottom:1px solid rgba(0,255,208,.1)!important}
+.op-actions,.lane-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;margin-top:14px!important}
+.op-actions a{text-decoration:none!important;color:#031018!important;background:#00ffd0!important;padding:10px!important;font-family:Orbitron,sans-serif!important;font-size:11px!important;text-align:center!important}
+.lane-grid a{text-decoration:none!important;background:transparent!important;color:#e8f6ff!important;border:1px solid rgba(0,255,208,.25)!important;padding:10px!important;font-family:Orbitron,sans-serif!important;font-size:11px!important;text-align:left!important}
+.lane-grid a b{color:#00ffd0!important;margin-right:8px!important;display:inline!important}
+.drop-feed{display:grid!important;gap:8px!important}
+.drop-row{display:flex!important;gap:10px!important;align-items:center!important;padding:8px 0!important;border-bottom:1px solid rgba(0,255,208,.1)!important}
+.drop-row i{display:block!important;width:8px!important;height:8px!important;background:#b6ff3b!important}
+@media (max-width:1100px){.cmd-strip{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media (max-width:980px){.cmd-hero,.cmd-grid{grid-template-columns:1fr!important}.cmd-orbit{display:none!important}.cmd-strip{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 </style>
 
-<div class="container-fluid px-4 py-6">
-    <!-- Message Status -->
-    <div class="mb-6 animate-fade-in-up">
-        <?= $this->include('Layout/msgStatus') ?>
+<div class="deck-wrap">
+    <div class="mb-4"><?= $this->include('Layout/msgStatus') ?></div>
+
+    <section class="cmd-hero">
+        <div class="cmd-scan"></div>
+        <div class="cmd-hero-copy">
+            <div class="hero-kicker">OPERATOR DECK · <?= esc($roleLabel) ?></div>
+            <h1>NODE <span><?= esc(strtoupper(getName($user))) ?></span></h1>
+            <p>Live license radar. Keys, pings, store orders and session clock in one tactical frame.</p>
+            <div class="cmd-clocks">
+                <div>
+                    <small>SESSION EXPIRES</small>
+                    <strong id="exp">--</strong>
+                </div>
+                <div>
+                    <small>LOBBY CLOCK</small>
+                    <strong id="lobbyClock">--</strong>
+                </div>
+            </div>
+        </div>
+        <div class="cmd-orbit" aria-hidden="true">
+            <span class="orb-ring r1"></span>
+            <span class="orb-ring r2"></span>
+            <span class="orb-ring r3"></span>
+            <span class="orb-core"><?= (int) $stats['online'] ?></span>
+            <small>LIVE PINGS</small>
+        </div>
+    </section>
+
+    <div class="cmd-strip">
+        <article>
+            <i></i>
+            <div>
+                <small>TOTAL KEYS</small>
+                <b class="hud-stat"><?= (int) $stats['total'] ?></b>
+            </div>
+        </article>
+        <article>
+            <i class="lime"></i>
+            <div>
+                <small>USED / BOUND</small>
+                <b class="hud-stat lime"><?= (int) $stats['used'] ?></b>
+            </div>
+        </article>
+        <article>
+            <i class="rose"></i>
+            <div>
+                <small>UNUSED STOCK</small>
+                <b class="hud-stat rose"><?= (int) $stats['unused'] ?></b>
+            </div>
+        </article>
+        <article>
+            <i class="gold"></i>
+            <div>
+                <small>FILL RATE</small>
+                <b class="hud-stat"><?= (int) $stats['fill'] ?>%</b>
+            </div>
+        </article>
+        <article>
+            <i></i>
+            <div>
+                <small>OPERATORS</small>
+                <b class="hud-stat"><?= (int) $stats['users'] ?></b>
+            </div>
+        </article>
+        <article>
+            <i class="rose"></i>
+            <div>
+                <small>STORE QUEUE</small>
+                <b class="hud-stat rose"><?= (int) $stats['pending'] ?></b>
+            </div>
+        </article>
     </div>
-    
-    <!-- Stats Cards Row -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <!-- Total Keys Card -->
-        <div class="glass-card rounded-2xl p-6 animate-fade-in-up hover:scale-105 transition-transform duration-300" style="animation-delay: 0.1s">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600 mb-1">Total Keys</p>
-                    <h3 class="text-3xl font-bold text-gray-800"><?php echo $keycount['id_keys']; ?></h3>
+
+    <div class="cmd-grid">
+        <section class="cmd-panel">
+            <header>
+                <span>LICENSE FLOW</span>
+                <em><?= (int) $stats['used'] ?> bound · <?= (int) $stats['unused'] ?> idle</em>
+            </header>
+            <div class="flow-bars">
+                <?php
+                $maxBar = max(1, (int) $stats['total']);
+                $rows = [
+                    ['TOTAL', (int) $stats['total'], 'cyan'],
+                    ['USED', (int) $stats['used'], 'lime'],
+                    ['UNUSED', (int) $stats['unused'], 'rose'],
+                    ['ONLINE', (int) $stats['online'], 'gold'],
+                ];
+                foreach ($rows as $r) :
+                    $w = min(100, round(($r[1] / $maxBar) * 100));
+                ?>
+                <div class="flow-row">
+                    <span><?= $r[0] ?></span>
+                    <div class="flow-track"><b class="<?= $r[2] ?>" style="width:<?= $w ?>%"></b></div>
+                    <strong><?= $r[1] ?></strong>
                 </div>
-                <div class="gradient-bg w-16 h-16 rounded-xl flex items-center justify-center">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
-                    </svg>
-                </div>
+                <?php endforeach; ?>
             </div>
-        </div>
-        
-        <!-- Used Keys Card -->
-        <div class="glass-card rounded-2xl p-6 animate-fade-in-up hover:scale-105 transition-transform duration-300" style="animation-delay: 0.2s">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600 mb-1">Used Keys</p>
-                    <h3 class="text-3xl font-bold text-green-600"><?php echo $active['devices']; ?></h3>
-                </div>
-                <div class="gradient-bg-3 w-16 h-16 rounded-xl flex items-center justify-center">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
+        </section>
+
+        <section class="cmd-panel">
+            <header>
+                <span>OPERATOR</span>
+                <em><?= esc($user->username) ?></em>
+            </header>
+            <ul class="op-list">
+                <li><span>Role</span><b><?= esc($roleLabel) ?></b></li>
+                <li><span>Balance</span><b>Rs <?= (int) $user->saldo ?></b></li>
+                <li><span>Login</span><b><?= $time::parse(session()->time_since)->humanize() ?></b></li>
+                <li><span>Auto logout</span><b><?= $time::now()->difference($time::parse(session()->time_login))->humanize() ?></b></li>
+                <li><span>Public store</span><b><?= !empty($stats['page_on']) ? 'LIVE' : 'OFF' ?></b></li>
+            </ul>
+            <div class="op-actions">
+                <a href="<?= site_url('keys/generate') ?>">GENERATE</a>
+                <a href="<?= site_url('keys') ?>">KEYS</a>
+                <?php if ((int) $user->level <= 2) : ?>
+                <a href="<?= site_url('public-control') ?>">STORE</a>
+                <?php endif; ?>
             </div>
-        </div>
-        
-        <!-- Unused Keys Card -->
-        <div class="glass-card rounded-2xl p-6 animate-fade-in-up hover:scale-105 transition-transform duration-300" style="animation-delay: 0.3s">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600 mb-1">Unused Keys</p>
-                    <h3 class="text-3xl font-bold text-orange-600"><?php echo $inactive['devices']; ?></h3>
-                </div>
-                <div class="gradient-bg-2 w-16 h-16 rounded-xl flex items-center justify-center">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                    </svg>
-                </div>
+        </section>
+
+        <section class="cmd-panel">
+            <header>
+                <span>RECENT DROPS</span>
+                <em>history feed</em>
+            </header>
+            <div class="drop-feed">
+                <?php if ($history) : ?>
+                    <?php foreach ($history as $h) : $in = explode('|', $h->info); ?>
+                    <div class="drop-row">
+                        <i></i>
+                        <div>
+                            <strong><?= esc($in[0] ?? 'KEY') ?> · <?= esc($in[1] ?? '-') ?>**</strong>
+                            <small><?= hoursToDays($in[2] ?? 0) ?> · <?= esc($in[3] ?? '-') ?> devices · <?= $time::parse($h->created_at)->humanize() ?></small>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                <?php else : ?>
+                    <p class="muted">No drops yet. Generate a key to light this feed.</p>
+                <?php endif; ?>
             </div>
-        </div>
-        
-        <!-- Total Users Card -->
-        <div class="glass-card rounded-2xl p-6 animate-fade-in-up hover:scale-105 transition-transform duration-300" style="animation-delay: 0.4s">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600 mb-1">Total Users</p>
-                    <h3 class="text-3xl font-bold text-purple-600"><?php echo $users['id_users']; ?></h3>
-                </div>
-                <div class="gradient-bg-4 w-16 h-16 rounded-xl flex items-center justify-center">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                    </svg>
-                </div>
+        </section>
+
+        <section class="cmd-panel">
+            <header>
+                <span>QUICK LANES</span>
+                <em>jump</em>
+            </header>
+            <div class="lane-grid">
+                <a href="<?= site_url('keys/generate') ?>"><b>01</b> Generate Key</a>
+                <a href="<?= site_url('keys') ?>"><b>02</b> View Keys</a>
+                <a href="<?= site_url('search') ?>"><b>03</b> Search</a>
+                <a href="<?= site_url('settings') ?>"><b>04</b> Settings</a>
+                <?php if ((int) $user->level <= 2) : ?>
+                <a href="<?= site_url('shop') ?>" target="_blank" rel="noopener"><b>05</b> Public Shop</a>
+                <a href="<?= site_url('public-control') ?>"><b>06</b> Public Control</a>
+                <?php endif; ?>
+                <?php if ((int) $user->level == 1) : ?>
+                <a href="<?= site_url('admin/manage-users') ?>"><b>07</b> Manage Users</a>
+                <a href="<?= site_url('audit') ?>"><b>08</b> Audit Log</a>
+                <?php endif; ?>
             </div>
-        </div>
-    </div>
-    
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Left Column -->
-        <div class="lg:col-span-2 space-y-6">
-            <!-- Expiration Timer Card -->
-            <div class="glass-card rounded-2xl p-8 animate-fade-in-left">
-                <div class="flex items-center mb-6">
-                    <div class="gradient-bg w-12 h-12 rounded-xl flex items-center justify-center mr-4">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                    <h2 class="text-2xl font-bold text-gray-800">Subscription Expiration</h2>
-                </div>
-                <div class="text-center py-8">
-                    <p id="exp" class="animate-pulse-slow"></p>
-                </div>
-            </div>
-            
-            <!-- Keys Chart Card -->
-            <div class="glass-card rounded-2xl p-8 animate-fade-in-left" style="animation-delay: 0.2s">
-                <div class="flex items-center mb-6">
-                    <div class="gradient-bg-3 w-12 h-12 rounded-xl flex items-center justify-center mr-4">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                        </svg>
-                    </div>
-                    <h2 class="text-2xl font-bold text-gray-800">Keys Overview</h2>
-                </div>
-                <div class="relative h-64">
-                    <canvas id="keysChart"></canvas>
-                </div>
-            </div>
-            
-            <!-- History Table Card -->
-            <div class="glass-card rounded-2xl p-8 animate-fade-in-left" style="animation-delay: 0.3s">
-                <div class="flex items-center mb-6">
-                    <div class="gradient-bg-2 w-12 h-12 rounded-xl flex items-center justify-center mr-4">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                    <h2 class="text-2xl font-bold text-gray-800">Recent History</h2>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead>
-                            <tr class="border-b-2 border-gray-200">
-                                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">ID</th>
-                                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Type</th>
-                                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Code</th>
-                                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Duration</th>
-                                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Devices</th>
-                                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Time</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($history as $h) : ?>
-                                <?php $in = explode("|", $h->info) ?>
-                                <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                    <td class="px-4 py-3">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                            #3812<?= $h->id_history ?>
-                                        </span>
-                                    </td>
-                                    <td class="px-4 py-3 text-sm text-gray-700"><?= $in[0] ?></td>
-                                    <td class="px-4 py-3">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                            <?= $in[1] ?>**
-                                        </span>
-                                    </td>
-                                    <td class="px-4 py-3">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            <?= HoursToDays($in[2]); ?>
-                                        </span>
-                                    </td>
-                                    <td class="px-4 py-3">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                            <?= $in[3] ?> Devices
-                                        </span>
-                                    </td>
-                                    <td class="px-4 py-3 text-sm text-gray-500">
-                                        <?= $time::parse($h->created_at)->humanize() ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Right Column - User Info -->
-        <div class="space-y-6">
-            <div class="glass-card rounded-2xl p-8 animate-fade-in-right">
-                <div class="flex items-center mb-6">
-                    <div class="gradient-bg-4 w-12 h-12 rounded-xl flex items-center justify-center mr-4">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                        </svg>
-                    </div>
-                    <h2 class="text-2xl font-bold text-gray-800">User Info</h2>
-                </div>
-                
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl">
-                        <span class="text-sm font-medium text-gray-700">Role</span>
-                        <span class="px-3 py-1 bg-white rounded-lg text-sm font-semibold text-purple-600">
-                            <?= getLevel($user->level) ?>
-                        </span>
-                    </div>
-                    
-                    <div class="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-teal-50 rounded-xl">
-                        <span class="text-sm font-medium text-gray-700">Balance</span>
-                        <span class="px-3 py-1 bg-white rounded-lg text-sm font-semibold text-green-600">
-                            ₹<?= $user->saldo ?>
-                        </span>
-                    </div>
-                    
-                    <div class="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl">
-                        <span class="text-sm font-medium text-gray-700">Login Time</span>
-                        <span class="px-3 py-1 bg-white rounded-lg text-sm font-semibold text-blue-600">
-                            <?= $time::parse(session()->time_since)->humanize() ?>
-                        </span>
-                    </div>
-                    
-                    <div class="flex items-center justify-between p-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-xl">
-                        <span class="text-sm font-medium text-gray-700">Auto Logout</span>
-                        <span class="px-3 py-1 bg-white rounded-lg text-sm font-semibold text-orange-600">
-                            <?= $time::now()->difference($time::parse(session()->time_login))->humanize() ?>
-                        </span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Doughnut Chart Card -->
-            <div class="glass-card rounded-2xl p-8 animate-fade-in-right" style="animation-delay: 0.2s">
-                <div class="flex items-center mb-6">
-                    <div class="gradient-bg w-12 h-12 rounded-xl flex items-center justify-center mr-4">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path>
-                        </svg>
-                    </div>
-                    <h2 class="text-2xl font-bold text-gray-800">Keys Distribution</h2>
-                </div>
-                <div class="relative h-64">
-                    <canvas id="doughnutChart"></canvas>
-                </div>
-            </div>
-        </div>
+        </section>
     </div>
 </div>
 
 <script>
-    // Countdown Timer
-    var countDownTimer = new Date("<?php echo "$getDateTime"; ?>").getTime();
+    var countDownTimer = new Date("<?= esc($expiration_date) ?>").getTime();
     var interval = setInterval(function() {
-        var current = new Date().getTime();
-        var diff = countDownTimer - current;
+        var diff = countDownTimer - new Date().getTime();
         var days = Math.floor(diff / (1000 * 60 * 60 * 24));
         var hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         var minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         var seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-        document.getElementById("exp").innerHTML = days + " Days : " + hours + "h : " +
-        minutes + "m : " + seconds + "s";
-        
+        var el = document.getElementById("exp");
+        if (!el) return;
+        el.innerHTML = days + "D " + hours + "H " + minutes + "M " + seconds + "S";
         if (diff < 0) {
             clearInterval(interval);
-            document.getElementById("exp").innerHTML = "EXPIRED";
+            el.innerHTML = "EXPIRED";
         }
     }, 1000);
-    
-    // Bar Chart for Keys
-    const ctx = document.getElementById('keysChart').getContext('2d');
-    const keysChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Total Keys', 'Used Keys', 'Unused Keys'],
-            datasets: [{
-                label: 'Keys Count',
-                data: [<?php echo $keycount['id_keys']; ?>, <?php echo $active['devices']; ?>, <?php echo $inactive['devices']; ?>],
-                backgroundColor: [
-                    'rgba(102, 126, 234, 0.8)',
-                    'rgba(74, 222, 128, 0.8)',
-                    'rgba(251, 146, 60, 0.8)'
-                ],
-                borderColor: [
-                    'rgba(102, 126, 234, 1)',
-                    'rgba(74, 222, 128, 1)',
-                    'rgba(251, 146, 60, 1)'
-                ],
-                borderWidth: 2,
-                borderRadius: 10
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.05)'
-                    }
-                },
-                x: {
-                    grid: {
-                        display: false
-                    }
-                }
-            }
-        }
-    });
-    
-    // Doughnut Chart
-    const ctx2 = document.getElementById('doughnutChart').getContext('2d');
-    const doughnutChart = new Chart(ctx2, {
-        type: 'doughnut',
-        data: {
-            labels: ['Used Keys', 'Unused Keys'],
-            datasets: [{
-                data: [<?php echo $active['devices']; ?>, <?php echo $inactive['devices']; ?>],
-                backgroundColor: [
-                    'rgba(74, 222, 128, 0.8)',
-                    'rgba(251, 146, 60, 0.8)'
-                ],
-                borderColor: [
-                    'rgba(74, 222, 128, 1)',
-                    'rgba(251, 146, 60, 1)'
-                ],
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        padding: 20,
-                        font: {
-                            size: 12,
-                            family: 'Inter'
-                        }
-                    }
-                }
-            }
-        }
-    });
+    function tickLobby() {
+        var n = new Date();
+        var p = function(v){ return (v < 10 ? '0' : '') + v; };
+        var el = document.getElementById('lobbyClock');
+        if (el) el.textContent = p(n.getHours()) + ':' + p(n.getMinutes()) + ':' + p(n.getSeconds());
+    }
+    tickLobby();
+    setInterval(tickLobby, 1000);
 </script>
-
 <?= $this->endSection() ?>

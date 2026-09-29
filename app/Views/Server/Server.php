@@ -1,24 +1,3 @@
-<?php
-include('conn.php');
-include('mail.php');
-
-// for maintainece mode
-$sql1 ="select * from onoff where id=1";
-$result1 = mysqli_query($conn, $sql1);
-$userDetails1 = mysqli_fetch_assoc($result1);
-
-// for ftext and status
-$sql2 ="select * from _ftext where id=1";
-$result2 = mysqli_query($conn, $sql2);
-$userDetails2 = mysqli_fetch_assoc($result2);
-
-// for Features Status
-$sql3 = "SELECT * FROM Feature WHERE id=1";
-$result3 = mysqli_query($conn, $sql3);
-$ModFeatureStatus = mysqli_fetch_assoc($result3);
-
-?>
-
 <?= $this->extend('Layout/Starter') ?>
 <?= $this->section('content') ?>
 
@@ -269,28 +248,6 @@ $ModFeatureStatus = mysqli_fetch_assoc($result3);
         animation: fadeInUp 0.6s ease-out forwards;
     }
     
-    .glass-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-    }
-    
-    .gradient-bg {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    
-    .gradient-bg-2 {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    }
-    
-    .gradient-bg-3 {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    }
-    
-    .gradient-bg-4 {
-        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-    }
 </style>
 
 <?= $this->endSection() ?>

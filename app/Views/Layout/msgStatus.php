@@ -104,7 +104,7 @@
                     </div>
                     <div class="ml-3 flex-1">
                         <p class="text-sm font-medium text-purple-800">
-                            Welcome <span class="font-bold"><?= getName($user) ?></span>! 👋
+                            Welcome <span class="font-bold"><?= isset($user) ? getName($user) : session('unames') ?></span>. Drop in. Own the lobby.
                         </p>
                     </div>
                     <button onclick="this.parentElement.parentElement.remove()" class="flex-shrink-0 ml-4 text-purple-500 hover:text-purple-700 transition-colors">
@@ -125,7 +125,7 @@
                 </div>
                 <div class="ml-3 flex-1">
                     <p class="text-sm font-medium text-blue-800">
-                        Welcome Stranger! 🌟 Please login to continue.
+                        Welcome operator. Authenticate to enter the HUD.
                     </p>
                 </div>
                 <button onclick="this.parentElement.parentElement.remove()" class="flex-shrink-0 ml-4 text-blue-500 hover:text-blue-700 transition-colors">

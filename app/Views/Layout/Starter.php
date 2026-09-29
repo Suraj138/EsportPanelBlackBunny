@@ -1,46 +1,42 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+<script>
+window.tailwind = window.tailwind || {};
+tailwind.config = { corePlugins: { preflight: false } };
+</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <title><?= BASE_NAME ?> - <?= isset($title) ? $title : 'Panel' ?></title>
-<?= $this->renderSection('css') ?>
-<?= link_tag('assets/css/natacode.css') ?>
+<link rel="stylesheet" href="<?= base_url('assets/css/natacode.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/natacode.css') ?: time() ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/blackbunny.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/blackbunny.css') ?: time() ?>">
 <script src="https://code.jquery.com/jquery-3.6.0.js" crossorigin="anonymous"></script>
-<style>
-:root{--bg:#050719;--panel:rgba(10,15,38,.78);--line:rgba(124,92,255,.38);--violet:#a855f7;--cyan:#22d3ee;--pink:#ec4899;--text:#eef2ff;--muted:#9aa5c7}
-*{box-sizing:border-box}html{background:var(--bg)}body{margin:0;min-height:100vh;background:#050719;color:var(--text);font-family:Inter,ui-sans-serif,system-ui,sans-serif;overflow-x:hidden}
-body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 12% 18%,rgba(168,85,247,.22),transparent 30%),radial-gradient(circle at 86% 15%,rgba(34,211,238,.16),transparent 28%),radial-gradient(circle at 65% 85%,rgba(236,72,153,.14),transparent 30%);z-index:-5}
-body:after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.28;background-image:linear-gradient(rgba(86,69,180,.18) 1px,transparent 1px),linear-gradient(90deg,rgba(86,69,180,.18) 1px,transparent 1px);background-size:55px 55px;transform:perspective(700px) rotateX(58deg) scale(1.7) translateY(35%);transform-origin:center bottom;animation:gridMove 12s linear infinite;z-index:-4}
-@keyframes gridMove{to{background-position:0 55px,0 55px}}@keyframes floatOrb{50%{transform:translate3d(30px,-45px,0) scale(1.08)}}@keyframes scan{0%{transform:translateY(-120%)}100%{transform:translateY(120%)}}
-@keyframes glowPulse{50%{box-shadow:0 0 35px rgba(168,85,247,.34),inset 0 0 25px rgba(34,211,238,.06)}}
-@keyframes shimmer{to{transform:translateX(120%)}}@keyframes rise{from{opacity:0;transform:translateY(28px) scale(.98)}to{opacity:1;transform:none}}
-.app-sidebar{position:fixed;z-index:100;left:0;top:0;bottom:0;width:246px;padding:24px 16px;background:linear-gradient(180deg,rgba(6,9,26,.96),rgba(9,12,34,.88));border-right:1px solid rgba(116,88,255,.28);box-shadow:18px 0 70px rgba(0,0,0,.38);backdrop-filter:blur(20px)}
-.app-sidebar:after{content:"";position:absolute;right:-1px;top:8%;width:2px;height:84%;background:linear-gradient(transparent,var(--violet),var(--cyan),transparent);box-shadow:0 0 18px var(--violet)}
-.brand-link{display:flex;align-items:center;gap:11px;text-decoration:none;color:white}.brand-cube{width:42px;height:42px;display:grid;place-items:center;border:1px solid #9c7cff;border-radius:12px;background:linear-gradient(145deg,#161044,#26105b);box-shadow:inset 0 0 18px rgba(168,85,247,.38),0 0 22px rgba(168,85,247,.35);transform:perspective(180px) rotateY(-10deg);animation:glowPulse 4s ease-in-out infinite}.brand-cube span{font-weight:900;font-size:20px;color:#fff;text-shadow:0 0 15px #a855f7}.brand-copy{display:flex;flex-direction:column;line-height:1}.brand-copy strong{font-size:13px;letter-spacing:.13em}.brand-copy small{font-size:7px;color:#8c97bb;letter-spacing:.08em;margin-top:5px}.side-nav{display:flex;flex-direction:column;gap:7px;margin-top:32px}.side-item{position:relative;display:flex;align-items:center;gap:12px;padding:11px 13px;border:1px solid transparent;border-radius:11px;color:#aeb8d6;text-decoration:none;font-size:13px;transition:.25s ease;overflow:hidden}.side-item i{font-style:normal;width:20px;text-align:center;color:#8994b7}.side-item:before{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent,rgba(168,85,247,.15),transparent);transform:translateX(-110%);transition:.45s}.side-item:hover:before{transform:translateX(110%)}.side-item:hover,.side-item.active{color:#fff;border-color:rgba(123,92,255,.45);background:linear-gradient(90deg,rgba(94,55,180,.38),rgba(27,29,72,.55));box-shadow:0 0 24px rgba(124,58,237,.18),inset 0 0 16px rgba(34,211,238,.04);transform:translateX(3px)}.side-item.active:after{content:"";position:absolute;right:8px;width:5px;height:5px;border-radius:50%;background:#22d3ee;box-shadow:0 0 12px #22d3ee}.logout{margin-top:12px;color:#ff7c9b}.sidebar-user{position:absolute;bottom:22px;left:16px;right:16px;padding:12px;border-radius:14px;border:1px solid rgba(124,92,255,.32);background:rgba(17,20,50,.75);display:flex;align-items:center;gap:10px}.sidebar-user strong,.topbar-actions strong{font-size:11px;display:block}.sidebar-user small,.topbar-actions small{font-size:9px;color:#7884a7}.avatar-orb,.top-avatar{display:grid;place-items:center;border-radius:11px;width:34px;height:34px;background:linear-gradient(145deg,#5521a8,#0c718c);box-shadow:0 0 18px rgba(34,211,238,.3)}
-.app-topbar{position:fixed;z-index:90;left:246px;right:0;top:0;height:74px;padding:15px 30px;display:flex;align-items:center;justify-content:space-between;background:rgba(5,7,25,.68);border-bottom:1px solid rgba(124,92,255,.18);backdrop-filter:blur(18px)}.topbar-search{width:min(430px,48vw);height:42px;display:flex;align-items:center;gap:10px;padding:0 15px;border:1px solid rgba(124,92,255,.25);border-radius:12px;background:rgba(12,17,42,.78);box-shadow:inset 0 0 20px rgba(0,0,0,.25)}.topbar-search span{font-size:20px;color:#7e8bad}.topbar-search input{width:100%;border:0;outline:0;background:transparent;color:white;font-size:12px}.topbar-actions{display:flex;align-items:center;gap:15px;color:#aab5d5}.pulse-dot{color:#f05d9b;text-shadow:0 0 12px #ec4899}.top-avatar{width:35px;height:35px;border-radius:50%}.mobile-topbar{display:none}
-main{margin-left:246px;padding-top:74px;min-height:100vh;position:relative;z-index:2}main:before{content:"";position:absolute;left:12%;top:5%;width:220px;height:220px;border-radius:50%;background:rgba(168,85,247,.12);filter:blur(60px);animation:floatOrb 9s ease-in-out infinite;pointer-events:none}.container-fluid{position:relative}.glass-card{position:relative!important;background:linear-gradient(145deg,rgba(18,24,55,.88),rgba(7,11,31,.76))!important;border:1px solid rgba(124,92,255,.34)!important;box-shadow:0 22px 70px rgba(0,0,0,.34),inset 0 0 25px rgba(168,85,247,.04)!important;backdrop-filter:blur(18px);color:#eef2ff!important;overflow:hidden;animation:rise .7s ease both}.glass-card:before{content:"";position:absolute;left:-40%;top:0;width:32%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.09),transparent);transform:skewX(-18deg);animation:shimmer 7s ease-in-out infinite;pointer-events:none}.glass-card:hover{transform:translateY(-5px) perspective(900px) rotateX(1deg);border-color:rgba(34,211,238,.52)!important;box-shadow:0 28px 85px rgba(0,0,0,.46),0 0 30px rgba(124,58,237,.14),inset 0 0 30px rgba(34,211,238,.04)!important;transition:.3s ease}.text-gray-800,.text-gray-700,.text-gray-600,.text-gray-500,.text-gray-400{color:#d7def5!important}.text-gray-200{color:#e8edff!important}.bg-white,.bg-white\/50{background:rgba(10,16,39,.78)!important;color:#edf2ff!important}.border-gray-200,.border-gray-100{border-color:rgba(124,92,255,.25)!important}.bg-gray-100,.bg-gray-50{background:rgba(17,23,50,.8)!important;color:#dce3fa!important}.bg-gradient-to-r{background-image:linear-gradient(100deg,#7c3aed,#2563eb)!important}.rounded-2xl{border-radius:18px}.btn-gradient,.btn-gradient-2{background:linear-gradient(100deg,#7c3aed,#2563eb,#06b6d4)!important;background-size:220% 100%;animation:gradientShift 4s linear infinite;color:#fff!important;border:1px solid rgba(255,255,255,.15)}@keyframes gradientShift{to{background-position:220% 0}}input,select,textarea{background:rgba(7,12,31,.78)!important;border-color:rgba(124,92,255,.32)!important;color:#f4f6ff!important}input::placeholder,textarea::placeholder{color:#6f7a9e!important}label{color:#bdc7e2!important}.table,.dataTables_wrapper{color:#dce3fa!important}.table th,.table td{border-color:rgba(124,92,255,.2)!important;background:rgba(8,13,34,.38)!important;color:#dce3fa!important}.table-hover tbody tr:hover{background:rgba(124,92,255,.1)!important}.badge{background:rgba(34,211,238,.16)!important;color:#67e8f9!important;border:1px solid rgba(34,211,238,.25)}footer{margin-left:246px!important;background:rgba(5,7,25,.7)!important;border-color:rgba(124,92,255,.15)!important;color:#7783a6!important}.text-center small{color:#7783a6!important}
-.neon-orb{position:fixed;width:90px;height:90px;border-radius:50%;filter:blur(.2px);opacity:.18;pointer-events:none;z-index:0;animation:floatOrb 10s ease-in-out infinite}.neon-orb.one{right:9%;top:18%;background:#a855f7;box-shadow:0 0 80px #a855f7}.neon-orb.two{left:22%;bottom:10%;background:#22d3ee;box-shadow:0 0 80px #22d3ee;animation-delay:-3s}
-@media(max-width:900px){.app-sidebar{transform:translateX(-105%);transition:.3s}.app-sidebar.mobile-open{transform:none}.app-topbar{display:none}.mobile-topbar{position:fixed;display:flex;z-index:120;top:0;left:0;right:0;height:64px;padding:10px 15px;align-items:center;justify-content:space-between;background:rgba(5,7,25,.9);backdrop-filter:blur(18px);border-bottom:1px solid rgba(124,92,255,.2)}main{margin-left:0;padding-top:74px}footer{margin-left:0!important}.neon-menu{border:1px solid rgba(124,92,255,.4);background:#101535;color:#fff;border-radius:10px;padding:8px 12px}.brand-copy strong{font-size:11px}}
-</style>
 <?= $this->renderSection('css') ?>
 </head>
 <body>
-<div class="neon-orb one"></div><div class="neon-orb two"></div>
+<div class="bb-stage">
+    <div class="bb-aurora"></div>
+    <div class="bb-grid"></div>
+    <div class="bb-orb a"></div>
+    <div class="bb-orb b"></div>
+    <div class="bb-vignette"></div>
+    <div class="bb-film"></div>
+</div>
 <?= $this->include('Layout/Header') ?>
-<main class="min-h-screen"><?= $this->renderSection('content') ?></main>
-<footer class="py-4 mt-8"><div class="container"><div class="text-center"><small>&copy; <?= date('Y') ?> - <?= BASE_NAME ?> | All Rights Reserved</small></div></div></footer>
+<main class="min-h-screen">
+    <?= $this->renderSection('content') ?>
+</main>
+<footer class="py-4 mt-8">
+    <div class="container">
+        <div class="text-center"><small>&copy; <?= date('Y') ?> - <?= BASE_NAME ?> | All Rights Reserved</small></div>
+    </div>
+</footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/11.1.0/sweetalert2.all.min.js" crossorigin="anonymous"></script>
 <?= script_tag('assets/js/natacode.js') ?>
+<?= script_tag('assets/js/blackbunny.js') ?>
 <?= $this->renderSection('js') ?>
-<script>
-(function(){
- const cards=[...document.querySelectorAll('.glass-card')];
- cards.forEach((card,i)=>{card.style.animationDelay=(Math.min(i,10)*.06)+'s';card.addEventListener('pointermove',e=>{if(innerWidth<900)return;const r=card.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;card.style.transform=`translateY(-5px) perspective(900px) rotateX(${-y*3}deg) rotateY(${x*4}deg)`});card.addEventListener('pointerleave',()=>card.style.transform='')});
- const field=document.createElement('div');field.className='particle-field';field.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:-1;overflow:hidden';
- for(let i=0;i<28;i++){const p=document.createElement('i');p.style.cssText=`position:absolute;width:${2+Math.random()*4}px;height:${2+Math.random()*4}px;left:${Math.random()*100}%;top:${Math.random()*100}%;border-radius:50%;background:${Math.random()>.5?'#a855f7':'#22d3ee'};box-shadow:0 0 12px currentColor;opacity:${.2+Math.random()*.5};animation:particle${i} ${7+Math.random()*10}s ease-in-out infinite alternate`;const s=document.createElement('style');s.textContent=`@keyframes particle${i}{to{transform:translate(${(Math.random()-.5)*140}px,${(Math.random()-.5)*160}px);opacity:.05}}`;document.head.appendChild(s);field.appendChild(p)}document.body.appendChild(field);
-})();
-</script>
-</body></html>
+</body>
+</html>

@@ -1,22 +1,3 @@
-<?php
-include('conn.php');
-include('mail.php');
-
-// For Highest id Ref
-$sqli = "SELECT * FROM referral_code
-ORDER BY id_reff DESC
-LIMIT 1;";
-$result = mysqli_query($conn, $sqli);
-$id_reff = mysqli_fetch_assoc($result);
-
-// For Referral Code
-$sql = "SELECT Referral FROM referral_code";
-$result = mysqli_query($conn, $sql);
-$refcode = mysqli_fetch_assoc($result);
-$row = $refcode;
-
-?>
-
 <?= $this->extend('Layout/Starter') ?>
 <?= $this->section('content') ?>
 
@@ -72,6 +53,24 @@ $row = $refcode;
                         <small class="text-red-500 text-xs mt-1"><?= $validation->getError('accLevel') ?></small>
                     <?php endif; ?>
                 </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Panel Login Devices</label>
+                    <input type="number" name="login_devices" value="<?= old('login_devices') ?: 1 ?>" min="1" max="99" class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all">
+                    <p class="text-xs text-gray-500 mt-1">How many different browsers/devices this new account may use.</p>
+                    <?php if ($validation->hasError('login_devices')) : ?>
+                        <small class="text-red-500 text-xs mt-1"><?= $validation->getError('login_devices') ?></small>
+                    <?php endif; ?>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Referral Accounts They Can Create</label>
+                    <input type="number" name="ref_accounts" value="<?= old('ref_accounts') ?: 0 ?>" min="0" max="999" class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all">
+                    <p class="text-xs text-gray-500 mt-1">0 = cannot create child referrals. Owner can still set limits.</p>
+                    <?php if ($validation->hasError('ref_accounts')) : ?>
+                        <small class="text-red-500 text-xs mt-1"><?= $validation->getError('ref_accounts') ?></small>
+                    <?php endif; ?>
+                </div>
                 
                 <!-- Submit Button -->
                 <button type="submit" class="w-full py-3 px-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300 shadow-lg">
@@ -102,6 +101,8 @@ $row = $refcode;
                                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Saldo</th>
                                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Level</th>
                                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Expiration</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Devices</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Ref Acc</th>
                                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Used by</th>
                                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Create by</th>
                             </tr>
@@ -123,6 +124,8 @@ $row = $refcode;
                                     </td>
                                     <td class="px-4 py-3 text-sm text-gray-700"><?= $c->level ?></td>
                                     <td class="px-4 py-3 text-sm text-gray-700"><?= $c->acc_expiration ?></td>
+                                    <td class="px-4 py-3 text-sm text-gray-700"><?= isset($c->login_devices) ? $c->login_devices : 1 ?></td>
+                                    <td class="px-4 py-3 text-sm text-gray-700"><?= isset($c->ref_accounts) ? $c->ref_accounts : 0 ?></td>
                                     <td class="px-4 py-3 text-sm text-gray-700"><?= $c->used_by ?></td>
                                     <td class="px-4 py-3 text-sm text-gray-700"><?= $c->created_by ?></td>
                                 </tr>
@@ -153,20 +156,6 @@ $row = $refcode;
         animation: fadeInUp 0.6s ease-out forwards;
     }
     
-    .glass-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-    }
-    
-    .gradient-bg {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    
-    .gradient-bg-3 {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    }
 </style>
 
 <?= $this->endSection() ?>

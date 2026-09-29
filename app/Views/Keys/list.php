@@ -102,13 +102,6 @@
         to { opacity: 1; transform: translateY(0); }
     }
     .animate-fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
-    .glass-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-    }
-    .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
     .key-sensi { filter: blur(5px); transition: filter 0.3s; }
 </style>
 
@@ -176,10 +169,12 @@
                 { 
                     data: null,
                     render: function(data, type, row, meta) {
-                        var btnReset = `<button class="btn btn-outline-danger btn-sm" onclick="resetUserKey('${row.user_key}')" data-bs-toggle="tooltip" data-bs-placement="left" title="Reset key?"><i class="bi bi-bootstrap-reboot"></i></button>`;
-                        var btnalterOne = `<button class="btn btn-outline-warning btn-sm" onclick="resetUserKey1('${row.user_key}')" data-bs-toggle="tooltip" data-bs-placement="left" title="DELETE KEY?"><i class="bi bi-trash-fill"></i></button>`;
-                        var btnEdits = `<a href="${window.location.origin}/keys/${row.id}" class="btn btn-outline-info btn-sm" data-bs-toggle="tooltip" data-bs-placement="left" title="Edit key information?"><i class="bi bi-person"></i></a>`;
-                        return `<div class="d-grid gap-2 d-md-block">${btnReset} ${btnalterOne} ${btnEdits}</div>`;
+                        var btnReset = `<button class="btn btn-outline-danger btn-sm" onclick="resetUserKey('${row.user_key}')" title="Reset HWID">HWID</button>`;
+                        var btnalterOne = `<button class="btn btn-outline-warning btn-sm" onclick="resetUserKey1('${row.user_key}')" title="Delete key">DEL</button>`;
+                        var btnEdits = `<a href="${window.location.origin}/keys/${row.id}" class="btn btn-outline-info btn-sm" title="Edit">EDIT</a>`;
+                        var btnCopy = `<button class="btn btn-outline-success btn-sm" onclick="copyKey('${row.user_key}')" title="Copy">COPY</button>`;
+                        var btnShare = `<button class="btn btn-outline-primary btn-sm" onclick="shareKey('${row.user_key}','${row.game}','${row.duration}')" title="Share">SHARE</button>`;
+                        return `<div class="d-flex flex-wrap gap-1">${btnReset} ${btnalterOne} ${btnEdits} ${btnCopy} ${btnShare}</div>`;
                     }
                 }
             ]
@@ -245,6 +240,19 @@
         });
     }
 
+    function copyKey(key) {
+        if (navigator.clipboard) navigator.clipboard.writeText(key);
+        else {
+            var t = document.createElement('textarea');
+            t.value = key; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove();
+        }
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Key copied', showConfirmButton: false, timer: 1400 });
+    }
+    function shareKey(key, game, duration) {
+        var text = 'BLACK BUNNY KEY\\nGame: ' + game + '\\nKey: ' + key + '\\nDuration: ' + duration;
+        if (navigator.share) navigator.share({ title: 'BLACK BUNNY KEY', text: text });
+        else copyKey(key);
+    }
     function resetUserKey(keys) {
         Swal.fire({
             title: 'Are you sure?',

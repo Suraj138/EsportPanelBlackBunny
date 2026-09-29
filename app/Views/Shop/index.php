@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title><?= esc($cfg['hero_title'] ?? 'BLACK BUNNY') ?> · Public Store</title>
+<?= link_tag('assets/css/blackbunny.css') ?>
+<?= link_tag('assets/css/shop.css') ?>
+</head>
+<body class="shop-body">
+<div class="bb-stage">
+    <div class="bb-aurora"></div>
+    <div class="bb-grid"></div>
+    <div class="bb-orb a"></div>
+    <div class="bb-orb b"></div>
+    <div class="bb-vignette"></div>
+    <div class="bb-film"></div>
+</div>
+<header class="shop-nav">
+    <a class="brand-link" href="<?= site_url('shop') ?>">
+        <?= view('Layout/BrandMark') ?>
+        <span class="brand-copy"><strong>BLACK BUNNY</strong><small>PUBLIC STORE</small></span>
+    </a>
+    <nav>
+        <a href="#plans">Plans</a>
+        <a href="#gallery">Gallery</a>
+        <a href="#about">About</a>
+        <a href="<?= site_url('shop/legal/contact') ?>">Contact</a>
+        <a class="ghost" href="<?= site_url('login') ?>">Operator</a>
+    </nav>
+</header>
+
+<section class="shop-hero">
+    <div class="shop-hero-copy">
+        <div class="hero-kicker">ONLINE KEY STORE</div>
+        <h1><?= esc($cfg['hero_title'] ?? 'BLACK BUNNY ARENA') ?></h1>
+        <p><?= esc($cfg['hero_sub'] ?? '') ?></p>
+        <div class="shop-cta">
+            <a href="#plans" class="submit shop-btn">SELECT PLAN</a>
+            <?php if (!empty($cfg['telegram_url'])) : ?>
+                <a class="ghost-btn" href="<?= esc($cfg['telegram_url']) ?>" target="_blank" rel="noopener">TELEGRAM</a>
+            <?php endif; ?>
+        </div>
+    </div>
+    <div class="shop-hero-media">
+        <?php if (!empty($cfg['hero_media']) && ($cfg['hero_type'] ?? '') === 'video') : ?>
+            <video autoplay muted loop playsinline src="<?= base_url($cfg['hero_media']) ?>"></video>
+        <?php elseif (!empty($cfg['hero_media'])) : ?>
+            <img src="<?= base_url($cfg['hero_media']) ?>" alt="Hero">
+        <?php else : ?>
+            <div class="radar-core shop-radar">
+                <span class="radar-ring r1"></span>
+                <span class="radar-ring r2"></span>
+                <span class="radar-ring r3"></span>
+                <span class="radar-sweep"></span>
+                <span class="radar-cross"></span>
+                <span class="radar-mark">BB</span>
+            </div>
+        <?php endif; ?>
+    </div>
+</section>
+
+<section id="plans" class="shop-section">
+    <div class="shop-kicker">KEY LANES</div>
+    <h2>Pick a duration. Pay UPI. Owner drops the key.</h2>
+    <div class="plan-grid">
+        <?php foreach ($plans as $p) : ?>
+        <article class="plan-card">
+            <span class="plan-badge"><?= esc($p['badge'] ?: 'PLAN') ?></span>
+            <h3><?= esc($p['title']) ?></h3>
+            <p class="plan-hours"><?= hoursToDays((int) $p['hours']) ?></p>
+            <p class="plan-price">Rs <?= (int) $p['price'] ?></p>
+            <small><?= (int) $p['devices'] ?> device<?= ((int) $p['devices'] === 1) ? '' : 's' ?></small>
+            <a href="<?= site_url('shop/buy/' . $p['id']) ?>">BUY LANE</a>
+        </article>
+        <?php endforeach; ?>
+        <?php if (!$plans) : ?>
+            <p class="muted">No public plans are live.</p>
+        <?php endif; ?>
+    </div>
+</section>
+
+<?php if ($media) : ?>
+<section id="gallery" class="shop-section">
+    <div class="shop-kicker">MEDIA SHOWCASE</div>
+    <h2>Gameplay + drops</h2>
+    <div class="media-rail">
+        <?php foreach ($media as $i => $m) : ?>
+            <figure class="media-tile t<?= ($i % 4) + 1 ?>">
+                <?php if ($m['kind'] === 'video') : ?>
+                    <video controls src="<?= base_url($m['file']) ?>"></video>
+                <?php else : ?>
+                    <img src="<?= base_url($m['file']) ?>" alt="<?= esc($m['caption']) ?>">
+                <?php endif; ?>
+                <?php if ($m['caption']) : ?><figcaption><?= esc($m['caption']) ?></figcaption><?php endif; ?>
+            </figure>
+        <?php endforeach; ?>
+    </div>
+</section>
+<?php endif; ?>
+
+<section id="about" class="shop-section about-grid">
+    <article>
+        <div class="shop-kicker">ABOUT</div>
+        <p><?= nl2br(esc($cfg['about_text'] ?? '')) ?></p>
+    </article>
+    <article>
+        <div class="shop-kicker">FEATURES</div>
+        <p><?= nl2br(esc($cfg['features_text'] ?? '')) ?></p>
+    </article>
+    <article>
+        <div class="shop-kicker">UPDATES</div>
+        <p><?= nl2br(esc($cfg['updates_text'] ?? '')) ?></p>
+    </article>
+</section>
+
+<section class="shop-section social-row">
+    <?php if (!empty($cfg['youtube_url'])) : ?><a href="<?= esc($cfg['youtube_url']) ?>" target="_blank" rel="noopener">YouTube</a><?php endif; ?>
+    <?php if (!empty($cfg['instagram_url'])) : ?><a href="<?= esc($cfg['instagram_url']) ?>" target="_blank" rel="noopener">Instagram</a><?php endif; ?>
+    <?php if (!empty($cfg['telegram_url'])) : ?><a href="<?= esc($cfg['telegram_url']) ?>" target="_blank" rel="noopener">Telegram</a><?php endif; ?>
+    <?php if (!empty($cfg['telegram_support'])) : ?><a href="<?= esc($cfg['telegram_support']) ?>" target="_blank" rel="noopener">Support</a><?php endif; ?>
+</section>
+
+<footer class="shop-foot">
+    <a href="<?= site_url('shop/legal/privacy') ?>">Privacy</a>
+    <a href="<?= site_url('shop/legal/terms') ?>">Terms</a>
+    <a href="<?= site_url('shop/legal/refund') ?>">Refund</a>
+    <a href="<?= site_url('shop/legal/contact') ?>">Contact</a>
+    <span>&copy; <?= date('Y') ?> BLACK BUNNY</span>
+</footer>
+<?= script_tag('assets/js/blackbunny.js') ?>
+</body>
+</html>

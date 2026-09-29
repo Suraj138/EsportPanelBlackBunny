@@ -1,5 +1,4 @@
 <?php
-include('mail.php');
 ?>
 
 <?= $this->extend('Layout/Starter') ?>
@@ -60,7 +59,7 @@ include('mail.php');
                     <!-- Roles -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Roles</label>
-                        <?php $sel_level = ['' => '— Select Roles —', '1' => 'Owner', '2' => 'Admin', '3' => 'Reseller']; ?>
+                        <?php $sel_level = ['' => '— Select Roles —', '1' => 'Owner', '2' => 'Admin', '3' => 'User']; ?>
                         <?= form_dropdown(['class' => 'w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all', 'name' => 'level', 'id' => 'level'], $sel_level, $target->level) ?>
                     </div>
                     
@@ -131,16 +130,7 @@ include('mail.php');
         animation: fadeInUp 0.6s ease-out forwards;
     }
     
-    .glass-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-    }
-    
-    .gradient-bg {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
+     .gradient-bg { background: linear-gradient(135deg, #083048 0%, #00ffd0 100%); }
 </style>
 
 <?= $this->endSection() ?>

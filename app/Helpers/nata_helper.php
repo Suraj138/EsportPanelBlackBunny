@@ -35,7 +35,7 @@ function getLevel($level = 0)
             $a = 'Admin';
             break;
         case '3':
-            $a = 'Reseller';
+            $a = 'User';
             break;
         default:
             $a = 'Unknown';
@@ -84,7 +84,46 @@ function setDevice($devicesPost, $max)
 
 function getPrice($price, $duration, $device_max)
 {
-    $priceReal = $price[$duration];
+    $priceReal = isset($price[$duration]) ? $price[$duration] : 0;
     $result = ($priceReal * $device_max);
     return ($result <= 0) ? false : $result;
+}
+
+function clientIp()
+{
+    $clientIp  = isset($_SERVER['HTTP_CLIENT_IP']) ? $_SERVER['HTTP_CLIENT_IP'] : '';
+    $forwardIp = isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : '';
+    $remoteIp  = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '0.0.0.0';
+    if (filter_var($clientIp, FILTER_VALIDATE_IP)) {
+        return $clientIp;
+    }
+    if (filter_var($forwardIp, FILTER_VALIDATE_IP)) {
+        return $forwardIp;
+    }
+    return $remoteIp;
+}
+
+function writeAudit($action, $detail = '', $username = null)
+{
+    $db = \Config\Database::connect();
+    $db->table('audit_log')->insert([
+        'username' => $username ?: session('unames'),
+        'action' => $action,
+        'detail' => $detail,
+        'ip' => clientIp(),
+        'created_at' => date('Y-m-d H:i:s'),
+    ]);
+}
+
+function hoursToDays($value)
+{
+    $value = (int) $value;
+    if ($value <= 1) {
+        return $value . ' Hour';
+    }
+    if ($value < 24) {
+        return $value . ' Hours';
+    }
+    $days = $value / 24;
+    return $days . ($days == 1 ? ' Day' : ' Days');
 }

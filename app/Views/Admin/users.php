@@ -69,7 +69,7 @@ return "#FF0000";
                                     </span>
                                 <?php else : ?>
                                     <span class="px-2 py-1 bg-gradient-to-r from-green-100 to-teal-100 text-green-700 rounded-lg text-xs font-semibold">
-                                        Reseller
+                                        User
                                     </span>
                                 <?php endif; ?>
                             </td>
@@ -134,16 +134,7 @@ return "#FF0000";
         animation: fadeInUp 0.6s ease-out forwards;
     }
     
-    .glass-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-    }
-    
-    .gradient-bg {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
+     .gradient-bg { background: linear-gradient(135deg, #083048 0%, #00ffd0 100%); }
 </style>
 
 <?= $this->endSection() ?>

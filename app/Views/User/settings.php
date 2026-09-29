@@ -2,83 +2,13 @@
 
 <?= $this->section('content') ?>
 
-<!-- Tailwind CSS CDN -->
-<script src="https://cdn.tailwindcss.com"></script>
-<!-- Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
 
 <style>
-    * {
-        font-family: 'Inter', sans-serif;
-    }
-    
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    @keyframes fadeInLeft {
-        from {
-            opacity: 0;
-            transform: translateX(-30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-    
-    @keyframes fadeInRight {
-        from {
-            opacity: 0;
-            transform: translateX(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-    
-    .animate-fade-in-up {
-        animation: fadeInUp 0.6s ease-out forwards;
-    }
-    
-    .animate-fade-in-left {
-        animation: fadeInLeft 0.6s ease-out forwards;
-    }
-    
-    .animate-fade-in-right {
-        animation: fadeInRight 0.6s ease-out forwards;
-    }
-    
-    .glass-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-    }
-    
-    .gradient-bg {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    
-    .gradient-bg-2 {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    }
-    
-    .gradient-bg-3 {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    }
-    
-    .gradient-bg-4 {
-        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-    }
+    .gradient-bg { background: linear-gradient(135deg, #083048 0%, #00ffd0 100%); }
+    .gradient-bg-2 { background: linear-gradient(135deg, #2a0818 0%, #ff2d6a 100%); }
+    .gradient-bg-3 { background: linear-gradient(135deg, #071428 0%, #2d7dff 100%); }
+    .gradient-bg-4 { background: linear-gradient(135deg, #102008 0%, #b6ff3b 100%); }
     
     .input-field {
         transition: all 0.3s ease;

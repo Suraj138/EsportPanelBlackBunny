@@ -16,7 +16,7 @@ class AdminFilter implements FilterInterface
             $userModel = new UserModel();
             $user = $userModel->getUser($session->userid);
             if ($user) {
-                if ($user->level != 1) {
+                if ((int) $user->level > 2) {
                     return redirect()->to('dashboard')->with('msgWarning', "Access Denied!");
                 }
             }
