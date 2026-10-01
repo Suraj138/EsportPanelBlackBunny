@@ -1,0 +1,150 @@
+.shop-body { margin: 0; background: #02040a; color: #e8f6ff; font-family: Rajdhani, sans-serif; }
+.shop-hero h1, .shop-section h2, .plan-card h3 { font-family: 'Russo One', Orbitron, sans-serif !important; }
+.shop-nav {
+  position: relative; z-index: 8;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 6vw;
+}
+.shop-nav nav { display: flex; gap: 18px; align-items: center; }
+.shop-nav nav a {
+  color: #8aa3c2; text-decoration: none; letter-spacing: .16em;
+  font-size: 11px; font-family: Orbitron, sans-serif; text-transform: uppercase;
+}
+.shop-nav nav a.ghost {
+  border: 1px solid #00ffd0; color: #00ffd0; padding: 6px 12px;
+}
+.shop-hero {
+  position: relative; z-index: 2;
+  min-height: 72vh;
+  display: grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap: 40px;
+  align-items: center;
+  padding: 24px 6vw 48px;
+}
+.shop-hero h1 {
+  margin: 0 0 12px;
+  font-family: Orbitron, sans-serif;
+  font-size: clamp(2rem, 6vw, 4.4rem);
+  letter-spacing: .08em;
+}
+.shop-hero p { color: #8aa3c2; max-width: 520px; }
+.shop-steps {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px;
+}
+.shop-steps span {
+  font-family: Orbitron, sans-serif;
+  font-size: 10px;
+  letter-spacing: .16em;
+  color: #00ffd0;
+  border: 1px solid rgba(0,255,208,.28);
+  padding: 6px 10px;
+}
+.buy-wrap { position: relative; z-index: 3; padding: 24px 6vw 64px; max-width: 720px; margin: 0 auto; }
+@media (max-width: 720px) {
+  .shop-nav nav { display: none; }
+  .shop-hero { grid-template-columns: 1fr; min-height: auto; }
+}
+.shop-cta { display: flex; gap: 12px; margin-top: 22px; flex-wrap: wrap; }
+.shop-btn { display: inline-grid; place-items: center; width: auto; padding: 0 28px; text-decoration: none; }
+.ghost-btn {
+  display: inline-grid; place-items: center;
+  height: 50px; padding: 0 18px;
+  border: 1px solid #00ffd0; color: #00ffd0;
+  text-decoration: none; letter-spacing: .14em;
+  font-family: Orbitron, sans-serif; font-size: 12px;
+}
+.shop-hero-media {
+  min-height: 280px;
+  display: grid; place-items: center;
+  border: 1px solid rgba(0,255,208,.28);
+  overflow: hidden;
+  clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px);
+}
+.shop-hero-media img, .shop-hero-media video { width: 100%; height: 100%; object-fit: cover; }
+.shop-radar { margin: 24px auto; }
+.shop-section { position: relative; z-index: 2; padding: 28px 6vw 48px; }
+.shop-kicker {
+  color: #b6ff3b; letter-spacing: .28em; font-size: 11px;
+  font-family: Orbitron, sans-serif; margin-bottom: 8px;
+}
+.shop-section h2 { font-family: Orbitron, sans-serif; letter-spacing: .06em; margin: 0 0 22px; }
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+}
+.plan-card {
+  padding: 22px 18px;
+  border: 1px solid rgba(0,255,208,.28);
+  background: linear-gradient(160deg, rgba(6,16,32,.9), rgba(4,10,20,.86));
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+  display: grid; gap: 6px;
+  animation: riseIn .7s var(--ease) both;
+}
+.plan-card:nth-child(2) { animation-delay: .08s; }
+.plan-card:nth-child(3) { animation-delay: .16s; }
+.plan-badge {
+  font-size: 10px; letter-spacing: .2em; color: #00ffd0; font-family: Orbitron, sans-serif;
+}
+.plan-card h3 { margin: 0; font-size: 18px; }
+.plan-hours { color: #8aa3c2; margin: 0; }
+.plan-price { font-family: Orbitron, sans-serif; font-size: 28px; color: #b6ff3b; margin: 4px 0; }
+.plan-card a {
+  margin-top: 10px; text-align: center; text-decoration: none;
+  color: #031018; background: linear-gradient(90deg, #00ffd0, #b6ff3b);
+  padding: 10px; font-family: Orbitron, sans-serif; letter-spacing: .12em;
+}
+.media-rail {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.media-tile {
+  margin: 0; overflow: hidden; border: 1px solid rgba(0,255,208,.2);
+  animation: riseIn .8s var(--ease) both;
+}
+.media-tile img, .media-tile video { width: 100%; height: 180px; object-fit: cover; display: block; }
+.media-tile.t1 { transform: rotate(-1.2deg); }
+.media-tile.t2 { transform: rotate(1.4deg) scale(1.02); }
+.media-tile.t3 { transform: rotate(-.6deg); }
+.media-tile.t4 { transform: rotate(1deg); }
+.media-tile figcaption { padding: 8px 10px; font-size: 12px; color: #8aa3c2; }
+.about-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.about-grid article {
+  padding: 18px; border: 1px solid rgba(0,255,208,.18); background: rgba(4,12,24,.7);
+}
+.social-row { display: flex; gap: 16px; flex-wrap: wrap; }
+.social-row a { color: #00ffd0; letter-spacing: .16em; text-transform: uppercase; text-decoration: none; font-family: Orbitron, sans-serif; font-size: 12px; }
+.shop-foot {
+  position: relative; z-index: 2;
+  display: flex; gap: 16px; flex-wrap: wrap;
+  padding: 24px 6vw 48px; color: #7f93b0; font-size: 12px;
+}
+.shop-foot a { color: #7dffea; text-decoration: none; }
+.buy-wrap { position: relative; z-index: 2; width: min(520px, 92vw); margin: 40px auto 80px; }
+.pay-box {
+  border: 1px solid rgba(0,255,208,.3);
+  padding: 14px; margin-bottom: 18px; text-align: center;
+}
+.upi-id { font-family: Orbitron, sans-serif; color: #00ffd0; letter-spacing: .08em; }
+.qr { width: 180px; margin: 10px auto; display: block; }
+.msg-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.toggle-row { display: flex; gap: 10px; align-items: center; margin: 10px 0 16px; color: #b6ff3b; }
+.plan-admin { display: grid; gap: 8px; margin-top: 16px; }
+.plan-edit { display: grid; grid-template-columns: 1.4fr .6fr .6fr .5fr .7fr .4fr auto auto; gap: 6px; align-items: center; }
+.plan-edit input { height: 34px; font-size: 12px; }
+.plan-edit button { height: 34px; background: #00ffd0; border: 0; font-size: 11px; }
+.order-row {
+  display: flex; justify-content: space-between; gap: 12px; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid rgba(0,255,208,.12);
+}
+.order-row small { display: block; color: #8aa3c2; }
+.order-row button { margin-left: 6px; background: #00ffd0; border: 0; height: 32px; padding: 0 10px; font-size: 11px; }
+.media-mini { margin-top: 12px; font-size: 12px; color: #8aa3c2; display: grid; gap: 4px; }
+.control-grid .field textarea { width: 100%; min-height: 70px; }
+@media (max-width: 980px) {
+  .shop-hero, .about-grid, .media-rail { grid-template-columns: 1fr; }
+  .shop-nav nav { display: none; }
+  .plan-edit { grid-template-columns: 1fr 1fr; }
+}

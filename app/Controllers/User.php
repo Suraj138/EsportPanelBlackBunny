@@ -2,7 +2,10 @@
 
 namespace App\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\CodeModel;
+use App\Models\KeysModel;
+use App\Models\LibModel;
 use App\Models\Server;
 use App\Models\Status;
 use App\Models\_ftext;
@@ -15,7 +18,7 @@ use CodeIgniter\Controller;
 
 class User extends BaseController
 {
-    protected $model, $userid, $user;
+    protected $model, $userid, $user, $time, $accExpire, $accLevel;
 
     public function __construct()
     {
@@ -35,18 +38,62 @@ class User extends BaseController
         $this->accLevel = [
            1 => 'Owner',
            2 => 'Admin',
-           3 => 'Reseller',
+           3 => 'User',
         ];
     }
 
     public function index()
     {
         $historyModel = new HistoryModel();
+        $db = \Config\Database::connect();
+        $keysTable = $db->table('keys_code');
+        $user = $this->user;
+        if ((int) $user->level != 1) {
+            $keysTable->where('registrator', $user->username);
+        }
+        $totalKeys = $keysTable->countAllResults(false);
+        $usedKeys = $db->table('keys_code');
+        if ((int) $user->level != 1) {
+            $usedKeys->where('registrator', $user->username);
+        }
+        $usedKeys->where('devices IS NOT NULL', null, false)->where('devices !=', '');
+        $usedCount = $usedKeys->countAllResults();
+        $userCount = $db->table('users')->countAllResults();
+        $onlineQ = $db->table('keys_code')->where('last_ping >=', date('Y-m-d H:i:s', time() - 180));
+        if ((int) $user->level != 1) {
+            $onlineQ->where('registrator', $user->username);
+        }
+        $onlineCount = $onlineQ->countAllResults();
+        $pendingOrders = 0;
+        $pageOn = '1';
+        try {
+            $pendingOrders = $db->table('shop_orders')->where('status', 'pending')->countAllResults();
+            $pageRow = $db->table('shop_config')->where('config_key', 'page_on')->get()->getRow();
+            $pageOn = $pageRow ? $pageRow->config_value : '1';
+        } catch (\Throwable $e) {
+            $pendingOrders = 0;
+        }
+        $unused = max(0, $totalKeys - $usedCount);
+        $roleLabel = 'User';
+        if ((int) $user->level == 1) $roleLabel = 'Owner';
+        elseif ((int) $user->level == 2) $roleLabel = 'Admin';
         $data = [
             'title' => 'Dashboard',
-            'user' => $this->user,
+            'user' => $user,
             'time' => $this->time,
-            'history' => $historyModel->getAll(),
+            'history' => $historyModel->getAll(8),
+            'roleLabel' => $roleLabel,
+            'stats' => [
+                'total' => $totalKeys,
+                'used' => $usedCount,
+                'unused' => $unused,
+                'users' => $userCount,
+                'online' => $onlineCount,
+                'fill' => $totalKeys > 0 ? (int) round(($usedCount / $totalKeys) * 100) : 0,
+                'pending' => $pendingOrders,
+                'page_on' => $pageOn === '1',
+            ],
+            'expiration_date' => $user->expiration_date,
         ];
         return view('User/dashboard', $data);
     }
@@ -85,6 +132,8 @@ class User extends BaseController
         $saldo = $this->request->getPost('set_saldo');
         $user_expire = $this->request->getPost('accExpire');
         $accLevel1 = $this->request->getPost('accLevel');
+        $loginDevices = (int) $this->request->getPost('login_devices');
+        $refAccounts = (int) $this->request->getPost('ref_accounts');
         $accExpire = $this->time::now()->addDays($user_expire);
         $form_rules = [
             'set_saldo' => [
@@ -100,12 +149,28 @@ class User extends BaseController
                 'errors' => [
                      'greater_than_equal_to' => 'Invalid Days, cannot set to expired.'
                 ]
+            ],
+            'login_devices' => [
+                'label' => 'Panel Login Devices',
+                'rules' => 'required|numeric|greater_than_equal_to[1]|less_than_equal_to[99]',
+            ],
+            'ref_accounts' => [
+                'label' => 'Referral Accounts They Can Create',
+                'rules' => 'required|numeric|greater_than_equal_to[0]|less_than_equal_to[999]',
             ]
         ];
 
         if (!$this->validate($form_rules)) {
             return redirect()->back()->withInput()->with('msgDanger', 'Failed, check the form');
         } else {
+            $actor = $this->user;
+            if ((int) $actor->level != 1) {
+                $quota = isset($actor->ref_accounts) ? (int) $actor->ref_accounts : 0;
+                $used = (new CodeModel())->countCreatedBy($actor->username);
+                if ($quota < 1 || $used >= $quota) {
+                    return redirect()->back()->with('msgDanger', 'Referral quota reached. Ask Owner to raise the limit.');
+                }
+            }
             $code = random_string('alnum', 6);
             $codeHash = create_password($code, false);
             $referral_code = [
@@ -114,37 +179,24 @@ class User extends BaseController
                 'level' => $accLevel1,
                 'set_saldo' => ($saldo < 1 ? 0 : $saldo),
                 'created_by' => session('unames'),
-                'acc_expiration' => $accExpire
+                'used_by' => '',
+                'acc_expiration' => $accExpire,
+                'login_devices' => ($loginDevices < 1 ? 1 : $loginDevices),
+                'ref_accounts' => ($refAccounts < 0 ? 0 : $refAccounts)
             ];
             $mCode = new CodeModel();
             $ids = $mCode->insert($referral_code, true);
             if ($ids) {
-                $msg = "Referral : $code";
-            /*$code = random_string('alnum', 6);
-            $darkcode = (" $code");/*For Updating 6 Digit of Code*/
-            //$codeHash = create_password($code, false);/*Its Encrypting the Referral Codes by Hashing Method*/
-            /*$referral_code = [
-                'code' => $darkcode,/*$codeHash,//it used to update Hashed Refferal Code in Database*//*
-                'set_saldo' => ($saldo < 1 ? 0 : $saldo),
-                'created_by' => session('unames')
-            ];
-            $mCode = new CodeModel();
-            $ids = $mCode->insert($referral_code, true);
-            if ($ids) {
-                $msg = "Referral : $code";*/
-                return redirect()->back()->with('msgSuccess', $msg);
+                writeAudit('create_referral', "code=$code level=$accLevel1", session('unames'));
+                return redirect()->back()->with('msgSuccess', "Referral : $code");
             }
         }
     }
 
   
-    public function alterUser(){
-       echo 'hello';
-         $model = new userModel();
-    
-        $data=$model->where('id_users !=', 1)->delete();
-    print_r($data);
-     return redirect()->back()->with('msgSuccess', 'success');
+    public function alterUser()
+    {
+        return redirect()->to('dashboard')->with('msgDanger', 'Disabled.');
     }
         
     
@@ -163,11 +215,38 @@ class User extends BaseController
             return redirect()->to('dashboard')->with('msgWarning', 'Access Denied!');
 
         $model = $this->model;
+        $q = trim((string) $this->request->getGet('q'));
+        $page = max(1, (int) $this->request->getGet('page'));
+        $perPage = 20;
+        if (strlen($q) >= 1) {
+            $model->groupStart()
+                ->like('username', $q)
+                ->orLike('fullname', $q)
+                ->orLike('uplink', $q)
+                ->groupEnd();
+        }
+        $total = $model->countAllResults();
+        if (strlen($q) >= 1) {
+            $model->groupStart()
+                ->like('username', $q)
+                ->orLike('fullname', $q)
+                ->orLike('uplink', $q)
+                ->groupEnd();
+        }
+        $user_list = $model->orderBy('id_users', 'DESC')
+            ->limit($perPage, ($page - 1) * $perPage)
+            ->get()
+            ->getResultObject();
+        $pages = max(1, (int) ceil($total / $perPage));
         $validation = Services::validation();
         $data = [
             'title' => 'Users',
             'user' => $user,
-            'user_list' => $model->getUserList(),
+            'user_list' => $user_list,
+            'q' => $q,
+            'page' => $page,
+            'pages' => $pages,
+            'total' => $total,
             'time' => $this->time,
             'validation' => $validation
         ];
@@ -176,9 +255,7 @@ class User extends BaseController
 
     public function user_delete($userid = false)
     {
-        $model = new userModel();
-        $data=$model->where('id_users =', $userid)->delete();
-        return redirect()->back()->with('msgSuccess', 'success');
+        return redirect()->to('dashboard')->with('msgDanger', 'Disabled.');
     }
     
     public function user_edit($userid = false)
@@ -297,32 +374,179 @@ class User extends BaseController
             return $this->fullname_act();
 
         $user = $this->user;
-        
+        $this->ensureOtpColumn();
+
+        if ($this->request->getPost('otp_enable') && (int) $user->level == 1) {
+            $secret = totpSecretMake();
+            $this->model->update($user->id_users, ['otp_secret' => $secret]);
+            writeAudit('otp_enable', 'owner 2fa', $user->username);
+            return redirect()->to('settings')->with('msgSuccess', '2FA armed. Scan secret now.');
+        }
+        if ($this->request->getPost('otp_disable') && (int) $user->level == 1) {
+            $code = (string) $this->request->getPost('otp_code');
+            $secret = isset($user->otp_secret) ? (string) $user->otp_secret : '';
+            if ($secret && !totpVerify($secret, $code)) {
+                return redirect()->to('settings')->with('msgDanger', '2FA code invalid.');
+            }
+            $this->model->update($user->id_users, ['otp_secret' => '']);
+            writeAudit('otp_disable', 'owner 2fa off', $user->username);
+            return redirect()->to('settings')->with('msgSuccess', '2FA disarmed.');
+        }
+
+        $user = $this->model->getUser($this->userid);
+        $otpSecret = isset($user->otp_secret) ? trim((string) $user->otp_secret) : '';
         $validation = Services::validation();
         $data = [
             'title' => 'Settings',
             'user' => $user,
             'time' => $this->time,
-            'validation' => $validation
+            'validation' => $validation,
+            'otp_secret' => $otpSecret,
+            'otp_uri' => $otpSecret ? totpUri($otpSecret, $user->username) : '',
         ];
         
         return view('User/settings', $data);
     }
+
+    private function ensureOtpColumn()
+    {
+        try {
+            $db = \Config\Database::connect();
+            if (!$db->fieldExists('otp_secret', 'users')) {
+                $db->query('ALTER TABLE users ADD COLUMN otp_secret VARCHAR(64) NULL');
+            }
+        } catch (\Throwable $e) {
+        }
+    }
+
+    public function pulse()
+    {
+        $user = $this->user;
+        $db = \Config\Database::connect();
+        $keysTable = $db->table('keys_code');
+        if ((int) $user->level != 1) {
+            $keysTable->where('registrator', $user->username);
+        }
+        $totalKeys = $keysTable->countAllResults(false);
+        $usedKeys = $db->table('keys_code');
+        if ((int) $user->level != 1) {
+            $usedKeys->where('registrator', $user->username);
+        }
+        $usedKeys->where('devices IS NOT NULL', null, false)->where('devices !=', '');
+        $usedCount = $usedKeys->countAllResults();
+        $onlineQ = $db->table('keys_code')->where('last_ping >=', date('Y-m-d H:i:s', time() - 180));
+        if ((int) $user->level != 1) {
+            $onlineQ->where('registrator', $user->username);
+        }
+        $onlineCount = $onlineQ->countAllResults();
+        $pending = 0;
+        try {
+            $pending = $db->table('shop_orders')->where('status', 'pending')->countAllResults();
+        } catch (\Throwable $e) {
+            $pending = 0;
+        }
+        return $this->response->setJSON([
+            'total' => (int) $totalKeys,
+            'used' => (int) $usedCount,
+            'unused' => max(0, (int) $totalKeys - (int) $usedCount),
+            'online' => (int) $onlineCount,
+            'pending' => (int) $pending,
+            'fill' => $totalKeys > 0 ? (int) round(($usedCount / $totalKeys) * 100) : 0,
+            'lobby' => date('H:i:s'),
+        ]);
+    }
         
     public function lib()
     {
-        $user  = $this->user;
-        if ($this->request->getPost('lib_form'))
-           return $this->lib();
         $user = $this->user;
-        $validation = Services::validation();
+        if (!(($user->level == 1) || ($user->level == 2))) {
+            return redirect()->to('dashboard')->with('msgWarning', 'Access Denied!');
+        }
+        $libModel = new LibModel();
+        if ($this->request->getPost('save') && $this->request->getFile('myfile')) {
+            $file = $this->request->getFile('myfile');
+            if ($file && $file->isValid() && !$file->hasMoved()) {
+                $ext = strtolower($file->getExtension());
+                if (!in_array($ext, ['so', 'zip', 'apk', 'bin'], true)) {
+                    return redirect()->to('store')->with('msgDanger', 'Only Store / LIB files are allowed.');
+                }
+                if ($file->getSize() > 100000000) {
+                    return redirect()->to('store')->with('msgWarning', 'File is too large.');
+                }
+                $uploadDir = FCPATH . 'uploads/lib/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+                $safeName = preg_replace('/[^A-Za-z0-9._-]/', '_', $file->getName());
+                $file->move($uploadDir, $safeName, true);
+                $size = filesize($uploadDir . $safeName);
+                $suffixes = ['B', 'KB', 'MB'];
+                $base = $size > 0 ? log($size, 1024) : 0;
+                $realsize = round(pow(1024, $base - floor($base)), 2) . ' ' . $suffixes[(int) floor($base)];
+                $libModel->insert([
+                    'file' => $safeName,
+                    'file_type' => 'uploads/lib/' . $safeName,
+                    'file_size' => $realsize,
+                    'time' => date('Y-m-d H:i:s'),
+                ]);
+                writeAudit('store_upload', $safeName, $user->username);
+                return redirect()->to('store')->with('msgSuccess', 'Store package uploaded: ' . $safeName . ' (' . $realsize . ')');
+            }
+            return redirect()->to('store')->with('msgDanger', 'Failed to upload store package.');
+        }
+        $current = $libModel->current();
+        $history = $libModel->latest(12);
         $data = [
-            'title' => 'lib',
+            'title' => 'Store / Public Control',
             'user' => $user,
             'time' => $this->time,
-            'validation' => $validation
+            'validation' => Services::validation(),
+            'lib' => $current ?: (object) ['file' => 'No package', 'file_size' => '-', 'id' => '-', 'file_type' => '-', 'time' => '-'],
+            'lib_history' => $history,
+            'now' => date('Y-m-d H:i:s'),
         ];
         return view('Server/lib', $data);
+    }
+
+    public function search()
+    {
+        $q = trim((string) $this->request->getGet('q'));
+        $user = $this->user;
+        $keys = [];
+        $users = [];
+        if (strlen($q) >= 2) {
+            $km = new KeysModel();
+            if ((int) $user->level != 1) {
+                $km->where('registrator', $user->username);
+            }
+            $km->groupStart()->like('user_key', $q)->orLike('game', $q)->groupEnd();
+            $keys = $km->findAll(20);
+            if ((int) $user->level == 1) {
+                $users = $this->model->groupStart()->like('username', $q)->orLike('fullname', $q)->groupEnd()->findAll(20);
+            }
+        }
+        return view('User/search', [
+            'title' => 'Search',
+            'user' => $user,
+            'time' => $this->time,
+            'q' => $q,
+            'keys' => $keys,
+            'users' => $users,
+        ]);
+    }
+
+    public function audit()
+    {
+        $user = $this->user;
+        if ((int) $user->level != 1) {
+            return redirect()->to('dashboard')->with('msgWarning', 'Access Denied!');
+        }
+        return view('User/audit', [
+            'title' => 'Audit Log',
+            'user' => $user,
+            'time' => $this->time,
+            'logs' => (new AuditLog())->latest(80),
+        ]);
     }
         
     public function Server()
@@ -371,6 +595,9 @@ class User extends BaseController
 	    $model= new Server();
 	    
 	    $data['row'] = $model->where('id',$id)->first();
+	    $data['userDetails1'] = (new onoff())->find(1) ?: ['status' => 'off', 'myinput' => ''];
+	    $data['userDetails2'] = (new _ftext())->find(1) ?: ['_status' => '', '_ftext' => ''];
+	    $data['ModFeatureStatus'] = (new Feature())->find(1) ?: ['ESP'=>'off','Item'=>'off','AIM'=>'off','SilentAim'=>'off','BulletTrack'=>'off','Memory'=>'off','Floating'=>'off','Setting'=>'off'];
 	    
 	     if (($user->level == 1) || ($user->level == 2)){
 		return view('Server/Server',$data);

@@ -155,6 +155,15 @@ class Keys extends BaseController
 
     public function api_get_keys()
     {
+        if (!$this->request->isAJAX() && $this->request->getHeaderLine('X-Requested-With') !== 'XMLHttpRequest') {
+            $accept = (string) $this->request->getHeaderLine('Accept');
+            if (stripos($accept, 'json') === false && !$this->request->getGet('draw')) {
+                return $this->response->setStatusCode(403)->setJSON(['status' => false, 'reason' => 'Forbidden']);
+            }
+        }
+        if (!session()->has('userid')) {
+            return $this->response->setStatusCode(401)->setJSON(['status' => false]);
+        }
         $model = $this->model;
         return $model->API_getKeys();
     }
@@ -193,6 +202,12 @@ class Keys extends BaseController
 
     public function api_key_reset()
     {
+        if (!session()->has('userid')) {
+            return $this->response->setStatusCode(401)->setJSON(['registered' => false]);
+        }
+        if (!hudRateLimit('key_reset', 20, 60)) {
+            return $this->response->setStatusCode(429)->setJSON(['registered' => false, 'reason' => 'rate']);
+        }
         sleep(1);
         $model = $this->model;
         $keys = $this->request->getGet('userkey');
@@ -220,7 +235,25 @@ class Keys extends BaseController
         ];
 
         $real_response = array_merge($data, $rules);
+        if (!empty($rules['reset'])) {
+            writeAudit('hwid_reset', $keys, $this->user->username);
+        }
         return $this->response->setJSON($real_response);
+    }
+
+    public function share($key = '')
+    {
+        $dKey = $this->model->getKeys($key);
+        $user = $this->user;
+        if (!$dKey || ($user->level != 1 && $dKey->registrator != $user->username)) {
+            return redirect()->to('keys')->with('msgDanger', 'Key not found.');
+        }
+        $text = "BLACK BUNNY KEY\nGame: {$dKey->game}\nKey: {$dKey->user_key}\nDuration: {$dKey->duration}h\nDevices: {$dKey->max_devices}";
+        return $this->response->setJSON([
+            'status' => true,
+            'user_key' => $dKey->user_key,
+            'share' => $text,
+        ]);
     }
 
     public function edit_key($key = false)
@@ -397,18 +430,18 @@ class Keys extends BaseController
         $cuslicense = $this->request->getPost('cuslicense');
         $getPrice = getPrice($this->price, $drtn, $maxd);
         
-        $loopcount = $this->request->getPost('loopcount');
-        
-        if ($loopcount == "1") {
-            $loopcount = 6;
-        } else if ($loopcount == "2") {
-            $loopcount = 11;
-        } else if ($loopcount == "3") {
-            $loopcount = 51;
-        } else if ($loopcount == "4") {
-            $loopcount = 101;
-        } else if ($loopcount == "5") {
-            $loopcount = 2;
+        $bulkMap = [
+            '1' => 1,
+            '5' => 5,
+            '10' => 10,
+            '25' => 25,
+            '50' => 50,
+            '100' => 100,
+        ];
+        $loopRaw = (string) $this->request->getPost('loopcount');
+        $loopcount = isset($bulkMap[$loopRaw]) ? $bulkMap[$loopRaw] : 1;
+        if ($this->request->getPost('custominput') === 'custom') {
+            $loopcount = 1;
         }
 
         $game_list = implode(",", array_keys($this->game_list));
@@ -439,8 +472,9 @@ class Keys extends BaseController
         ];
 
         $validation = Services::validation();
-        $reduceCheck = ($user->saldo - $getPrice);
-        
+        $previewFees = $getPrice * max(1, (int) $loopcount);
+        $reduceCheck = ($user->saldo - $previewFees);
+
         if ($reduceCheck < 0) {
             $validation->setError('duration', 'Insufficient balance');
             return redirect()->back()->withInput()->with('msgWarning', 'Please top up to your beloved admin.');
@@ -449,9 +483,18 @@ class Keys extends BaseController
                 return redirect()->back()->withInput()->with('msgDanger', 'Failed! Please check the error');
             } else {
                 $msg = "Successfuly Generated.";
-                $data = '';
+                $generated = [];
+                $idKeys = 0;
+                $license = '';
+                $unitPrice = $getPrice;
+                $totalFees = $unitPrice * $loopcount;
+                $reduceCheck = ($user->saldo - $totalFees);
+                if ($reduceCheck < 0) {
+                    $validation->setError('duration', 'Insufficient balance');
+                    return redirect()->back()->withInput()->with('msgWarning', 'Please top up to your beloved admin.');
+                }
 
-                for ($i = 1; $i < $loopcount; $i++) {
+                for ($i = 0; $i < $loopcount; $i++) {
                     $license = $user->username . '-' . $drtn . '-' . random_string('alnum', 5);
                     $model = $this->model;
                     if ($twst == "custom") {
@@ -459,27 +502,25 @@ class Keys extends BaseController
                             $findKey = $model->getKeysGame(['user_key' => $cuslicense, 'game' => $game]);
                             if ($findKey) {
                                 return redirect()->back()->with('msgDanger', 'Key already exists!!');
-                            } else {
-                                $license = $cuslicense;
                             }
+                            $license = $cuslicense;
                         } else {
                             return redirect()->back()->with('msgDanger', 'Custom Key is too Short/Long');
                         }
                     }
-                       
+
                     $data_response = [
                         'game' => $game,
                         'user_key' => $license,
                         'duration' => $drtn,
                         'max_devices' => $maxd,
                         'registrator' => $user->username,
-                        'admin_id' => $this->userId
+                        'created_by' => (int) $this->userId,
                     ];
-                    $data .= $license . "\n";
-                  
+                    $generated[] = $license;
                     $idKeys = $this->model->insert($data_response);
                 }
-                
+
                 $this->userModel->update(session('userid'), ['saldo' => $reduceCheck]);
 
                 $history = new HistoryModel();
@@ -488,13 +529,16 @@ class Keys extends BaseController
                     'user_do' => $user->username,
                     'info' => "$game|" . substr($license, 0, 5) . "|$drtn|$maxd"
                 ]);
+                writeAudit('generate_keys', count($generated) . " keys / $game / {$drtn}h", $user->username);
 
                 $other_response = [
-                    'fees' => $getPrice
+                    'fees' => $totalFees,
+                    'user_key' => $generated[0],
+                    'generated_keys' => implode("\n", $generated),
+                    'bulk_count' => count($generated),
                 ];
 
                 session()->setFlashdata(array_merge($data_response, $other_response));
-                 
                 return redirect()->back()->with('msgSuccess', $msg);
             }
         }

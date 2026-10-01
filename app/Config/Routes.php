@@ -34,12 +34,26 @@ $routes->setAutoRoute(false);
 $routes->get('dbg', 'Auth::index');
 $routes->get('logout', 'Auth::logout');
 $routes->get('dashboard', 'User::index');
+$routes->get('pulse', 'User::pulse');
 $routes->match(['get', 'post'], '/', 'Auth::login');
 $routes->match(['get', 'post'], 'login', 'Auth::login');
 $routes->match(['get', 'post'], 'register', 'Auth::register'); // Server
 
 $routes->match(['get', 'post'], 'settings', 'User::settings');
 $routes->match(['get', 'post'], 'Server', 'User::Server');
+$routes->match(['get', 'post'], 'store', 'User::lib');
+$routes->match(['get', 'post'], 'lib', 'User::lib');
+$routes->match(['get', 'post'], 'recover', 'Auth::recover');
+$routes->match(['get', 'post'], 'recover/reset/(:segment)', 'Auth::recoverReset/$1');
+$routes->match(['get', 'post'], 'search', 'User::search');
+$routes->get('audit', 'User::audit');
+$routes->get('shop', 'Shop::index');
+$routes->get('shop/legal/(:segment)', 'Shop::legal/$1');
+$routes->get('shop/buy/(:num)', 'Shop::buy/$1');
+$routes->post('shop/order', 'Shop::order');
+$routes->get('shop/thanks/(:num)', 'Shop::thanks/$1');
+$routes->match(['get', 'post'], 'public-control', 'Shop::control');
+$routes->get('keys/share/(:segment)', 'Keys::share/$1');
 
 // Testing
 $routes->match(['get', 'post'], 'New', 'Home::index');

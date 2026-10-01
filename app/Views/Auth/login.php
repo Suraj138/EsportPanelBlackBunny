@@ -1,3 +1,60 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title><?= BASE_NAME ?> - Login</title><script src="https://cdn.tailwindcss.com"></script><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#040615;color:#fff;font-family:Inter,sans-serif;overflow:hidden}.scene{min-height:100vh;position:relative;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 20% 20%,rgba(168,85,247,.25),transparent 28%),radial-gradient(circle at 80% 75%,rgba(34,211,238,.18),transparent 30%),#040615}.scene:before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(111,78,220,.16) 1px,transparent 1px),linear-gradient(90deg,rgba(111,78,220,.16) 1px,transparent 1px);background-size:58px 58px;transform:perspective(650px) rotateX(62deg) scale(1.6) translateY(28%);animation:grid 10s linear infinite;opacity:.45}@keyframes grid{to{background-position:0 58px,0 58px}}.orb{position:absolute;border-radius:50%;filter:blur(1px);animation:float 8s ease-in-out infinite}.o1{width:180px;height:180px;right:8%;top:10%;background:rgba(168,85,247,.16);box-shadow:0 0 100px #a855f7}.o2{width:110px;height:110px;left:12%;bottom:12%;background:rgba(34,211,238,.15);box-shadow:0 0 80px #22d3ee;animation-delay:-3s}.o3{width:55px;height:55px;left:28%;top:17%;background:#a855f7;box-shadow:0 0 50px #a855f7;animation-delay:-5s}@keyframes float{50%{transform:translate3d(25px,-35px,0) scale(1.08)}}.login-wrap{position:relative;z-index:2;width:min(1120px,94vw);display:grid;grid-template-columns:1fr 480px;gap:55px;align-items:center}.brand-stage{text-align:center}.brand-cube{width:145px;height:145px;margin:0 auto 25px;border-radius:35px;border:1px solid #a78bfa;background:linear-gradient(145deg,#151039,#321064);display:grid;place-items:center;transform:perspective(500px) rotateX(8deg) rotateY(-15deg);box-shadow:0 0 40px rgba(168,85,247,.55),inset 0 0 35px rgba(34,211,238,.13);animation:float 5s ease-in-out infinite}.brand-cube b{font-size:70px;text-shadow:0 0 30px #a855f7}.brand-title{font-size:44px;font-weight:800;letter-spacing:.08em;background:linear-gradient(90deg,#c084fc,#22d3ee);-webkit-background-clip:text;color:transparent}.brand-sub{color:#8792b5;letter-spacing:.28em;font-size:11px}.platform{width:250px;height:25px;margin:30px auto 0;border-radius:50%;background:linear-gradient(90deg,#7c3aed,#22d3ee,#7c3aed);box-shadow:0 0 35px rgba(34,211,238,.5);animation:pulse 2.5s ease-in-out infinite}@keyframes pulse{50%{transform:scale(1.08);opacity:.8}}.login-card{position:relative;padding:38px;border:1px solid rgba(168,85,247,.55);border-radius:25px;background:linear-gradient(145deg,rgba(18,23,55,.88),rgba(5,8,25,.82));box-shadow:0 35px 100px rgba(0,0,0,.55),0 0 45px rgba(124,58,237,.22),inset 0 0 30px rgba(34,211,238,.04);backdrop-filter:blur(20px);transform:perspective(1100px) rotateY(-3deg);animation:cardIn .8s ease both}@keyframes cardIn{from{opacity:0;transform:perspective(1100px) rotateY(-12deg) translateX(40px)}to{opacity:1;transform:perspective(1100px) rotateY(-3deg)}}.login-card:before{content:"";position:absolute;inset:-1px;border-radius:25px;padding:1px;background:linear-gradient(120deg,#a855f7,transparent,#22d3ee);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}.login-card h1{font-size:30px;margin:0 0 7px}.login-card p{color:#8f9abb;font-size:12px}.field{margin-top:18px}.field label{display:block;color:#c7d0e9;font-size:12px;font-weight:600;margin-bottom:8px}.field input{width:100%;height:49px;border:1px solid rgba(124,92,255,.35);border-radius:12px;background:rgba(7,11,31,.75);color:#fff;padding:0 15px;outline:none;transition:.25s}.field input:focus{border-color:#22d3ee;box-shadow:0 0 25px rgba(34,211,238,.13);transform:translateY(-2px)}.rowx{display:flex;justify-content:space-between;align-items:center;margin:18px 0;color:#8d98b8;font-size:11px}.submit{position:relative;overflow:hidden;width:100%;height:52px;border:0;border-radius:13px;color:#fff;font-weight:800;letter-spacing:.08em;background:linear-gradient(100deg,#7c3aed,#a855f7,#06b6d4);background-size:220% 100%;box-shadow:0 12px 35px rgba(124,58,237,.35);animation:gradient 4s linear infinite;cursor:pointer}.submit:hover{transform:translateY(-3px);box-shadow:0 18px 45px rgba(34,211,238,.25)}@keyframes gradient{to{background-position:220% 0}}.secure{margin-top:18px;text-align:center;color:#657291;font-size:10px}.status{margin-bottom:12px}@media(max-width:850px){body{overflow:auto}.login-wrap{grid-template-columns:1fr;gap:25px;padding:35px 0}.brand-stage{transform:scale(.75)}.login-card{transform:none}.brand-title{font-size:32px}}
-</style></head><body><div class="scene"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div><div class="login-wrap"><section class="brand-stage"><div class="brand-cube"><b>W</b></div><div class="brand-title">WALTER PANEL</div><div class="brand-sub">NEXT GEN CONTROL PANEL</div><div class="platform"></div></section><section class="login-card"><div class="status"><?= $this->include('Layout/msgStatus') ?></div><h1>Welcome Back</h1><p>Control everything from one futuristic workspace.</p><?= form_open('', ['class'=>'login-form']) ?><div class="field"><label>USERNAME</label><input type="text" name="username" id="username" required placeholder="Enter your username"><?php if ($validation->hasError('username')) : ?><small class="text-red-400"><?= $validation->getError('username') ?></small><?php endif; ?></div><div class="field"><label>PASSWORD</label><input type="password" name="password" id="password" required minlength="6" placeholder="Enter your password"><?php if ($validation->hasError('password')) : ?><small class="text-red-400"><?= $validation->getError('password') ?></small><?php endif; ?></div><input type="hidden" name="ip" value="<?= $_SERVER['HTTP_USER_AGENT']; ?>" id="ip" required><div class="rowx"><label><input type="checkbox" name="stay_log" id="stay_log" value="1"> Remember me</label><a href="<?= site_url('register') ?>" class="text-cyan-300">Create account</a></div><button type="submit" class="submit">SIGN IN　→</button><?= form_close() ?><div class="secure">◈ Secure • Fast • Reliable</div></section></div></div><script>document.querySelector('button[type="submit"]')?.addEventListener('click',function(e){const r=document.createElement('span');r.style.cssText='position:absolute;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.5);left:'+(e.offsetX-10)+'px;top:'+(e.offsetY-10)+'px;transform:scale(0);animation:r .65s ease-out';this.appendChild(r);setTimeout(()=>r.remove(),650)});const s=document.createElement('style');s.textContent='@keyframes r{to{transform:scale(14);opacity:0}}';document.head.appendChild(s);</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title><?= BASE_NAME ?> - Login</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="<?= base_url('assets/css/blackbunny.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/blackbunny.css') ?: time() ?>">
+</head>
+<body>
+<div class="bb-stage">
+    <div class="bb-aurora"></div>
+    <div class="bb-grid"></div>
+    <div class="bb-orb a"></div>
+    <div class="bb-orb b"></div>
+    <div class="bb-vignette"></div>
+    <div class="bb-film"></div>
+</div>
+<div class="auth-scene">
+    <div class="auth-wrap">
+        <?= view('Layout/RadarStage', ['brandSub' => 'Esport Key HUD']) ?>
+        <section class="login-card">
+            <div class="status"><?= $this->include('Layout/msgStatus') ?></div>
+            <div class="card-kicker">SECURE CHANNEL</div>
+            <h1>PORTAL ACCESS</h1>
+            <p>Authorize operator identity. Drop in. Own the lobby.</p>
+            <?= form_open('', ['class'=>'login-form']) ?>
+            <div class="field">
+                <label>OPERATOR ID / USERNAME</label>
+                <input type="text" name="username" id="username" required placeholder="Enter identity alias">
+                <?php if ($validation->hasError('username')) : ?>
+                    <small class="text-red-400"><?= $validation->getError('username') ?></small>
+                <?php endif; ?>
+            </div>
+            <div class="field">
+                <label>CRYPTOGRAPHIC KEY</label>
+                <input type="password" name="password" id="password" required minlength="6" placeholder="Enter cryptographic key">
+                <?php if ($validation->hasError('password')) : ?>
+                    <small class="text-red-400"><?= $validation->getError('password') ?></small>
+                <?php endif; ?>
+            </div>
+            <div class="field">
+                <label>OWNER 2FA (IF ARMED)</label>
+                <input type="text" name="otp_code" id="otp_code" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code">
+            </div>
+            <input type="hidden" name="ip" value="portal" id="ip">
+            <div class="rowx">
+                <label><input type="checkbox" name="stay_log" id="stay_log" value="1"> 24H Session Active</label>
+                <a href="<?= site_url('recover') ?>">Recover Key?</a>
+            </div>
+            <button type="submit" class="submit">AUTHENTICATE &amp; ENTER</button>
+            <?= form_close() ?>
+            <div class="secure">Unregistered node? <a href="<?= site_url('register') ?>">Register Identity</a></div>
+            <div class="secure">Owner · Admin · User</div>
+        </section>
+    </div>
+</div>
+<script src="<?= base_url('assets/js/blackbunny.js') ?>?v=<?= @filemtime(FCPATH . 'assets/js/blackbunny.js') ?: time() ?>"></script>
+</body>
+</html>

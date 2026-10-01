@@ -7,17 +7,19 @@
         <?= $this->include('Layout/msgStatus') ?>
     </div>
     
-    <!-- Keys List Card -->
+    <section class="page-hero">
+        <div class="hero-kicker">LOCKER</div>
+        <h1>REGISTERED KEYS</h1>
+        <p>Every license in the arena. Blur, reset, share.</p>
+    </section>
     <div class="glass-card rounded-2xl p-6 sm:p-8 animate-fade-in-up">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
             <div class="flex items-center">
                 <div class="gradient-bg w-12 h-12 rounded-xl flex items-center justify-center mr-4">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
-                    </svg>
+                    <span class="orb-core" style="width:36px;height:36px;font-size:10px">BB</span>
                 </div>
                 <div>
-                    <h2 class="text-2xl font-bold text-gray-800">Keys Registered</h2>
+                    <h2 class="text-2xl font-bold">KEYS REGISTERED</h2>
                     <button id="blur-out" class="text-sm text-gray-600 hover:text-purple-600 transition-colors mt-1">
                         <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
@@ -102,13 +104,6 @@
         to { opacity: 1; transform: translateY(0); }
     }
     .animate-fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
-    .glass-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-    }
-    .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
     .key-sensi { filter: blur(5px); transition: filter 0.3s; }
 </style>
 
@@ -176,10 +171,12 @@
                 { 
                     data: null,
                     render: function(data, type, row, meta) {
-                        var btnReset = `<button class="btn btn-outline-danger btn-sm" onclick="resetUserKey('${row.user_key}')" data-bs-toggle="tooltip" data-bs-placement="left" title="Reset key?"><i class="bi bi-bootstrap-reboot"></i></button>`;
-                        var btnalterOne = `<button class="btn btn-outline-warning btn-sm" onclick="resetUserKey1('${row.user_key}')" data-bs-toggle="tooltip" data-bs-placement="left" title="DELETE KEY?"><i class="bi bi-trash-fill"></i></button>`;
-                        var btnEdits = `<a href="${window.location.origin}/keys/${row.id}" class="btn btn-outline-info btn-sm" data-bs-toggle="tooltip" data-bs-placement="left" title="Edit key information?"><i class="bi bi-person"></i></a>`;
-                        return `<div class="d-grid gap-2 d-md-block">${btnReset} ${btnalterOne} ${btnEdits}</div>`;
+                        var btnReset = `<button class="btn btn-outline-danger btn-sm" onclick="resetUserKey('${row.user_key}')" title="Reset HWID">HWID</button>`;
+                        var btnalterOne = `<button class="btn btn-outline-warning btn-sm" onclick="resetUserKey1('${row.user_key}')" title="Delete key">DEL</button>`;
+                        var btnEdits = `<a href="${window.location.origin}/keys/${row.id}" class="btn btn-outline-info btn-sm" title="Edit">EDIT</a>`;
+                        var btnCopy = `<button class="btn btn-outline-success btn-sm" onclick="copyKey('${row.user_key}')" title="Copy">COPY</button>`;
+                        var btnShare = `<button class="btn btn-outline-primary btn-sm" onclick="shareKey('${row.user_key}','${row.game}','${row.duration}')" title="Share">SHARE</button>`;
+                        return `<div class="d-flex flex-wrap gap-1">${btnReset} ${btnalterOne} ${btnEdits} ${btnCopy} ${btnShare}</div>`;
                     }
                 }
             ]
@@ -245,6 +242,19 @@
         });
     }
 
+    function copyKey(key) {
+        if (navigator.clipboard) navigator.clipboard.writeText(key);
+        else {
+            var t = document.createElement('textarea');
+            t.value = key; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove();
+        }
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Key copied', showConfirmButton: false, timer: 1400 });
+    }
+    function shareKey(key, game, duration) {
+        var text = 'BLACK BUNNY KEY\\nGame: ' + game + '\\nKey: ' + key + '\\nDuration: ' + duration;
+        if (navigator.share) navigator.share({ title: 'BLACK BUNNY KEY', text: text });
+        else copyKey(key);
+    }
     function resetUserKey(keys) {
         Swal.fire({
             title: 'Are you sure?',

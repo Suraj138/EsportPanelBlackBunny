@@ -2,83 +2,13 @@
 
 <?= $this->section('content') ?>
 
-<!-- Tailwind CSS CDN -->
-<script src="https://cdn.tailwindcss.com"></script>
-<!-- Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
 
 <style>
-    * {
-        font-family: 'Inter', sans-serif;
-    }
-    
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    @keyframes fadeInLeft {
-        from {
-            opacity: 0;
-            transform: translateX(-30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-    
-    @keyframes fadeInRight {
-        from {
-            opacity: 0;
-            transform: translateX(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-    
-    .animate-fade-in-up {
-        animation: fadeInUp 0.6s ease-out forwards;
-    }
-    
-    .animate-fade-in-left {
-        animation: fadeInLeft 0.6s ease-out forwards;
-    }
-    
-    .animate-fade-in-right {
-        animation: fadeInRight 0.6s ease-out forwards;
-    }
-    
-    .glass-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-    }
-    
-    .gradient-bg {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    
-    .gradient-bg-2 {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    }
-    
-    .gradient-bg-3 {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    }
-    
-    .gradient-bg-4 {
-        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-    }
+    .gradient-bg { background: linear-gradient(135deg, #083048 0%, #00ffd0 100%); }
+    .gradient-bg-2 { background: linear-gradient(135deg, #2a0818 0%, #ff2d6a 100%); }
+    .gradient-bg-3 { background: linear-gradient(135deg, #071428 0%, #2d7dff 100%); }
+    .gradient-bg-4 { background: linear-gradient(135deg, #102008 0%, #b6ff3b 100%); }
     
     .input-field {
         transition: all 0.3s ease;
@@ -111,11 +41,32 @@
 </style>
 
 <div class="container-fluid px-4 py-6">
-    <!-- Page Header -->
-    <div class="mb-8 animate-fade-in-up">
-        <h1 class="text-4xl font-bold text-gray-800 mb-2">Account Settings</h1>
-        <p class="text-gray-600">Manage your account preferences and security settings</p>
+    <section class="page-hero">
+        <div class="hero-kicker">OPERATOR</div>
+        <h1>ACCOUNT SETTINGS</h1>
+        <p>Swap cryptographic key, identity alias, and Owner 2FA.</p>
+    </section>
+    <?php if ((int) $user->level == 1) : ?>
+    <div class="glass-card rounded-2xl p-6 mb-6">
+        <h2>OWNER 2FA</h2>
+        <?php if (!empty($otp_secret)) : ?>
+            <p class="muted">Armed. Scan this secret in Google Authenticator / Aegis.</p>
+            <p class="hud-chip" style="margin:10px 0"><?= esc($otp_secret) ?></p>
+            <p class="muted" style="word-break:break-all"><?= esc($otp_uri) ?></p>
+            <?= form_open('settings') ?>
+                <input type="hidden" name="otp_disable" value="1">
+                <div class="field"><label>CONFIRM CODE</label><input name="otp_code" maxlength="6" placeholder="000000"></div>
+                <button class="submit" type="submit">DISARM 2FA</button>
+            <?= form_close() ?>
+        <?php else : ?>
+            <p class="muted">Not armed. Enable TOTP for owner portal login.</p>
+            <?= form_open('settings') ?>
+                <input type="hidden" name="otp_enable" value="1">
+                <button class="submit" type="submit">ARM OWNER 2FA</button>
+            <?= form_close() ?>
+        <?php endif; ?>
     </div>
+    <?php endif; ?>
 
     <!-- Message Status -->
     <div class="mb-6 animate-fade-in-up" style="animation-delay: 0.1s">
@@ -197,11 +148,8 @@
                 
                 <!-- Submit Button -->
                 <div class="pt-2">
-                    <button type="submit" class="btn-gradient w-full text-white font-semibold py-3 px-6 rounded-xl flex items-center justify-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        Update Password
+                    <button type="submit" class="submit w-full py-3 px-6">
+                        LOCK NEW KEY
                     </button>
                 </div>
             </div>
@@ -270,11 +218,8 @@
                 
                 <!-- Submit Button -->
                 <div class="pt-2">
-                    <button type="submit" class="btn-gradient-2 w-full text-white font-semibold py-3 px-6 rounded-xl flex items-center justify-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                        </svg>
-                        Update Account
+                    <button type="submit" class="submit w-full py-3 px-6">
+                        LOCK IDENTITY
                     </button>
                 </div>
             </div>

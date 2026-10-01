@@ -9,7 +9,7 @@ class KeysModel extends Model
 {
     protected $table      = 'keys_code';
     protected $primaryKey = 'id_keys';
-    protected $allowedFields = ['game', 'user_key', 'duration', 'expired_date', 'max_devices', 'devices', 'status', 'registrator'];
+    protected $allowedFields = ['game', 'user_key', 'duration', 'expired_date', 'max_devices', 'devices', 'status', 'registrator', 'last_ping', 'created_by'];
 
     protected $useTimestamps = true;
 

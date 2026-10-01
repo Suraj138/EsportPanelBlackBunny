@@ -1,24 +1,3 @@
-<?php
-include('conn.php');
-include('mail.php');
-
-// for maintainece mode
-$sql1 ="select * from onoff where id=1";
-$result1 = mysqli_query($conn, $sql1);
-$userDetails1 = mysqli_fetch_assoc($result1);
-
-// for ftext and status
-$sql2 ="select * from _ftext where id=1";
-$result2 = mysqli_query($conn, $sql2);
-$userDetails2 = mysqli_fetch_assoc($result2);
-
-// for Features Status
-$sql3 = "SELECT * FROM Feature WHERE id=1";
-$result3 = mysqli_query($conn, $sql3);
-$ModFeatureStatus = mysqli_fetch_assoc($result3);
-
-?>
-
 <?= $this->extend('Layout/Starter') ?>
 <?= $this->section('content') ?>
 
@@ -28,8 +7,12 @@ $ModFeatureStatus = mysqli_fetch_assoc($result3);
         <?= $this->include('Layout/msgStatus') ?>
     </div>
     
+    <section class="page-hero">
+        <div class="hero-kicker">ONLINE SYSTEM</div>
+        <h1>SERVER CONTROL</h1>
+        <p>Maintenance, features, and live loader status.</p>
+    </section>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Server Maintenance Card -->
         <?php if($user->level != 2) : ?>
         <div class="glass-card rounded-2xl p-6 sm:p-8 animate-fade-in-up">
             <div class="flex items-center mb-6">
@@ -70,8 +53,8 @@ $ModFeatureStatus = mysqli_fetch_assoc($result3);
                     ></textarea>
                 </div>
                 
-                <button type="submit" class="w-full py-3 px-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300 shadow-lg">
-                    Update Settings
+                <button type="submit" class="w-full py-3 px-6 submit">
+                    LOCK MAINTENANCE
                 </button>
             <?= form_close() ?>
         </div>
@@ -165,8 +148,8 @@ $ModFeatureStatus = mysqli_fetch_assoc($result3);
                     </div>
                 </div>
                 
-                <button type="submit" class="w-full py-3 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl hover:from-blue-500 hover:to-indigo-500 transition-all duration-300 shadow-lg mt-6">
-                    Update Features
+                <button type="submit" class="w-full py-3 px-6 submit mt-6">
+                    LOCK FEATURES
                 </button>
             <?= form_close() ?>
         </div>
@@ -198,8 +181,8 @@ $ModFeatureStatus = mysqli_fetch_assoc($result3);
                     >
                 </div>
                 
-                <button type="submit" class="w-full py-3 px-6 bg-gradient-to-r from-pink-600 to-red-600 text-white font-bold rounded-xl hover:from-pink-500 hover:to-red-500 transition-all duration-300 shadow-lg">
-                    Update Mod Name
+                <button type="submit" class="w-full py-3 px-6 submit">
+                    LOCK MOD NAME
                 </button>
             <?= form_close() ?>
         </div>
@@ -245,8 +228,8 @@ $ModFeatureStatus = mysqli_fetch_assoc($result3);
                     >
                 </div>
                 
-                <button type="submit" class="w-full py-3 px-6 bg-gradient-to-r from-green-600 to-teal-600 text-white font-bold rounded-xl hover:from-green-500 hover:to-teal-500 transition-all duration-300 shadow-lg">
-                    Update Floating Text
+                <button type="submit" class="w-full py-3 px-6 submit">
+                    LOCK FLOAT TEXT
                 </button>
             <?= form_close() ?>
         </div>
@@ -269,28 +252,6 @@ $ModFeatureStatus = mysqli_fetch_assoc($result3);
         animation: fadeInUp 0.6s ease-out forwards;
     }
     
-    .glass-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-    }
-    
-    .gradient-bg {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    
-    .gradient-bg-2 {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    }
-    
-    .gradient-bg-3 {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    }
-    
-    .gradient-bg-4 {
-        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-    }
 </style>
 
 <?= $this->endSection() ?>

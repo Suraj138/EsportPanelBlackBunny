@@ -13,25 +13,19 @@ return "#FF0000";
 <?= $this->section('content') ?>
 
 <div class="container-fluid px-4 py-6">
-    <!-- Info Alert -->
-    <div class="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-4 animate-fade-in-up">
-        <div class="flex items-center">
-            <svg class="w-6 h-6 text-blue-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <p class="text-sm text-blue-800"><strong>INFO:</strong> Search specify user by their (username, fullname, saldo or uplink).</p>
-        </div>
-    </div>
-    
-    <!-- Users Table Card -->
+    <section class="page-hero">
+        <div class="hero-kicker">ROSTER</div>
+        <h1>MANAGE USERS</h1>
+        <p>Search operators by username, fullname, saldo or uplink.</p>
+    </section>
+    <form method="get" action="<?= site_url('admin/manage-users') ?>" class="hud-search mb-6">
+        <input type="text" name="q" value="<?= esc($q ?? '') ?>" placeholder="SCAN USERNAME / FULLNAME / UPLINK">
+        <button type="submit" class="submit">SCAN ROSTER</button>
+    </form>
     <div class="glass-card rounded-2xl p-6 sm:p-8 animate-fade-in-up" style="animation-delay: 0.1s">
-        <div class="flex items-center mb-6">
-            <div class="gradient-bg w-12 h-12 rounded-xl flex items-center justify-center mr-4">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                </svg>
-            </div>
-            <h2 class="text-2xl font-bold text-gray-800">Manage Users</h2>
+        <div class="flex items-center justify-between mb-6">
+            <h2>ROSTER GRID</h2>
+            <span class="hud-chip"><?= (int) ($total ?? 0) ?> NODES</span>
         </div>
         
         <?php if ($user_list) : ?>
@@ -69,7 +63,7 @@ return "#FF0000";
                                     </span>
                                 <?php else : ?>
                                     <span class="px-2 py-1 bg-gradient-to-r from-green-100 to-teal-100 text-green-700 rounded-lg text-xs font-semibold">
-                                        Reseller
+                                        User
                                     </span>
                                 <?php endif; ?>
                             </td>
@@ -113,7 +107,14 @@ return "#FF0000";
                 </table>
             </div>
         <?php else : ?>
-            <p class="text-center text-gray-500 py-8">No users found</p>
+            <p class="text-center muted py-8">No users found</p>
+        <?php endif; ?>
+        <?php if (!empty($pages) && $pages > 1) : ?>
+        <div class="hud-pager">
+            <?php for ($i = 1; $i <= $pages; $i++) : ?>
+                <a class="<?= ($page ?? 1) == $i ? 'on' : '' ?>" href="<?= site_url('admin/manage-users') ?>?q=<?= urlencode($q ?? '') ?>&page=<?= $i ?>"><?= $i ?></a>
+            <?php endfor; ?>
+        </div>
         <?php endif; ?>
     </div>
 </div>
@@ -134,16 +135,7 @@ return "#FF0000";
         animation: fadeInUp 0.6s ease-out forwards;
     }
     
-    .glass-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-    }
-    
-    .gradient-bg {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
+     .gradient-bg { background: linear-gradient(135deg, #083048 0%, #00ffd0 100%); }
 </style>
 
 <?= $this->endSection() ?>

@@ -8,7 +8,11 @@
             <?= $this->include('Layout/msgStatus') ?>
         </div>
         
-        <!-- Key Edit Card -->
+        <section class="page-hero">
+            <div class="hero-kicker">PATCH</div>
+            <h1>EDIT KEY</h1>
+            <p>Rewrite duration, devices and status for this license.</p>
+        </section>
         <div class="glass-card rounded-2xl p-6 sm:p-8 animate-fade-in-up">
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center">
@@ -123,8 +127,8 @@
                 </div>
                 
                 <!-- Submit Button -->
-                <button type="submit" class="btnUpdate w-full py-4 px-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                    Update User Key
+                <button type="submit" class="btnUpdate submit w-full py-4 px-6 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    LOCK KEY PATCH
                 </button>
             <?= form_close() ?>
         </div>
@@ -147,16 +151,7 @@
         animation: fadeInUp 0.6s ease-out forwards;
     }
     
-    .glass-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-    }
-    
-    .gradient-bg {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
+     .gradient-bg { background: linear-gradient(135deg, #083048 0%, #00ffd0 100%); }
 </style>
 
 <?= $this->endSection() ?>
