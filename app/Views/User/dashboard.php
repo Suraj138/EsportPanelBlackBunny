@@ -104,6 +104,9 @@
             <div class="hero-kicker">OPERATOR DECK · <?= esc($roleLabel) ?></div>
             <h1>NODE <span><?= esc(strtoupper(getName($user))) ?></span></h1>
             <p>Live license radar. Keys, pings, store orders and session clock in one tactical frame.</p>
+            <?php if (keyExpirySoon($expiration_date, 7)) : ?>
+                <div class="hud-alert warn" data-stamp="HOLD">Account window closing · <?= esc($expiration_date) ?></div>
+            <?php endif; ?>
             <div class="cmd-clocks">
                 <div>
                     <small>SESSION EXPIRES</small>
@@ -286,5 +289,22 @@
     }
     tickLobby();
     setInterval(tickLobby, 1000);
+    function pulseDeck() {
+        fetch('<?= site_url('pulse') ?>', { headers: { 'Accept': 'application/json' } })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) {
+                if (!d) return;
+                var map = { total: d.total, used: d.used, unused: d.unused, fill: d.fill + '%', users: null, pending: d.pending, online: d.online };
+                var stats = document.querySelectorAll('.cmd-strip b.hud-stat');
+                if (stats[0]) stats[0].textContent = d.total;
+                if (stats[1]) stats[1].textContent = d.used;
+                if (stats[2]) stats[2].textContent = d.unused;
+                if (stats[3]) stats[3].textContent = d.fill + '%';
+                if (stats[5]) stats[5].textContent = d.pending;
+                var core = document.querySelector('.orb-core');
+                if (core) core.textContent = d.online;
+            }).catch(function () {});
+    }
+    setInterval(pulseDeck, 12000);
 </script>
 <?= $this->endSection() ?>

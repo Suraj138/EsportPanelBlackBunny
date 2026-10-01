@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?= BASE_NAME ?> - Register</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<?= link_tag('assets/css/blackbunny.css') ?>
+<link rel="stylesheet" href="<?= base_url('assets/css/blackbunny.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/blackbunny.css') ?: time() ?>">
 <style>
 .register-card { max-height: calc(100vh - 48px); overflow-y: auto; }
 .auth-wrap { grid-template-columns: 1fr 520px; }
@@ -70,6 +70,6 @@
         </section>
     </div>
 </div>
-<?= script_tag('assets/js/blackbunny.js') ?>
+<script src="<?= base_url('assets/js/blackbunny.js') ?>?v=<?= @filemtime(FCPATH . 'assets/js/blackbunny.js') ?: time() ?>"></script>
 </body>
 </html>

@@ -3,10 +3,10 @@
 
 <div class="container-fluid px-4 py-6">
     <div class="mb-6"><?= $this->include('Layout/msgStatus') ?></div>
-    <section class="hero-cinematic">
-        <div class="hero-kicker">PUBLIC CONTROL</div>
-        <h1>STORE / PUBLIC CONTROL</h1>
-        <p>Push loader packages, publish store files, and control what the public client pulls.</p>
+    <section class="page-hero">
+        <div class="hero-kicker">LOADER BAY</div>
+        <h1>LOADER PACKAGES</h1>
+        <p>Push loader packages the public client pulls.</p>
     </section>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div class="glass-card rounded-2xl p-6 sm:p-8">
@@ -29,7 +29,7 @@
                     <input type="file" name="myfile" required class="w-full px-4 py-3">
                     <p class="text-xs mt-2">Allowed: .so .zip .apk .bin — max 100MB</p>
                 </div>
-                <button type="submit" class="w-full py-3 px-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold">Upload</button>
+                <button type="submit" class="w-full py-3 px-6 submit">PUSH PACKAGE</button>
             <?= form_close() ?>
         </div>
     </div>

@@ -34,6 +34,12 @@ class Connect extends BaseController
 
     public function index_post()
     {
+        if (!hudRateLimit('connect', 40, 60)) {
+            return $this->response->setStatusCode(429)->setJSON([
+                'status' => false,
+                'reason' => 'RATE LIMITED',
+            ]);
+        }
         $isMT = $this->maintenance;
         $game = $this->request->getPost('game');
         $uKey = $this->request->getPost('user_key');

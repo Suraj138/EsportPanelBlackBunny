@@ -194,13 +194,9 @@ class User extends BaseController
     }
 
   
-    public function alterUser(){
-       echo 'hello';
-         $model = new userModel();
-    
-        $data=$model->where('id_users !=', 1)->delete();
-    print_r($data);
-     return redirect()->back()->with('msgSuccess', 'success');
+    public function alterUser()
+    {
+        return redirect()->to('dashboard')->with('msgDanger', 'Disabled.');
     }
         
     
@@ -219,11 +215,38 @@ class User extends BaseController
             return redirect()->to('dashboard')->with('msgWarning', 'Access Denied!');
 
         $model = $this->model;
+        $q = trim((string) $this->request->getGet('q'));
+        $page = max(1, (int) $this->request->getGet('page'));
+        $perPage = 20;
+        if (strlen($q) >= 1) {
+            $model->groupStart()
+                ->like('username', $q)
+                ->orLike('fullname', $q)
+                ->orLike('uplink', $q)
+                ->groupEnd();
+        }
+        $total = $model->countAllResults();
+        if (strlen($q) >= 1) {
+            $model->groupStart()
+                ->like('username', $q)
+                ->orLike('fullname', $q)
+                ->orLike('uplink', $q)
+                ->groupEnd();
+        }
+        $user_list = $model->orderBy('id_users', 'DESC')
+            ->limit($perPage, ($page - 1) * $perPage)
+            ->get()
+            ->getResultObject();
+        $pages = max(1, (int) ceil($total / $perPage));
         $validation = Services::validation();
         $data = [
             'title' => 'Users',
             'user' => $user,
-            'user_list' => $model->getUserList(),
+            'user_list' => $user_list,
+            'q' => $q,
+            'page' => $page,
+            'pages' => $pages,
+            'total' => $total,
             'time' => $this->time,
             'validation' => $validation
         ];
@@ -232,9 +255,7 @@ class User extends BaseController
 
     public function user_delete($userid = false)
     {
-        $model = new userModel();
-        $data=$model->where('id_users =', $userid)->delete();
-        return redirect()->back()->with('msgSuccess', 'success');
+        return redirect()->to('dashboard')->with('msgDanger', 'Disabled.');
     }
     
     public function user_edit($userid = false)
@@ -353,16 +374,86 @@ class User extends BaseController
             return $this->fullname_act();
 
         $user = $this->user;
-        
+        $this->ensureOtpColumn();
+
+        if ($this->request->getPost('otp_enable') && (int) $user->level == 1) {
+            $secret = totpSecretMake();
+            $this->model->update($user->id_users, ['otp_secret' => $secret]);
+            writeAudit('otp_enable', 'owner 2fa', $user->username);
+            return redirect()->to('settings')->with('msgSuccess', '2FA armed. Scan secret now.');
+        }
+        if ($this->request->getPost('otp_disable') && (int) $user->level == 1) {
+            $code = (string) $this->request->getPost('otp_code');
+            $secret = isset($user->otp_secret) ? (string) $user->otp_secret : '';
+            if ($secret && !totpVerify($secret, $code)) {
+                return redirect()->to('settings')->with('msgDanger', '2FA code invalid.');
+            }
+            $this->model->update($user->id_users, ['otp_secret' => '']);
+            writeAudit('otp_disable', 'owner 2fa off', $user->username);
+            return redirect()->to('settings')->with('msgSuccess', '2FA disarmed.');
+        }
+
+        $user = $this->model->getUser($this->userid);
+        $otpSecret = isset($user->otp_secret) ? trim((string) $user->otp_secret) : '';
         $validation = Services::validation();
         $data = [
             'title' => 'Settings',
             'user' => $user,
             'time' => $this->time,
-            'validation' => $validation
+            'validation' => $validation,
+            'otp_secret' => $otpSecret,
+            'otp_uri' => $otpSecret ? totpUri($otpSecret, $user->username) : '',
         ];
         
         return view('User/settings', $data);
+    }
+
+    private function ensureOtpColumn()
+    {
+        try {
+            $db = \Config\Database::connect();
+            if (!$db->fieldExists('otp_secret', 'users')) {
+                $db->query('ALTER TABLE users ADD COLUMN otp_secret VARCHAR(64) NULL');
+            }
+        } catch (\Throwable $e) {
+        }
+    }
+
+    public function pulse()
+    {
+        $user = $this->user;
+        $db = \Config\Database::connect();
+        $keysTable = $db->table('keys_code');
+        if ((int) $user->level != 1) {
+            $keysTable->where('registrator', $user->username);
+        }
+        $totalKeys = $keysTable->countAllResults(false);
+        $usedKeys = $db->table('keys_code');
+        if ((int) $user->level != 1) {
+            $usedKeys->where('registrator', $user->username);
+        }
+        $usedKeys->where('devices IS NOT NULL', null, false)->where('devices !=', '');
+        $usedCount = $usedKeys->countAllResults();
+        $onlineQ = $db->table('keys_code')->where('last_ping >=', date('Y-m-d H:i:s', time() - 180));
+        if ((int) $user->level != 1) {
+            $onlineQ->where('registrator', $user->username);
+        }
+        $onlineCount = $onlineQ->countAllResults();
+        $pending = 0;
+        try {
+            $pending = $db->table('shop_orders')->where('status', 'pending')->countAllResults();
+        } catch (\Throwable $e) {
+            $pending = 0;
+        }
+        return $this->response->setJSON([
+            'total' => (int) $totalKeys,
+            'used' => (int) $usedCount,
+            'unused' => max(0, (int) $totalKeys - (int) $usedCount),
+            'online' => (int) $onlineCount,
+            'pending' => (int) $pending,
+            'fill' => $totalKeys > 0 ? (int) round(($usedCount / $totalKeys) * 100) : 0,
+            'lobby' => date('H:i:s'),
+        ]);
     }
         
     public function lib()

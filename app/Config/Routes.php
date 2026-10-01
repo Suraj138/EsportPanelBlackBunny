@@ -34,6 +34,7 @@ $routes->setAutoRoute(false);
 $routes->get('dbg', 'Auth::index');
 $routes->get('logout', 'Auth::logout');
 $routes->get('dashboard', 'User::index');
+$routes->get('pulse', 'User::pulse');
 $routes->match(['get', 'post'], '/', 'Auth::login');
 $routes->match(['get', 'post'], 'login', 'Auth::login');
 $routes->match(['get', 'post'], 'register', 'Auth::register'); // Server

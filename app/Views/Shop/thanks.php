@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Order #<?= (int) $order['id'] ?> · BLACK BUNNY</title>
-<?= link_tag('assets/css/blackbunny.css') ?>
-<?= link_tag('assets/css/shop.css') ?>
+<link rel="stylesheet" href="<?= base_url('assets/css/blackbunny.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/blackbunny.css') ?: time() ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/shop.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/shop.css') ?: time() ?>">
 </head>
 <body class="shop-body">
 <div class="bb-stage"><div class="bb-aurora"></div><div class="bb-grid"></div><div class="bb-vignette"></div></div>
@@ -21,7 +21,7 @@
         <h1>Order #<?= (int) $order['id'] ?></h1>
         <p><?= esc($plan['title'] ?? 'Plan') ?> · Rs <?= (int) $order['amount'] ?> · <?= esc($order['status']) ?></p>
         <?php if ($order['status'] === 'verified' && $order['issued_key']) : ?>
-            <div class="pay-box"><strong>YOUR KEY</strong><p class="upi-id"><?= esc($order['issued_key']) ?></p></div>
+            <div class="pay-box key-drop" data-bb-success="1"><strong>YOUR KEY</strong><p class="upi-id"><?= esc($order['issued_key']) ?></p></div>
         <?php else : ?>
             <p>Payment is in Owner/Admin queue. After verify, your key appears here.</p>
         <?php endif; ?>
@@ -39,5 +39,6 @@
         <div class="secure"><a href="<?= site_url('shop') ?>">Back to store</a></div>
     </section>
 </div>
+<script src="<?= base_url('assets/js/blackbunny.js') ?>?v=<?= @filemtime(FCPATH . 'assets/js/blackbunny.js') ?: time() ?>"></script>
 </body>
 </html>

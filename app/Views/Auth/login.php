@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title><?= BASE_NAME ?> - Login</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<?= link_tag('assets/css/blackbunny.css') ?>
+<link rel="stylesheet" href="<?= base_url('assets/css/blackbunny.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/blackbunny.css') ?: time() ?>">
 </head>
 <body>
 <div class="bb-stage">
@@ -39,7 +39,11 @@
                     <small class="text-red-400"><?= $validation->getError('password') ?></small>
                 <?php endif; ?>
             </div>
-            <input type="hidden" name="ip" value="<?= $_SERVER['HTTP_USER_AGENT']; ?>" id="ip" required>
+            <div class="field">
+                <label>OWNER 2FA (IF ARMED)</label>
+                <input type="text" name="otp_code" id="otp_code" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code">
+            </div>
+            <input type="hidden" name="ip" value="portal" id="ip">
             <div class="rowx">
                 <label><input type="checkbox" name="stay_log" id="stay_log" value="1"> 24H Session Active</label>
                 <a href="<?= site_url('recover') ?>">Recover Key?</a>
@@ -51,6 +55,6 @@
         </section>
     </div>
 </div>
-<?= script_tag('assets/js/blackbunny.js') ?>
+<script src="<?= base_url('assets/js/blackbunny.js') ?>?v=<?= @filemtime(FCPATH . 'assets/js/blackbunny.js') ?: time() ?>"></script>
 </body>
 </html>

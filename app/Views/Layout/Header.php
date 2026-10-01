@@ -49,7 +49,8 @@ $initial = strtoupper(substr(session()->has('userid') && isset($user) ? getName(
             <?= $this->include('Layout/BrandMark') ?>
             <span class="brand-copy"><strong>BLACK BUNNY</strong><small>TACTICAL HUD</small></span>
         </a>
-        <button id="mobile-menu-button" class="neon-menu" type="button">Menu</button>
+        <a class="neon-menu" href="<?= site_url('search') ?>">SCAN</a>
+        <button id="mobile-menu-button" class="neon-menu" type="button">MENU</button>
     </div>
     <div id="sidebarOverlay" class="sidebar-overlay"></div>
     <div class="app-topbar">

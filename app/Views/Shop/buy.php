@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Buy <?= esc($plan['title']) ?> · BLACK BUNNY</title>
-<?= link_tag('assets/css/blackbunny.css') ?>
-<?= link_tag('assets/css/shop.css') ?>
+<link rel="stylesheet" href="<?= base_url('assets/css/blackbunny.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/blackbunny.css') ?: time() ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/shop.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/shop.css') ?: time() ?>">
 </head>
 <body class="shop-body">
 <div class="bb-stage">
@@ -33,6 +33,11 @@
                 <img class="qr" src="<?= base_url($cfg['qr_image']) ?>" alt="UPI QR">
             <?php endif; ?>
             <small>Pay Rs <?= (int) $plan['price'] ?> then submit txn id. Owner/Admin verifies and issues the key.</small>
+            <div class="shop-steps">
+                <span>1 PAY UPI</span>
+                <span>2 PASTE TXN</span>
+                <span>3 WAIT VERIFY</span>
+            </div>
         </div>
         <?= form_open('shop/order', ['class' => 'login-form']) ?>
             <input type="hidden" name="plan_id" value="<?= (int) $plan['id'] ?>">
@@ -57,5 +62,6 @@
         <div class="secure"><a href="<?= site_url('shop') ?>">Back to store</a></div>
     </section>
 </div>
+<script src="<?= base_url('assets/js/blackbunny.js') ?>?v=<?= @filemtime(FCPATH . 'assets/js/blackbunny.js') ?: time() ?>"></script>
 </body>
 </html>

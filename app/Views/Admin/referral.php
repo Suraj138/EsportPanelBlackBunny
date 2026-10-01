@@ -7,8 +7,12 @@
         <?= $this->include('Layout/msgStatus') ?>
     </div>
     
+    <section class="page-hero">
+        <div class="hero-kicker">UPLINK</div>
+        <h1>CREATE REFERRAL</h1>
+        <p>Mint operator codes with saldo, role and device limits.</p>
+    </section>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Generate Referral Card -->
         <div class="glass-card rounded-2xl p-6 sm:p-8 animate-fade-in-up">
             <div class="flex items-center mb-6">
                 <div class="gradient-bg w-12 h-12 rounded-xl flex items-center justify-center mr-4">
@@ -73,8 +77,8 @@
                 </div>
                 
                 <!-- Submit Button -->
-                <button type="submit" class="w-full py-3 px-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300 shadow-lg">
-                    Create Referral Code
+                <button type="submit" class="w-full py-3 px-6 submit">
+                    MINT REFERRAL
                 </button>
             <?= form_close() ?>
         </div>

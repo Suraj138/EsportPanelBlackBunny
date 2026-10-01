@@ -127,3 +127,135 @@ function hoursToDays($value)
     $days = $value / 24;
     return $days . ($days == 1 ? ' Day' : ' Days');
 }
+
+function hudRateLimit($bucket, $max = 8, $window = 300)
+{
+    $ip = preg_replace('/[^0-9a-fA-F.:]/', '', (string) clientIp());
+    $dir = WRITEPATH . 'cache/ratelimit';
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0755, true);
+    }
+    $file = $dir . '/' . preg_replace('/[^A-Za-z0-9._-]/', '_', $bucket . '_' . $ip) . '.json';
+    $now = time();
+    $hits = [];
+    if (is_file($file)) {
+        $raw = @file_get_contents($file);
+        $hits = json_decode((string) $raw, true);
+        if (!is_array($hits)) {
+            $hits = [];
+        }
+    }
+    $hits = array_values(array_filter($hits, function ($t) use ($now, $window) {
+        return (int) $t > ($now - $window);
+    }));
+    if (count($hits) >= $max) {
+        return false;
+    }
+    $hits[] = $now;
+    @file_put_contents($file, json_encode($hits), LOCK_EX);
+    return true;
+}
+
+function hudNotify($url)
+{
+    $url = trim((string) $url);
+    if ($url === '' || !preg_match('#^https?://#i', $url)) {
+        return false;
+    }
+    $ctx = stream_context_create([
+        'http' => [
+            'method' => 'GET',
+            'timeout' => 4,
+            'ignore_errors' => true,
+            'header' => "User-Agent: BLACK-BUNNY-HUD\r\n",
+        ],
+    ]);
+    @file_get_contents($url, false, $ctx);
+    return true;
+}
+
+function waDigits($raw)
+{
+    return preg_replace('/\D+/', '', (string) $raw);
+}
+
+function totpSecretMake()
+{
+    $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    $out = '';
+    for ($i = 0; $i < 16; $i++) {
+        $out .= $chars[random_int(0, 31)];
+    }
+    return $out;
+}
+
+function totpBase32Decode($secret)
+{
+    $map = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    $secret = strtoupper(preg_replace('/[^A-Z2-7]/', '', (string) $secret));
+    $bits = '';
+    $len = strlen($secret);
+    for ($i = 0; $i < $len; $i++) {
+        $val = strpos($map, $secret[$i]);
+        if ($val === false) {
+            continue;
+        }
+        $bits .= str_pad(decbin($val), 5, '0', STR_PAD_LEFT);
+    }
+    $bytes = '';
+    foreach (str_split($bits, 8) as $chunk) {
+        if (strlen($chunk) === 8) {
+            $bytes .= chr(bindec($chunk));
+        }
+    }
+    return $bytes;
+}
+
+function totpCode($secret, $slice = null)
+{
+    $slice = $slice === null ? (int) floor(time() / 30) : (int) $slice;
+    $key = totpBase32Decode($secret);
+    if ($key === '') {
+        return '';
+    }
+    $bin = pack('N*', 0) . pack('N*', $slice);
+    $hash = hash_hmac('sha1', $bin, $key, true);
+    $off = ord(substr($hash, -1)) & 0x0F;
+    $trunc = unpack('N', substr($hash, $off, 4));
+    $code = ($trunc[1] & 0x7FFFFFFF) % 1000000;
+    return str_pad((string) $code, 6, '0', STR_PAD_LEFT);
+}
+
+function totpVerify($secret, $code)
+{
+    $code = preg_replace('/\D+/', '', (string) $code);
+    if (strlen($code) !== 6 || !$secret) {
+        return false;
+    }
+    $now = (int) floor(time() / 30);
+    for ($i = -1; $i <= 1; $i++) {
+        if (hash_equals(totpCode($secret, $now + $i), $code)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function totpUri($secret, $account = 'owner')
+{
+    $label = rawurlencode('BLACK BUNNY:' . $account);
+    return 'otpauth://totp/' . $label . '?secret=' . $secret . '&issuer=' . rawurlencode('BLACK BUNNY');
+}
+
+function keyExpirySoon($date, $days = 3)
+{
+    if (!$date) {
+        return false;
+    }
+    $ts = strtotime((string) $date);
+    if ($ts === false) {
+        return false;
+    }
+    $left = $ts - time();
+    return $left > 0 && $left <= ($days * 86400);
+}

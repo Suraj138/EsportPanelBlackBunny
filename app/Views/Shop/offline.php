@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Store Offline · BLACK BUNNY</title>
-<?= link_tag('assets/css/blackbunny.css') ?>
-<?= link_tag('assets/css/shop.css') ?>
+<link rel="stylesheet" href="<?= base_url('assets/css/blackbunny.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/blackbunny.css') ?: time() ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/shop.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/shop.css') ?: time() ?>">
 </head>
 <body class="shop-body">
 <div class="bb-stage"><div class="bb-aurora"></div><div class="bb-vignette"></div></div>
@@ -17,5 +17,6 @@
         <div class="secure"><a href="<?= site_url('login') ?>">Operator login</a></div>
     </section>
 </div>
+<script src="<?= base_url('assets/js/blackbunny.js') ?>?v=<?= @filemtime(FCPATH . 'assets/js/blackbunny.js') ?: time() ?>"></script>
 </body>
 </html>

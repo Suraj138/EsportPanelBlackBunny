@@ -78,6 +78,9 @@ class Shop extends BaseController
 
     public function order()
     {
+        if (!hudRateLimit('shop_order', 6, 600)) {
+            return redirect()->back()->withInput()->with('msgDanger', 'Too many orders. Wait and retry.');
+        }
         $cfg = $this->cfg();
         if (!$this->pageOn()) {
             return redirect()->to('shop');
@@ -236,7 +239,16 @@ class Shop extends BaseController
                     'verified_by' => $user->username,
                 ]);
                 writeAudit('shop_verify', 'order#' . $oid . ' key=' . $license, $user->username);
-                return redirect()->to('public-control')->with('msgSuccess', 'Order verified. Key: ' . $license);
+                $cfgNow = $cfgModel->bag();
+                $msg = 'BLACK BUNNY KEY READY%0AOrder #' . $oid . '%0AKey: ' . $license . '%0ATxn: ' . rawurlencode((string) $order['txn_id']);
+                $phone = waDigits($order['customer_phone'] ?: ($cfgNow['owner_whatsapp'] ?? ''));
+                if ($phone) {
+                    hudNotify('https://wa.me/' . $phone . '?text=' . $msg);
+                }
+                if (!empty($cfgNow['telegram_support'])) {
+                    hudNotify($cfgNow['telegram_support']);
+                }
+                return redirect()->to('public-control')->with('msgSuccess', 'Order verified. Key: ' . $license . ' · ping sent');
             }
         }
 

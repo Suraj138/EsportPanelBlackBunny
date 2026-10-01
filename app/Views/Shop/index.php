@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title><?= esc($cfg['hero_title'] ?? 'BLACK BUNNY') ?> · Public Store</title>
-<?= link_tag('assets/css/blackbunny.css') ?>
-<?= link_tag('assets/css/shop.css') ?>
+<link rel="stylesheet" href="<?= base_url('assets/css/blackbunny.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/blackbunny.css') ?: time() ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/shop.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/shop.css') ?: time() ?>">
 </head>
 <body class="shop-body">
 <div class="bb-stage">
@@ -128,6 +128,6 @@
     <a href="<?= site_url('shop/legal/contact') ?>">Contact</a>
     <span>&copy; <?= date('Y') ?> BLACK BUNNY</span>
 </footer>
-<?= script_tag('assets/js/blackbunny.js') ?>
+<script src="<?= base_url('assets/js/blackbunny.js') ?>?v=<?= @filemtime(FCPATH . 'assets/js/blackbunny.js') ?: time() ?>"></script>
 </body>
 </html>

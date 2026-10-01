@@ -108,11 +108,67 @@
     document.body.appendChild(field);
   }
 
+  function toast(msg, kind) {
+    var el = document.createElement('div');
+    el.className = 'bb-toast ' + (kind || 'ok');
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(function () { el.remove(); }, 2600);
+  }
+
+  function burst(label) {
+    if (reduce) return;
+    var wrap = document.createElement('div');
+    wrap.className = 'bb-burst';
+    wrap.innerHTML = '<span class="ring"></span><span class="stamp">' + (label || 'LOCKED IN') + '</span>';
+    document.body.appendChild(wrap);
+    setTimeout(function () { wrap.remove(); }, 900);
+  }
+
+  function spark(x, y) {
+    if (reduce) return;
+    for (var i = 0; i < 10; i++) {
+      var d = document.createElement('i');
+      var ang = (Math.PI * 2 * i) / 10;
+      d.style.cssText = 'position:fixed;left:' + x + 'px;top:' + y + 'px;width:6px;height:6px;background:#00ffd0;box-shadow:0 0 10px #00ffd0;z-index:140;pointer-events:none;border-radius:50%';
+      document.body.appendChild(d);
+      d.animate([
+        { transform: 'translate(0,0)', opacity: 1 },
+        { transform: 'translate(' + (Math.cos(ang) * 70) + 'px,' + (Math.sin(ang) * 70) + 'px)', opacity: 0 }
+      ], { duration: 520, easing: 'ease-out' }).onfinish = function () { d.remove(); };
+    }
+  }
+
+  function hudActions() {
+    document.querySelectorAll('form').forEach(function (form) {
+      form.addEventListener('submit', function () {
+        var btn = form.querySelector('button[type="submit"], .submit');
+        if (btn) btn.classList.add('is-firing');
+      });
+    });
+    document.querySelectorAll('button[type="submit"], .submit').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        spark(e.clientX || (window.innerWidth / 2), e.clientY || (window.innerHeight / 2));
+      });
+    });
+    if (document.querySelector('.key-drop, [data-bb-success], .msgSuccess-flag')) {
+      burst('KEY DROP');
+    }
+    var ok = document.querySelector('.hud-alert.ok, .bb-ok');
+    var bad = document.querySelector('.hud-alert.bad');
+    if (ok) { burst(ok.getAttribute('data-stamp') || 'LOCKED IN'); toast(ok.textContent.trim().slice(0, 48) || 'SUCCESS', 'ok'); }
+    if (bad) toast(bad.textContent.trim().slice(0, 48) || 'FAILED', 'bad');
+  }
+
+  window.bbToast = toast;
+  window.bbBurst = burst;
+
   function boot() {
     document.body.classList.add('bb-ready');
     tiltCards();
     observeLayers();
     particles();
+    hudActions();
     onScroll();
     window.addEventListener('scroll', loop, { passive: true });
     window.addEventListener('pointermove', onPointer, { passive: true });

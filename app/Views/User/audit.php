@@ -2,7 +2,7 @@
 <?= $this->section('content') ?>
 <div class="container-fluid px-4 py-6">
     <div class="mb-6"><?= $this->include('Layout/msgStatus') ?></div>
-    <section class="hero-cinematic">
+    <section class="page-hero">
         <div class="hero-kicker">TRACE</div>
         <h1>AUDIT LOG</h1>
         <p>Portal logins, key generation, HWID resets, store uploads, recoveries.</p>

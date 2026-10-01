@@ -1,4 +1,5 @@
-.shop-body { margin: 0; background: #02040a; color: #e8f6ff; }
+.shop-body { margin: 0; background: #02040a; color: #e8f6ff; font-family: Rajdhani, sans-serif; }
+.shop-hero h1, .shop-section h2, .plan-card h3 { font-family: 'Russo One', Orbitron, sans-serif !important; }
 .shop-nav {
   position: relative; z-index: 8;
   display: flex; align-items: center; justify-content: space-between;
@@ -28,6 +29,22 @@
   letter-spacing: .08em;
 }
 .shop-hero p { color: #8aa3c2; max-width: 520px; }
+.shop-steps {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px;
+}
+.shop-steps span {
+  font-family: Orbitron, sans-serif;
+  font-size: 10px;
+  letter-spacing: .16em;
+  color: #00ffd0;
+  border: 1px solid rgba(0,255,208,.28);
+  padding: 6px 10px;
+}
+.buy-wrap { position: relative; z-index: 3; padding: 24px 6vw 64px; max-width: 720px; margin: 0 auto; }
+@media (max-width: 720px) {
+  .shop-nav nav { display: none; }
+  .shop-hero { grid-template-columns: 1fr; min-height: auto; }
+}
 .shop-cta { display: flex; gap: 12px; margin-top: 22px; flex-wrap: wrap; }
 .shop-btn { display: inline-grid; place-items: center; width: auto; padding: 0 28px; text-decoration: none; }
 .ghost-btn {

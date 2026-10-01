@@ -3,21 +3,22 @@
 
 <div class="container-fluid px-4 py-6">
     <div class="max-w-4xl mx-auto">
-        <!-- Message Status -->
+        <section class="page-hero">
+            <div class="hero-kicker">ARMORY</div>
+            <h1>GENERATE LICENSE</h1>
+            <p>Forge a loader key. Duration starts on first login.</p>
+        </section>
         <div class="mb-6">
             <?= $this->include('Layout/msgStatus') ?>
         </div>
         
-        <!-- Success Key Display -->
         <?php if (session()->getFlashdata('user_key')) : ?>
-            <div class="glass-card rounded-2xl p-8 mb-6 animate-fade-in-up">
+            <div class="glass-card key-drop rounded-2xl p-8 mb-6" data-bb-success="1">
                 <div class="flex items-center mb-6">
                     <div class="gradient-bg w-16 h-16 rounded-xl flex items-center justify-center mr-4">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
+                        <span class="orb-core" style="width:40px;height:40px;font-size:12px">OK</span>
                     </div>
-                    <h2 class="text-3xl font-bold text-gray-800">Key Generated Successfully!</h2>
+                    <h2 class="text-3xl font-bold">KEY DROP COMPLETE</h2>
                 </div>
                 
                 <div class="space-y-4 bg-gradient-to-r from-green-50 to-teal-50 rounded-xl p-6">
@@ -131,8 +132,8 @@
                 </div>
                 
                 <!-- Submit Button -->
-                <button type="submit" class="w-full py-4 px-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300 shadow-lg">
-                    Generate License Key
+                <button type="submit" class="w-full py-4 px-6 submit">
+                    FIRE GENERATE
                 </button>
             <?= form_close() ?>
         </div>
@@ -198,7 +199,8 @@
         copyText.select();
         document.execCommand("copy");
         if (navigator.clipboard) navigator.clipboard.writeText(copyText.value);
-        alert("Key copied to clipboard!");
+        if (window.bbToast) window.bbToast('KEY COPIED', 'ok');
+        if (window.bbBurst) window.bbBurst('COPIED');
     }
     function shareText() {
         var text = document.getElementById("mytext").value;

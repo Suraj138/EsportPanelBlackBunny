@@ -11,7 +11,11 @@
             <?= $this->include('Layout/msgStatus') ?>
         </div>
         
-        <!-- User Edit Card -->
+        <section class="page-hero">
+            <div class="hero-kicker">OPERATOR PATCH</div>
+            <h1>EDIT ACCOUNT</h1>
+            <p>Role, saldo and expiration for <?= esc(getName($target)) ?>.</p>
+        </section>
         <div class="glass-card rounded-2xl p-6 sm:p-8 animate-fade-in-up">
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center">
@@ -106,8 +110,8 @@
                 </div>
                 
                 <!-- Submit Button -->
-                <button type="submit" class="w-full py-4 px-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300 shadow-lg">
-                    Update Account Information
+                <button type="submit" class="w-full py-4 px-6 submit">
+                    LOCK ACCOUNT PATCH
                 </button>
             <?= form_close() ?>
         </div>

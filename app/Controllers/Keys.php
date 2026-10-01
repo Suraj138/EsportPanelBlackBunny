@@ -155,6 +155,15 @@ class Keys extends BaseController
 
     public function api_get_keys()
     {
+        if (!$this->request->isAJAX() && $this->request->getHeaderLine('X-Requested-With') !== 'XMLHttpRequest') {
+            $accept = (string) $this->request->getHeaderLine('Accept');
+            if (stripos($accept, 'json') === false && !$this->request->getGet('draw')) {
+                return $this->response->setStatusCode(403)->setJSON(['status' => false, 'reason' => 'Forbidden']);
+            }
+        }
+        if (!session()->has('userid')) {
+            return $this->response->setStatusCode(401)->setJSON(['status' => false]);
+        }
         $model = $this->model;
         return $model->API_getKeys();
     }
@@ -193,6 +202,12 @@ class Keys extends BaseController
 
     public function api_key_reset()
     {
+        if (!session()->has('userid')) {
+            return $this->response->setStatusCode(401)->setJSON(['registered' => false]);
+        }
+        if (!hudRateLimit('key_reset', 20, 60)) {
+            return $this->response->setStatusCode(429)->setJSON(['registered' => false, 'reason' => 'rate']);
+        }
         sleep(1);
         $model = $this->model;
         $keys = $this->request->getGet('userkey');

@@ -1,15 +1,15 @@
 <?= $this->extend('Layout/Starter') ?>
 <?= $this->section('content') ?>
 <div class="container-fluid px-4 py-6">
-    <section class="hero-cinematic">
+    <section class="page-hero">
         <div class="hero-kicker">LOCATOR</div>
-        <h1>SEARCH</h1>
+        <h1>SEARCH GRID</h1>
         <p>Find keys, licenses, and operators across the HUD.</p>
     </section>
     <div class="glass-card rounded-2xl p-6 mb-6">
         <form method="get" action="<?= site_url('search') ?>" class="flex gap-3">
             <input type="text" name="q" value="<?= esc($q) ?>" placeholder="Search keys, users, licenses..." class="flex-1 px-4 py-3">
-            <button type="submit" class="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold">SCAN</button>
+            <button type="submit" class="px-6 py-3 submit">SCAN</button>
         </form>
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">

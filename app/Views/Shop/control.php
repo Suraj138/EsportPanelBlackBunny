@@ -1,11 +1,11 @@
 <?= $this->extend('Layout/Starter') ?>
 <?= $this->section('css') ?>
-<?= link_tag('assets/css/shop.css') ?>
+<link rel="stylesheet" href="<?= base_url('assets/css/shop.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/shop.css') ?: time() ?>">
 <?= $this->endSection() ?>
 <?= $this->section('content') ?>
 <div class="container-fluid px-4 py-6">
     <div class="mb-4"><?= $this->include('Layout/msgStatus') ?></div>
-    <section class="hero-cinematic">
+    <section class="page-hero">
         <div class="hero-kicker">OWNER CONTROL</div>
         <h1>PUBLIC WEBSITE DECK</h1>
         <p>Toggle the store, price plans, drop media, and verify UPI orders from one lane.</p>
@@ -108,6 +108,10 @@
                         <strong>#<?= (int) $o['id'] ?> · <?= esc($o['customer_name']) ?></strong>
                         <small><?= esc($o['customer_phone']) ?> · txn <?= esc($o['txn_id']) ?> · Rs <?= (int) $o['amount'] ?> · <?= esc($o['status']) ?></small>
                         <?php if ($o['issued_key']) : ?><small>KEY <?= esc($o['issued_key']) ?></small><?php endif; ?>
+                        <?php $wa = waDigits($o['customer_phone']); ?>
+                        <?php if ($wa) : ?>
+                            <a class="ghost-btn" href="https://wa.me/<?= $wa ?>?text=<?= rawurlencode('BLACK BUNNY order #'.$o['id'].' status '.$o['status'].($o['issued_key'] ? ' key '.$o['issued_key'] : '')) ?>" target="_blank" rel="noopener">PING BUYER</a>
+                        <?php endif; ?>
                     </div>
                     <?php if ($o['status'] === 'pending') : ?>
                     <form method="post" action="<?= site_url('public-control') ?>">

@@ -23,8 +23,7 @@ class Auth extends BaseController
 
     public function index()
     {
-        $a = $this->userModel->getUser(session('userid'));
-        dd($a, session());
+        return redirect()->to('dashboard');
     }
 
     public function login()
@@ -37,6 +36,7 @@ class Auth extends BaseController
         $data = [
             'title' => 'Login',
             'validation' => Services::validation(),
+            'need_otp' => session()->getFlashdata('need_otp') ? true : false,
         ];
         return view('Auth/login', $data);
     }
@@ -58,6 +58,9 @@ class Auth extends BaseController
 
     private function login_action()
     {
+        if (!hudRateLimit('login', 8, 300)) {
+            return redirect()->route('login')->withInput()->with('msgDanger', 'Too many attempts. Wait 5 minutes.');
+        }
         $usernam = $this->request->getPost('username');
         $password = $this->request->getPost('password');
         $stay_log = $this->request->getPost('stay_log');
@@ -108,6 +111,15 @@ class Auth extends BaseController
             return redirect()->route('login')->withInput()->with('msgDanger', '<strong>Expired</strong> Please Renew Your Account to Login.');
         }
 
+        $otpSecret = isset($cekUser->otp_secret) ? trim((string) $cekUser->otp_secret) : '';
+        if ($otpSecret !== '') {
+            $otp = preg_replace('/\D+/', '', (string) $this->request->getPost('otp_code'));
+            if (!totpVerify($otpSecret, $otp)) {
+                session()->setFlashdata('need_otp', 1);
+                return redirect()->route('login')->withInput()->with('msgDanger', 'Owner 2FA code required.');
+            }
+        }
+
         $data = [
             'userid' => $cekUser->id_users,
             'unames' => $cekUser->username,
@@ -124,6 +136,9 @@ class Auth extends BaseController
 
     public function register_action()
     {
+        if (!hudRateLimit('register', 6, 600)) {
+            return redirect()->route('register')->withInput()->with('msgDanger', 'Too many attempts. Wait and retry.');
+        }
         $email = $this->request->getPost('email');
         $userna = $this->request->getPost('username');
         $fullname = $this->request->getPost('fullname');
@@ -219,6 +234,9 @@ class Auth extends BaseController
     public function recover()
     {
         if ($this->request->getPost()) {
+            if (!hudRateLimit('recover', 5, 600)) {
+                return redirect()->to('recover')->with('msgDanger', 'Too many recovery attempts.');
+            }
             $username = $this->request->getPost('username');
             $email = $this->request->getPost('email');
             $cekUser = $this->userModel->getUser($username, 'username');
