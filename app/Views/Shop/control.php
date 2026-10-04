@@ -3,7 +3,7 @@
 <link rel="stylesheet" href="<?= base_url('assets/css/shop.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/shop.css') ?: time() ?>">
 <?= $this->endSection() ?>
 <?= $this->section('content') ?>
-<div class="container-fluid px-4 py-6">
+<div class="container-fluid px-4 py-6 control-deck">
     <div class="mb-4"><?= $this->include('Layout/msgStatus') ?></div>
     <section class="page-hero">
         <div class="hero-kicker">OWNER CONTROL</div>
@@ -30,8 +30,13 @@
                     </select>
                 </div>
                 <div class="field"><label>HERO MEDIA</label><input type="file" name="hero_media"></div>
+                <div class="field"><label>LOADER NAME</label><input name="loader_name" value="<?= esc($cfg['loader_name'] ?? 'BLACK BUNNY') ?>" placeholder="BLACK BUNNY"></div>
+                <div class="field"><label>LOADER SIZE</label><input name="loader_size" value="<?= esc($cfg['loader_size'] ?? '10 MB') ?>" placeholder="10 MB"></div>
+                <div class="field"><label>GAME</label><input name="loader_game" value="<?= esc($cfg['loader_game'] ?? 'BGMI / PUBG Mobile') ?>" placeholder="BGMI / PUBG Mobile"></div>
+                <div class="field"><label>APK DOWNLOAD URL</label><input name="apk_url" value="<?= esc($cfg['apk_url'] ?? '') ?>" placeholder="https://... or upload below"></div>
+                <div class="field"><label>APK FILE (UPLOAD)</label><input type="file" name="apk_file" accept=".apk"></div>
                 <div class="field"><label>ABOUT</label><textarea name="about_text" rows="3"><?= esc($cfg['about_text'] ?? '') ?></textarea></div>
-                <div class="field"><label>FEATURES</label><textarea name="features_text" rows="3"><?= esc($cfg['features_text'] ?? '') ?></textarea></div>
+                <div class="field"><label>FEATURES</label><textarea name="features_text" rows="4"><?= esc($cfg['features_text'] ?? '') ?></textarea></div>
                 <div class="field"><label>UPDATES</label><textarea name="updates_text" rows="3"><?= esc($cfg['updates_text'] ?? '') ?></textarea></div>
                 <div class="field"><label>PRIVACY</label><textarea name="privacy_text" rows="3"><?= esc($cfg['privacy_text'] ?? '') ?></textarea></div>
                 <div class="field"><label>TERMS</label><textarea name="terms_text" rows="3"><?= esc($cfg['terms_text'] ?? '') ?></textarea></div>
@@ -128,4 +133,10 @@
         </section>
     </div>
 </div>
+<?= $this->endSection() ?>
+<?= $this->section('js') ?>
+<?php $waPing = session()->getFlashdata('shop_wa_ping'); ?>
+<?php if ($waPing) : ?>
+<script>window.open(<?= json_encode($waPing) ?>, '_blank', 'noopener');</script>
+<?php endif; ?>
 <?= $this->endSection() ?>

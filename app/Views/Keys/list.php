@@ -84,6 +84,7 @@
                             <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">#</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Game</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">User Keys</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Operator</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Devices</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Duration</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Expired</th>
@@ -148,11 +149,22 @@
                         return `<span class="${is_valid} keyBlur key-sensi">${(row.user_key ? row.user_key : '&mdash;')}</span> `;
                     }
                 },
+                {
+                    data: 'registrator',
+                    render: function(data, type, row) {
+                        return row.registrator ? `<span class="hud-chip">${row.registrator}</span>` : '<span class="muted">—</span>';
+                    }
+                },
                 { 
                     data: 'devices',
                     render: function(data, type, row, meta) {
                         var totalDevice = (row.devices ? row.devices : 0);
-                        return `<span id="devMax-${row.user_key}">${totalDevice}/${row.max_devices}</span>`;
+                        var used = parseInt(totalDevice, 10) > 0;
+                        var raw = row.devices_raw ? String(row.devices_raw).replace(/,/g, ' · ') : '';
+                        var ids = (used && raw) ? `<small class="muted d-block">${raw}</small>` : '';
+                        var ping = row.last_ping ? `<small class="muted d-block">PING ${row.last_ping}</small>` : '';
+                        var state = used ? '<span class="hud-chip">USED</span>' : '<span class="muted">UNUSED</span>';
+                        return `<span id="devMax-${row.user_key}">${totalDevice}/${row.max_devices}</span> ${state}${ids}${ping}`;
                     }
                 },
                 { 
@@ -222,21 +234,22 @@
         }).then((result) => {
             if (result.isConfirmed) {
                 Toast.fire({ icon: 'info', title: 'Please wait...' });
-                var base_url = window.location.origin;
-                var api_url = `${base_url}/keys/resetAll`;
+                var api_url = "<?= site_url('keys/resetAll') ?>";
                 $.getJSON(api_url, { userkey: keys, reset: 1 }, function(data, textStatus, jqXHR) {
                     if (textStatus == 'success') {
                         if (data.registered) {
                             if (data.reset) {
-                                $(`#devMax-${keys}`).html(`0/${data.devices_max}`);
-                                Swal.fire('Reset!', 'Your device key has been reset.', 'success');
+                                $('#datatable').DataTable().ajax.reload(null, false);
+                                Swal.fire('Deleted!', 'User key has been deleted.', 'success');
                             } else {
-                                Swal.fire('Failed!', data.devices_total ? "You don't have any access to this user." : "User key devices already reset.", data.devices_total ? 'error' : 'warning');
+                                Swal.fire('Failed!', "You don't have any access to this user.", 'error');
                             }
                         } else {
                             Swal.fire('Failed!', "User key no longer exists.", 'error');
                         }
                     }
+                }).fail(function() {
+                    Swal.fire('Failed!', 'Delete request failed.', 'error');
                 });
             }
         });

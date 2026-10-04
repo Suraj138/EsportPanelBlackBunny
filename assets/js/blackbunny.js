@@ -76,7 +76,7 @@
         }
       });
     }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
-    document.querySelectorAll('.glass-card, .hero-cinematic, .login-card, .register-card').forEach(function (el) {
+    document.querySelectorAll('.glass-card, .hero-cinematic, .login-card, .register-card, .loader-card, .plan-card, .cmd-panel').forEach(function (el) {
       io.observe(el);
     });
   }

@@ -13,6 +13,7 @@
 </style>
 </head>
 <body>
+<?= view('Layout/WelcomeSplash') ?>
 <div class="bb-stage">
     <div class="bb-aurora"></div>
     <div class="bb-grid"></div>

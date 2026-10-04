@@ -35,7 +35,7 @@ $routes->get('dbg', 'Auth::index');
 $routes->get('logout', 'Auth::logout');
 $routes->get('dashboard', 'User::index');
 $routes->get('pulse', 'User::pulse');
-$routes->match(['get', 'post'], '/', 'Auth::login');
+$routes->get('/', 'Shop::index');
 $routes->match(['get', 'post'], 'login', 'Auth::login');
 $routes->match(['get', 'post'], 'register', 'Auth::register'); // Server
 
@@ -44,7 +44,8 @@ $routes->match(['get', 'post'], 'Server', 'User::Server');
 $routes->match(['get', 'post'], 'store', 'User::lib');
 $routes->match(['get', 'post'], 'lib', 'User::lib');
 $routes->match(['get', 'post'], 'recover', 'Auth::recover');
-$routes->match(['get', 'post'], 'recover/reset/(:segment)', 'Auth::recoverReset/$1');
+$routes->match(['get', 'post'], 'recover/reset', 'Auth::recoverReset');
+$routes->match(['get', 'post'], 'recover/reset/(:segment)', 'Auth::recoverReset');
 $routes->match(['get', 'post'], 'search', 'User::search');
 $routes->get('audit', 'User::audit');
 $routes->get('shop', 'Shop::index');

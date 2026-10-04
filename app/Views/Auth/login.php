@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="<?= base_url('assets/css/blackbunny.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/blackbunny.css') ?: time() ?>">
 </head>
 <body>
+<?= view('Layout/WelcomeSplash') ?>
 <div class="bb-stage">
     <div class="bb-aurora"></div>
     <div class="bb-grid"></div>

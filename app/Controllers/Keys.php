@@ -16,6 +16,9 @@ class Keys extends BaseController
         $this->userModel = new UserModel();
         $this->user = $this->userModel->getUser();
         $this->model = new KeysModel();
+        if (!$this->user && session()->has('userid')) {
+            session()->remove(['userid', 'unames', 'time_login', 'time_since']);
+        }
         $this->time = new \CodeIgniter\I18n\Time;
 
         $this->userId = session()->get('userid');
@@ -57,10 +60,13 @@ class Keys extends BaseController
         $model = $this->model;
         $user = $this->user;
 
+        if (!$user) {
+            return redirect()->to('login')->with('msgWarning', 'Please login first');
+        }
         if ($user->level != 1) {
             $keys = $model->where('registrator', $user->username)->findAll();
         } else {
-            $keys = $model->select('user_key')->findAll();
+            $keys = $model->findAll();
         }
         $data = [
             'title' => 'Keys',
@@ -108,8 +114,15 @@ class Keys extends BaseController
 
     public function alterKeys()
     {
+        $user = $this->user;
+        if (!$user) {
+            return redirect()->to('login')->with('msgWarning', 'Please login first');
+        }
         $model = $this->model;
-        $data = $model->where('expired_date <', date('Y-m-d H:i:s'))->delete();
+        if ($user->level != 1) {
+            $model->where('registrator', $user->username);
+        }
+        $model->where('expired_date <', date('Y-m-d H:i:s'))->delete();
 
         return redirect()->back()->with('msgSuccess', 'Expired keys successfully removed.');
     }
@@ -119,9 +132,11 @@ class Keys extends BaseController
     {
         $model = $this->model;
         $user = $this->user;
+        if (!$user) {
+            return redirect()->to('login')->with('msgWarning', 'Please login first');
+        }
 
         if ($user->level == 1) {
-            // Admin: पूरी टेबल साफ़ करेगा
             $model->emptyTable('keys_code');
         } else {
             // Reseller: केवल अपनी बनाई हुई keys डिलीट करेगा
@@ -138,11 +153,34 @@ class Keys extends BaseController
 
     public function resetAllKeys()
     {
-        $model = $this->model;
+        if (!session()->has('userid') || !$this->user) {
+            return $this->response->setStatusCode(401)->setJSON(['registered' => false]);
+        }
+        if (!hudRateLimit('key_delete', 20, 60)) {
+            return $this->response->setStatusCode(429)->setJSON(['registered' => false, 'reason' => 'rate']);
+        }
         $keys = $this->request->getGet('userkey');
-        $data = $model->where('user_key', $keys)->delete();
-
-        return redirect()->back()->with('msgSuccess', 'Key deleted successfully.');
+        $db_key = $this->model->getKeys($keys);
+        if (!$db_key) {
+            return $this->response->setJSON(['registered' => false, 'keys' => $keys]);
+        }
+        $user = $this->user;
+        if ($user->level != 1 && $db_key->registrator != $user->username) {
+            return $this->response->setJSON([
+                'registered' => true,
+                'reset' => false,
+                'devices_total' => 1,
+                'keys' => $keys,
+            ]);
+        }
+        $this->model->where('user_key', $keys)->delete();
+        writeAudit('key_delete', $keys, $user->username);
+        return $this->response->setJSON([
+            'registered' => true,
+            'reset' => true,
+            'devices_max' => (int) $db_key->max_devices,
+            'keys' => $keys,
+        ]);
     }
 
     public function startDate()
@@ -172,6 +210,9 @@ class Keys extends BaseController
     {
         $model = $this->model;
         $user = $this->user;
+        if (!$user) {
+            return redirect()->to('login')->with('msgWarning', 'Please login first');
+        }
 
         if ($user->level != 1) {
             $model->where('registrator', $user->username);
@@ -191,6 +232,9 @@ class Keys extends BaseController
     {
         $model = $this->model;
         $user = $this->user;
+        if (!$user) {
+            return redirect()->to('login')->with('msgWarning', 'Please login first');
+        }
 
         if ($user->level != 1) {
             $model->where('registrator', $user->username);
@@ -202,7 +246,7 @@ class Keys extends BaseController
 
     public function api_key_reset()
     {
-        if (!session()->has('userid')) {
+        if (!session()->has('userid') || !$this->user) {
             return $this->response->setStatusCode(401)->setJSON(['registered' => false]);
         }
         if (!hudRateLimit('key_reset', 20, 60)) {
@@ -219,7 +263,7 @@ class Keys extends BaseController
             $total = $db_key->devices ? explode(',', $db_key->devices) : [];
             $rules = ['devices_total' => count($total), 'devices_max' => (int) $db_key->max_devices];
             $user = $this->user;
-            if ($db_key->devices and $reset) {
+            if ($user && $db_key->devices and $reset) {
                 if ($user->level == 1 or $db_key->registrator == $user->username) {
                     $model->set('devices', NULL)
                         ->where('user_key', $keys)

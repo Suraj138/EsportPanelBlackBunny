@@ -68,10 +68,7 @@ class Auth extends BaseController
         $form_rules = [
             'username' => [
                 'label' => 'username',
-                'rules' => 'required|alpha_numeric|min_length[4]|max_length[25]|is_not_unique[users.username]',
-                'errors' => [
-                    'is_not_unique' => 'The {field} is not registered.'
-                ]
+                'rules' => 'required|alpha_numeric|min_length[4]|max_length[25]',
             ],
             'password' => [
                 'label' => 'password',
@@ -88,13 +85,9 @@ class Auth extends BaseController
 
         $validation = Services::validation();
         $cekUser = $this->userModel->getUser($usernam, 'username');
-        if (!$cekUser) {
-            return redirect()->route('login')->withInput()->with('msgDanger', '<strong>Failed</strong> Please check the form.');
-        }
-
         $hashPassword = create_password($password, false);
-        if (!password_verify($hashPassword, $cekUser->password)) {
-            $validation->setError('password', 'Wrong password, please try again.');
+        if (!$cekUser || !password_verify($hashPassword, $cekUser->password)) {
+            $validation->setError('password', 'Wrong username or password.');
             return redirect()->route('login')->withInput()->with('msgDanger', '<strong>Failed</strong> Please check the form.');
         }
 
@@ -246,8 +239,12 @@ class Auth extends BaseController
                     'reset_link_token' => $token,
                     'exp_date' => date('Y-m-d H:i:s', strtotime('+1 hour')),
                 ]);
+                session()->set([
+                    'recover_uid' => (int) $cekUser->id_users,
+                    'recover_until' => date('Y-m-d H:i:s', strtotime('+15 minutes')),
+                ]);
                 writeAudit('recover_request', 'identity verified', $cekUser->username);
-                return redirect()->to('recover/reset/' . $token)->with('msgSuccess', 'Identity verified. Set a new cryptographic key.');
+                return redirect()->to('recover/reset')->with('msgSuccess', 'Identity verified. Set a new cryptographic key.');
             }
             return redirect()->to('recover')->withInput()->with('msgDanger', 'Identity not found. Check operator alias and email.');
         }
@@ -260,13 +257,21 @@ class Auth extends BaseController
 
     public function recoverReset($token = '')
     {
-        $token = preg_replace('/[^a-f0-9]/', '', (string) $token);
-        $cekUser = $token ? $this->userModel->where('reset_link_token', $token)->first() : null;
-        if (!$cekUser) {
-            return redirect()->to('recover')->with('msgDanger', 'Recovery link is invalid or expired.');
+        $uid = (int) session()->get('recover_uid');
+        $until = (string) session()->get('recover_until');
+        $cekUser = null;
+        if ($uid && $until && strtotime($until) > time()) {
+            $cekUser = $this->userModel->getUser($uid);
+            if ($cekUser) {
+                $cekUser = [
+                    'id_users' => $cekUser->id_users,
+                    'username' => $cekUser->username,
+                ];
+            }
         }
-        if (!empty($cekUser['exp_date']) && strtotime($cekUser['exp_date']) < time()) {
-            return redirect()->to('recover')->with('msgDanger', 'Recovery link expired. Request a new one.');
+        if (!$cekUser) {
+            session()->remove(['recover_uid', 'recover_until']);
+            return redirect()->to('recover')->with('msgDanger', 'Recovery session is invalid or expired.');
         }
 
         if ($this->request->getPost()) {
@@ -292,6 +297,7 @@ class Auth extends BaseController
                 'reset_link_token' => '',
                 'exp_date' => '',
             ]);
+            session()->remove(['recover_uid', 'recover_until']);
             writeAudit('recover_reset', 'password changed', $cekUser['username']);
             return redirect()->to('login')->with('msgSuccess', 'Cryptographic key updated. Authenticate with the new key.');
         }
@@ -299,7 +305,6 @@ class Auth extends BaseController
         $data = [
             'title' => 'Reset Key',
             'validation' => Services::validation(),
-            'token' => $token,
         ];
         return view('Auth/recover_reset', $data);
     }

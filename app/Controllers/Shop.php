@@ -29,10 +29,17 @@ class Shop extends BaseController
         if (!$this->pageOn()) {
             return view('Shop/offline', ['cfg' => $cfg]);
         }
+        $feat = [];
+        try {
+            $feat = (new \App\Models\Feature())->find(1) ?: [];
+        } catch (\Throwable $e) {
+            $feat = [];
+        }
         return view('Shop/index', [
             'cfg' => $cfg,
             'plans' => (new ShopPlan())->publicList(),
             'media' => (new ShopMedia())->gallery(),
+            'feat' => $feat,
         ]);
     }
 
@@ -130,6 +137,9 @@ class Shop extends BaseController
     public function control()
     {
         $user = (new UserModel())->getUser();
+        if (!$user) {
+            return redirect()->to('login')->with('msgWarning', 'Please login first');
+        }
         if ((int) $user->level > 2) {
             return redirect()->to('dashboard')->with('msgWarning', 'Access Denied!');
         }
@@ -145,12 +155,26 @@ class Shop extends BaseController
                 'privacy_text', 'terms_text', 'refund_text', 'contact_text',
                 'upi_id', 'upi_name', 'youtube_url', 'instagram_url',
                 'telegram_url', 'telegram_support', 'owner_whatsapp', 'admin_whatsapp',
+                'loader_name', 'loader_size', 'loader_game', 'apk_url',
             ];
             $pairs = [];
             foreach ($fields as $f) {
                 $pairs[$f] = (string) $this->request->getPost($f);
             }
             $pairs['page_on'] = $this->request->getPost('page_on') ? '1' : '0';
+            $apk = $this->request->getFile('apk_file');
+            if ($apk && $apk->isValid() && !$apk->hasMoved()) {
+                $ext = strtolower($apk->getExtension());
+                if ($ext === 'apk') {
+                    $dest = FCPATH . 'uploads/shop/';
+                    if (!is_dir($dest)) {
+                        mkdir($dest, 0755, true);
+                    }
+                    $name = 'blackbunny-loader.' . $ext;
+                    $apk->move($dest, $name, true);
+                    $pairs['apk_url'] = 'uploads/shop/' . $name;
+                }
+            }
             $hero = $this->request->getFile('hero_media');
             if ($hero && $hero->isValid() && !$hero->hasMoved()) {
                 $ext = strtolower($hero->getExtension());
@@ -240,15 +264,13 @@ class Shop extends BaseController
                 ]);
                 writeAudit('shop_verify', 'order#' . $oid . ' key=' . $license, $user->username);
                 $cfgNow = $cfgModel->bag();
-                $msg = 'BLACK BUNNY KEY READY%0AOrder #' . $oid . '%0AKey: ' . $license . '%0ATxn: ' . rawurlencode((string) $order['txn_id']);
+                $msg = 'BLACK BUNNY KEY READY' . "\n" . 'Order #' . $oid . "\n" . 'Key: ' . $license . "\n" . 'Txn: ' . (string) $order['txn_id'];
                 $phone = waDigits($order['customer_phone'] ?: ($cfgNow['owner_whatsapp'] ?? ''));
-                if ($phone) {
-                    hudNotify('https://wa.me/' . $phone . '?text=' . $msg);
+                $waLink = $phone ? ('https://wa.me/' . $phone . '?text=' . rawurlencode($msg)) : '';
+                if ($waLink) {
+                    session()->setFlashdata('shop_wa_ping', $waLink);
                 }
-                if (!empty($cfgNow['telegram_support'])) {
-                    hudNotify($cfgNow['telegram_support']);
-                }
-                return redirect()->to('public-control')->with('msgSuccess', 'Order verified. Key: ' . $license . ' · ping sent');
+                return redirect()->to('public-control')->with('msgSuccess', 'Order verified. Key: ' . $license . ($waLink ? ' · open WhatsApp ping' : ''));
             }
         }
 

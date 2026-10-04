@@ -44,7 +44,9 @@ class UserModel extends Model
         $builder = $connect->table('users');
 
         $user = $this->getUser();
-        if ($user->level != 1) {
+        if (!$user) {
+            $builder->where('id_users', 0);
+        } elseif ($user->level != 1) {
             $builder->where('uplink', $user->username);
         }
 
@@ -68,7 +70,9 @@ class UserModel extends Model
         $time_ex = $session->time_login;
         if ($time::now()->isBefore($time_ex)) {
             $userCek = $this->getUser($session->userid);
-            if ($userCek->level > 3) {
+            if (!$userCek) {
+                $msg = 'Account no longer exists!';
+            } elseif ($userCek->level > 3) {
                 $msg = 'Level account invalid!';
             } elseif ($userCek->status != 1) {
                 $msg = 'Status account changed!';

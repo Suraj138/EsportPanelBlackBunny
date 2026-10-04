@@ -170,7 +170,7 @@
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Current Mod Name: <span class="text-pink-600 font-semibold"><?php echo $row['modname']; ?></span>
+                         Current Mod Name: <span class="text-pink-600 font-semibold"><?php echo esc($row['modname'] ?? ''); ?></span>
                     </label>
                     <input 
                         type="text" 
@@ -199,7 +199,7 @@
             </div>
             
             <?= form_open('', ['class' => 'space-y-6']) ?>
-                <input type="hidden" name="_ftext" value="1">
+                <input type="hidden" name="_ftext_form" value="1">
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">

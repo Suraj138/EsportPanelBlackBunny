@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="<?= base_url('assets/css/shop.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/shop.css') ?: time() ?>">
 </head>
 <body class="shop-body">
+<?= view('Layout/WelcomeSplash') ?>
 <div class="bb-stage">
     <div class="bb-aurora"></div>
     <div class="bb-grid"></div>
@@ -22,6 +23,7 @@
         <span class="brand-copy"><strong>BLACK BUNNY</strong><small>PUBLIC STORE</small></span>
     </a>
     <nav>
+        <a href="#loader">Loader</a>
         <a href="#plans">Plans</a>
         <a href="#gallery">Gallery</a>
         <a href="#about">About</a>
@@ -36,10 +38,19 @@
         <h1><?= esc($cfg['hero_title'] ?? 'BLACK BUNNY ARENA') ?></h1>
         <p><?= esc($cfg['hero_sub'] ?? '') ?></p>
         <div class="shop-cta">
-            <a href="#plans" class="submit shop-btn">SELECT PLAN</a>
-            <?php if (!empty($cfg['telegram_url'])) : ?>
-                <a class="ghost-btn" href="<?= esc($cfg['telegram_url']) ?>" target="_blank" rel="noopener">TELEGRAM</a>
+            <a href="<?= site_url('login') ?>" class="submit shop-btn">LOGIN</a>
+            <?php
+                $apkHref = trim((string) ($cfg['apk_url'] ?? ''));
+                if ($apkHref !== '' && strpos($apkHref, 'http') !== 0) {
+                    $apkHref = base_url($apkHref);
+                }
+            ?>
+            <?php if ($apkHref) : ?>
+                <a class="ghost-btn" href="<?= esc($apkHref) ?>" download>DOWNLOAD APK</a>
+            <?php else : ?>
+                <a class="ghost-btn" href="#loader">DOWNLOAD APK · 10 MB</a>
             <?php endif; ?>
+            <a href="#plans" class="ghost-btn">BUY KEY</a>
         </div>
     </div>
     <div class="shop-hero-media">
@@ -57,6 +68,70 @@
                 <span class="radar-mark">BB</span>
             </div>
         <?php endif; ?>
+    </div>
+</section>
+
+<?php
+    $loaderName = $cfg['loader_name'] ?? 'BLACK BUNNY';
+    $loaderSize = $cfg['loader_size'] ?? '10 MB';
+    $loaderGame = $cfg['loader_game'] ?? 'BGMI / PUBG Mobile';
+    $featList = [];
+    $rawFeat = trim((string) ($cfg['features_text'] ?? ''));
+    if ($rawFeat !== '') {
+        $featList = preg_split('/\r\n|\r|\n|,/', $rawFeat);
+        $featList = array_values(array_filter(array_map('trim', $featList)));
+    }
+    if (!$featList) {
+        $featList = ['ESP Wallhack', 'Item ESP', 'AIM Bot', 'Silent Aim', 'Bullet Track', 'Memory Bypass', 'Floating Menu', 'In-Game Settings', '1 Device Bind', 'Key Based Access'];
+    }
+    $liveMap = [
+        'ESP' => 'ESP',
+        'Item' => 'Items',
+        'AIM' => 'Aim-Bot',
+        'SilentAim' => 'Silent Aim',
+        'BulletTrack' => 'Bullet Track',
+        'Memory' => 'Memory',
+        'Floating' => 'Floating',
+        'Setting' => 'Settings',
+    ];
+?>
+<section id="loader" class="shop-section loader-deck">
+    <div class="shop-kicker">LOADER PACKAGE</div>
+    <h2><?= esc($loaderName) ?> · <?= esc($loaderGame) ?></h2>
+    <div class="loader-grid">
+        <article class="loader-card">
+            <small>PACKAGE</small>
+            <b><?= esc($loaderName) ?></b>
+            <p><?= esc($loaderGame) ?> tactical overlay. Drop in, own the lobby.</p>
+            <div class="loader-stats">
+                <span>SIZE <em><?= esc($loaderSize) ?></em></span>
+                <span>TYPE <em>APK LOADER</em></span>
+                <span>ACCESS <em>KEY + LOGIN</em></span>
+            </div>
+            <div class="shop-cta">
+                <a href="<?= site_url('login') ?>" class="submit shop-btn">LOGIN PORTAL</a>
+                <?php if ($apkHref) : ?>
+                    <a class="ghost-btn" href="<?= esc($apkHref) ?>" download>DOWNLOAD <?= esc($loaderSize) ?> APK</a>
+                <?php else : ?>
+                    <a class="ghost-btn" href="#plans">GET KEY FIRST</a>
+                <?php endif; ?>
+            </div>
+        </article>
+        <article class="loader-card">
+            <small>BGMI FEATURES</small>
+            <ul class="feat-list">
+                <?php foreach ($featList as $f) : ?>
+                    <li><?= esc($f) ?></li>
+                <?php endforeach; ?>
+            </ul>
+            <?php if (!empty($feat)) : ?>
+            <div class="live-feats">
+                <?php foreach ($liveMap as $k => $label) : ?>
+                    <span class="<?= (!empty($feat[$k]) && $feat[$k] === 'on') ? 'on' : 'off' ?>"><?= esc($label) ?></span>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+        </article>
     </div>
 </section>
 

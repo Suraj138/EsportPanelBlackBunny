@@ -26,6 +26,9 @@ class User extends BaseController
         $this->model = new UserModel();
         $this->user = $this->model->getUser($this->userid);
         $this->time = new \CodeIgniter\I18n\Time;
+        if (!$this->user && session()->has('userid')) {
+            session()->remove(['userid', 'unames', 'time_login', 'time_since']);
+        }
         
         $this->accExpire = [
            1 => '1 Day',
@@ -48,6 +51,9 @@ class User extends BaseController
         $db = \Config\Database::connect();
         $keysTable = $db->table('keys_code');
         $user = $this->user;
+        if (!$user) {
+            return redirect()->to('login')->with('msgWarning', 'Please login first');
+        }
         if ((int) $user->level != 1) {
             $keysTable->where('registrator', $user->username);
         }
@@ -519,10 +525,45 @@ class User extends BaseController
             if ((int) $user->level != 1) {
                 $km->where('registrator', $user->username);
             }
-            $km->groupStart()->like('user_key', $q)->orLike('game', $q)->groupEnd();
-            $keys = $km->findAll(20);
+            $km->groupStart()
+                ->like('user_key', $q)
+                ->orLike('game', $q)
+                ->orLike('registrator', $q)
+                ->orLike('devices', $q)
+                ->groupEnd();
+            $keys = $km->findAll(40);
+            $opNames = [];
+            foreach ($keys as $row) {
+                $name = trim((string) ($row['registrator'] ?? ''));
+                if ($name !== '') {
+                    $opNames[$name] = $name;
+                }
+            }
             if ((int) $user->level == 1) {
                 $users = $this->model->groupStart()->like('username', $q)->orLike('fullname', $q)->groupEnd()->findAll(20);
+            }
+            if ($opNames) {
+                $fromKeys = $this->model->whereIn('username', array_values($opNames))->findAll(40);
+                $seen = [];
+                foreach ($users as $u) {
+                    $seen[$u['username']] = true;
+                }
+                foreach ($fromKeys as $u) {
+                    if (empty($seen[$u['username']])) {
+                        $users[] = $u;
+                        $seen[$u['username']] = true;
+                    }
+                }
+                foreach ($opNames as $name) {
+                    if (empty($seen[$name])) {
+                        $users[] = [
+                            'username' => $name,
+                            'fullname' => '',
+                            'level' => 0,
+                        ];
+                        $seen[$name] = true;
+                    }
+                }
             }
         }
         return view('User/search', [
@@ -552,6 +593,9 @@ class User extends BaseController
     public function Server()
     {
         $user = $this->user;
+        if (!$user) {
+            return redirect()->to('login')->with('msgWarning', 'Please login first');
+        }
         if (($user->level == 1) || ($user->level == 2)) 
         {
         
@@ -571,7 +615,7 @@ class User extends BaseController
         }
         if (($user->level == 1) || ($user->level == 2)) 
         {
-        if ($this->request->getPost('_ftext'))
+        if ($this->request->getPost('_ftext_form'))
             return $this->_ftext_act();
 
         if ($this->request->getPost('fullname_form'))
@@ -594,7 +638,7 @@ class User extends BaseController
 	    
 	    $model= new Server();
 	    
-	    $data['row'] = $model->where('id',$id)->first();
+	    $data['row'] = $model->where('id',$id)->first() ?: ['modname' => ''];
 	    $data['userDetails1'] = (new onoff())->find(1) ?: ['status' => 'off', 'myinput' => ''];
 	    $data['userDetails2'] = (new _ftext())->find(1) ?: ['_status' => '', '_ftext' => ''];
 	    $data['ModFeatureStatus'] = (new Feature())->find(1) ?: ['ESP'=>'off','Item'=>'off','AIM'=>'off','SilentAim'=>'off','BulletTrack'=>'off','Memory'=>'off','Floating'=>'off','Setting'=>'off'];

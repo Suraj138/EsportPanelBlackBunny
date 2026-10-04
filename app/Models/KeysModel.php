@@ -34,14 +34,16 @@ class KeysModel extends Model
 
         $userModel = new UserModel();
         $user = $userModel->getUser();
-        if ($user->level != 1) {
+        if (!$user) {
+            $builder->where('id_keys', 0);
+        } elseif ($user->level != 1) {
             $builder->where('registrator', $user->username);
         }
 
-        $builder->select('CONCAT(keys_code.id_keys) as id, game, user_key, duration, CONCAT(keys_code.expired_date) as expired, max_devices, devices, status, registrator');
+        $builder->select('CONCAT(keys_code.id_keys) as id, game, user_key, duration, CONCAT(keys_code.expired_date) as expired, max_devices, devices, devices as devices_raw, status, registrator, last_ping');
 
         return DataTable::of($builder)
-            ->setSearchableColumns(['id_keys', 'game', 'user_key', 'duration', 'expired_date', 'max_devices', 'devices', 'registrator'])
+            ->setSearchableColumns(['id_keys', 'game', 'user_key', 'duration', 'expired_date', 'max_devices', 'devices', 'registrator', 'last_ping'])
             ->format('status', function ($value) {
                 return ($value ? "Active" : "Inactive");
             })
