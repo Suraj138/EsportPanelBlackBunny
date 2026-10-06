@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="<?= base_url('assets/css/shop.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/shop.css') ?: time() ?>">
 </head>
 <body class="shop-body">
+<?= view('Layout/WelcomeSplash') ?>
 <div class="bb-stage"><div class="bb-aurora"></div><div class="bb-grid"></div><div class="bb-vignette"></div></div>
 <header class="shop-nav">
     <a class="brand-link" href="<?= site_url('shop') ?>">

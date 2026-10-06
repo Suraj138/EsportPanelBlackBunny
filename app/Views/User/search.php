@@ -7,7 +7,8 @@
         <p>Find keys, licenses, operators, and live device binds.</p>
     </section>
     <div class="glass-card rounded-2xl p-6 mb-6">
-        <form method="get" action="<?= site_url('search') ?>" class="hud-search">
+        <form method="get" action="<?= site_url('search') ?>" class="hud-search scan-form">
+            <span class="scan-line"></span>
             <input type="text" name="q" value="<?= esc($q) ?>" placeholder="SCAN KEY / OPERATOR / DEVICE">
             <button type="submit" class="submit">SCAN</button>
         </form>

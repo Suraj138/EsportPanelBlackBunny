@@ -50,7 +50,8 @@
     <div class="glass-card rounded-2xl p-6 mb-6">
         <h2>OWNER 2FA</h2>
         <?php if (!empty($otp_secret)) : ?>
-            <p class="muted">Armed. Scan this secret in Google Authenticator / Aegis.</p>
+            <p class="muted">Armed. Scan QR in Google Authenticator / Aegis.</p>
+            <img class="otp-qr" alt="2FA QR" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=<?= rawurlencode($otp_uri) ?>">
             <p class="hud-chip" style="margin:10px 0"><?= esc($otp_secret) ?></p>
             <p class="muted" style="word-break:break-all"><?= esc($otp_uri) ?></p>
             <?= form_open('settings') ?>

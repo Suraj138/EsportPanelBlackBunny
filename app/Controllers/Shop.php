@@ -134,6 +134,63 @@ class Shop extends BaseController
         ]);
     }
 
+    public function status($id = 0)
+    {
+        $order = (new ShopOrder())->find((int) $id);
+        if (!$order) {
+            return $this->response->setStatusCode(404)->setJSON(['ok' => false]);
+        }
+        return $this->response->setJSON([
+            'ok' => true,
+            'id' => (int) $order['id'],
+            'status' => $order['status'],
+            'issued_key' => $order['issued_key'] ?: '',
+        ]);
+    }
+
+    public function lookup()
+    {
+        $cfg = $this->cfg();
+        if (!$this->pageOn()) {
+            return redirect()->to('shop');
+        }
+        if ($this->request->getPost()) {
+            if (!hudRateLimit('shop_lookup', 8, 300)) {
+                return redirect()->to('shop/lookup')->with('msgDanger', 'Too many lookups. Wait and retry.');
+            }
+            $phone = waDigits($this->request->getPost('customer_phone'));
+            $txn = trim((string) $this->request->getPost('txn_id'));
+            if ($phone === '' || $txn === '') {
+                return redirect()->to('shop/lookup')->withInput()->with('msgDanger', 'Phone and txn id required.');
+            }
+            $order = (new ShopOrder())
+                ->like('customer_phone', $phone)
+                ->where('txn_id', $txn)
+                ->orderBy('id', 'DESC')
+                ->first();
+            if (!$order) {
+                return redirect()->to('shop/lookup')->withInput()->with('msgDanger', 'Order not found.');
+            }
+            return redirect()->to('shop/thanks/' . (int) $order['id']);
+        }
+        return view('Shop/lookup', ['cfg' => $cfg]);
+    }
+
+    public function lang($code = 'en')
+    {
+        $code = strtolower((string) $code) === 'hi' ? 'hi' : 'en';
+        setcookie('bb_lang', $code, [
+            'expires' => time() + 86400 * 400,
+            'path' => '/',
+            'samesite' => 'Lax',
+        ]);
+        $back = (string) $this->request->getServer('HTTP_REFERER');
+        if ($back === '') {
+            return redirect()->to('shop');
+        }
+        return redirect()->to($back);
+    }
+
     public function control()
     {
         $user = (new UserModel())->getUser();
@@ -248,7 +305,7 @@ class Shop extends BaseController
                 $plan = $planModel->find((int) $order['plan_id']);
                 $hours = $plan ? (int) $plan['hours'] : 24;
                 $devices = $plan ? (int) $plan['devices'] : 1;
-                $license = 'SHOP-' . $hours . '-' . random_string('alnum', 6);
+                $license = uniqueLicenseKey(new KeysModel(), $hours, 'SHOP');
                 (new KeysModel())->insert([
                     'game' => 'PUBG',
                     'user_key' => $license,
@@ -272,6 +329,25 @@ class Shop extends BaseController
                 }
                 return redirect()->to('public-control')->with('msgSuccess', 'Order verified. Key: ' . $license . ($waLink ? ' · open WhatsApp ping' : ''));
             }
+        }
+
+        if ($this->request->getPost('delete_plan')) {
+            $id = (int) $this->request->getPost('plan_id');
+            if ($id) {
+                $planModel->delete($id);
+                writeAudit('shop_plan_del', 'plan#' . $id, $user->username);
+            }
+            return redirect()->to('public-control')->with('msgSuccess', 'Plan removed.');
+        }
+
+        if ($this->request->getPost('delete_media')) {
+            $id = (int) $this->request->getPost('media_id');
+            $row = $id ? $mediaModel->find($id) : null;
+            if ($row) {
+                $mediaModel->delete($id);
+                writeAudit('shop_media_del', (string) ($row['file'] ?? $id), $user->username);
+            }
+            return redirect()->to('public-control')->with('msgSuccess', 'Media removed.');
         }
 
         if ($this->request->getPost('reject_order')) {

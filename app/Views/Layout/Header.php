@@ -11,16 +11,17 @@ $initial = strtoupper(substr(session()->has('userid') && isset($user) ? getName(
 <header class="app-shell-header">
     <aside class="app-sidebar" id="appSidebar">
         <div class="brand-lockup">
-            <a href="<?= site_url() ?>" class="brand-link">
+            <a href="<?= session()->has('userid') ? site_url('dashboard') : site_url('shop') ?>" class="brand-link">
                 <?= $this->include('Layout/BrandMark') ?>
                 <span class="brand-copy"><strong>BLACK BUNNY</strong><small>TACTICAL HUD</small></span>
             </a>
         </div>
         <?php if (session()->has('userid')) : ?>
         <nav class="side-nav">
-            <a href="<?= site_url() ?>" class="side-item <?= $uri === '' || $uri === 'dashboard' ? 'active' : '' ?>"><i></i><span>Dashboard</span></a>
+            <a href="<?= site_url('dashboard') ?>" class="side-item <?= $uri === '' || $uri === 'dashboard' ? 'active' : '' ?>"><i></i><span>Dashboard</span></a>
             <a href="<?= site_url('keys') ?>" class="side-item <?= $uri === 'keys' ? 'active' : '' ?>"><i></i><span>View Keys</span></a>
             <a href="<?= site_url('keys/generate') ?>" class="side-item <?= strpos($uri, 'keys/generate') === 0 ? 'active' : '' ?>"><i></i><span>Generate Key</span></a>
+            <a href="<?= site_url('search') ?>" class="side-item <?= strpos($uri, 'search') === 0 ? 'active' : '' ?>"><i></i><span>SCAN</span></a>
             <a href="<?= site_url('settings') ?>" class="side-item <?= strpos($uri, 'settings') === 0 ? 'active' : '' ?>"><i></i><span>Settings</span></a>
             <?php if (($user->level == 1) || ($user->level == 2)) : ?>
                 <a href="<?= site_url('Server') ?>" class="side-item <?= strpos($uri, 'Server') === 0 ? 'active' : '' ?>"><i></i><span>Online System</span></a>
@@ -45,7 +46,7 @@ $initial = strtoupper(substr(session()->has('userid') && isset($user) ? getName(
         <?php endif; ?>
     </aside>
     <div class="mobile-topbar">
-        <a href="<?= site_url() ?>" class="brand-link">
+        <a href="<?= session()->has('userid') ? site_url('dashboard') : site_url('shop') ?>" class="brand-link">
             <?= $this->include('Layout/BrandMark') ?>
             <span class="brand-copy"><strong>BLACK BUNNY</strong><small>TACTICAL HUD</small></span>
         </a>

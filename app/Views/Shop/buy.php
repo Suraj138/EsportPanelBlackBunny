@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="<?= base_url('assets/css/shop.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/shop.css') ?: time() ?>">
 </head>
 <body class="shop-body">
+<?= view('Layout/WelcomeSplash') ?>
 <div class="bb-stage">
     <div class="bb-aurora"></div>
     <div class="bb-grid"></div>
@@ -28,7 +29,21 @@
         <div class="pay-box">
             <strong>UPI / QR</strong>
             <p><?= esc($cfg['upi_name'] ?? 'BLACK BUNNY') ?></p>
-            <p class="upi-id"><?= esc($cfg['upi_id'] ?? '') ?></p>
+            <p class="upi-id" id="upiId"><?= esc($cfg['upi_id'] ?? '') ?></p>
+            <?php
+                $upi = trim((string) ($cfg['upi_id'] ?? ''));
+                $amt = (int) $plan['price'];
+                $pn = rawurlencode((string) ($cfg['upi_name'] ?? 'BLACK BUNNY'));
+                $upiLink = $upi ? ('upi://pay?pa=' . rawurlencode($upi) . '&pn=' . $pn . '&am=' . $amt . '&cu=INR&tn=' . rawurlencode('BLACK BUNNY KEY')) : '';
+            ?>
+            <div class="shop-cta">
+                <?php if ($upi) : ?>
+                    <button type="button" class="ghost-btn" id="copyUpi">COPY UPI</button>
+                <?php endif; ?>
+                <?php if ($upiLink) : ?>
+                    <a class="submit shop-btn" href="<?= esc($upiLink) ?>">PAY Rs <?= $amt ?></a>
+                <?php endif; ?>
+            </div>
             <?php if (!empty($cfg['qr_image'])) : ?>
                 <img class="qr" src="<?= base_url($cfg['qr_image']) ?>" alt="UPI QR">
             <?php endif; ?>
@@ -63,5 +78,26 @@
     </section>
 </div>
 <script src="<?= base_url('assets/js/blackbunny.js') ?>?v=<?= @filemtime(FCPATH . 'assets/js/blackbunny.js') ?: time() ?>"></script>
+<script>
+(function(){
+  var b=document.getElementById('copyUpi');
+  var t=document.getElementById('upiId');
+  if(!b||!t) return;
+  function copyText(v){
+    if(navigator.clipboard&&navigator.clipboard.writeText) return navigator.clipboard.writeText(v);
+    var a=document.createElement('textarea'); a.value=v; document.body.appendChild(a); a.select();
+    try{document.execCommand('copy');}catch(e){}
+    document.body.removeChild(a);
+  }
+  b.addEventListener('click', function(){
+    var v=(t.textContent||'').trim();
+    if(!v) return;
+    copyText(v);
+    b.textContent='COPIED';
+    if(window.bbToast) window.bbToast('UPI COPIED','ok');
+    setTimeout(function(){ b.textContent='COPY UPI'; }, 1400);
+  });
+})();
+</script>
 </body>
 </html>

@@ -40,10 +40,6 @@
                     <small class="text-red-400"><?= $validation->getError('password') ?></small>
                 <?php endif; ?>
             </div>
-            <div class="field">
-                <label>OWNER 2FA (IF ARMED)</label>
-                <input type="text" name="otp_code" id="otp_code" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code">
-            </div>
             <input type="hidden" name="ip" value="portal" id="ip">
             <div class="rowx">
                 <label><input type="checkbox" name="stay_log" id="stay_log" value="1"> 24H Session Active</label>

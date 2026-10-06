@@ -103,6 +103,7 @@
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Expiration Date</label>
                         <input type="text" name="expiration" value="<?= old('expiration') ?: $target->expiration_date ?>" class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all" placeholder="YYYY-MM-DD HH:MM:SS">
+                        <label class="toggle-row" style="margin-top:12px"><input type="checkbox" name="reset_bound" value="1"> Reset bound panel logins</label>
                         <?php if ($validation->hasError('expiration')) : ?>
                             <small class="text-red-500 text-xs mt-1"><?= $validation->getError('expiration') ?></small>
                         <?php endif; ?>

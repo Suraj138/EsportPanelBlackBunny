@@ -37,7 +37,15 @@ html.bb-splash-on,html.bb-splash-on body{overflow:hidden!important;perspective:n
 @keyframes bbBar{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}
 @keyframes bbHudBlink{50%{opacity:.35}}
 </style>
-<script>document.documentElement.className+=' bb-splash-on';</script>
+<script>
+(function(){
+  var skip=false;
+  try{ skip=!!sessionStorage.getItem('bb_splash_seen'); }catch(e){}
+  window.__bbSplashSkip=skip;
+  if(skip) document.write('<style>#bbWelcome{display:none!important;visibility:hidden!important}</style>');
+  else document.documentElement.className+=' bb-splash-on';
+})();
+</script>
 <div id="bbWelcome">
   <div class="bb-sp-bg">
     <div class="bb-sp-grid"></div>
@@ -75,6 +83,11 @@ html.bb-splash-on,html.bb-splash-on body{overflow:hidden!important;perspective:n
 (function(){
   var el=document.getElementById('bbWelcome');
   if(!el) return;
+  if(window.__bbSplashSkip){
+    if(el.parentNode) el.parentNode.removeChild(el);
+    document.documentElement.className=document.documentElement.className.replace(' bb-splash-on','');
+    return;
+  }
   try{ document.documentElement.appendChild(el); }catch(e){}
   var title=document.getElementById('bbSpTitle');
   if(title){
@@ -92,6 +105,7 @@ html.bb-splash-on,html.bb-splash-on body{overflow:hidden!important;perspective:n
   function hide(){
     if(!el||el.getAttribute('data-done')) return;
     el.setAttribute('data-done','1');
+    try{ sessionStorage.setItem('bb_splash_seen','1'); }catch(e){}
     el.className='out';
     document.documentElement.className=document.documentElement.className.replace(' bb-splash-on','');
     setTimeout(function(){ if(el&&el.parentNode) el.parentNode.removeChild(el); }, 560);

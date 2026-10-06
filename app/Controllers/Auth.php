@@ -36,7 +36,6 @@ class Auth extends BaseController
         $data = [
             'title' => 'Login',
             'validation' => Services::validation(),
-            'need_otp' => session()->getFlashdata('need_otp') ? true : false,
         ];
         return view('Auth/login', $data);
     }
@@ -104,14 +103,25 @@ class Auth extends BaseController
             return redirect()->route('login')->withInput()->with('msgDanger', '<strong>Expired</strong> Please Renew Your Account to Login.');
         }
 
-        $otpSecret = isset($cekUser->otp_secret) ? trim((string) $cekUser->otp_secret) : '';
-        if ($otpSecret !== '') {
-            $otp = preg_replace('/\D+/', '', (string) $this->request->getPost('otp_code'));
-            if (!totpVerify($otpSecret, $otp)) {
-                session()->setFlashdata('need_otp', 1);
-                return redirect()->route('login')->withInput()->with('msgDanger', 'Owner 2FA code required.');
+        $this->ensureBoundColumn();
+        $print = hudDevicePrint();
+        $limit = isset($cekUser->login_devices) ? max(1, (int) $cekUser->login_devices) : 99;
+        $bound = [];
+        if (!empty($cekUser->bound_logins)) {
+            $decoded = json_decode((string) $cekUser->bound_logins, true);
+            if (is_array($decoded)) {
+                $bound = $decoded;
             }
         }
+        if (!in_array($print, $bound, true)) {
+            if (count($bound) >= $limit) {
+                writeAudit('login_denied', 'device limit ' . $limit, $cekUser->username);
+                return redirect()->route('login')->withInput()->with('msgDanger', 'Device limit reached. Owner must reset bound logins.');
+            }
+            $bound[] = $print;
+            $this->userModel->update($cekUser->id_users, ['bound_logins' => json_encode(array_values($bound))]);
+        }
+        hudBindCookie($print);
 
         $data = [
             'userid' => $cekUser->id_users,
@@ -121,7 +131,7 @@ class Auth extends BaseController
             'welcome_toast' => 1,
         ];
         session()->set($data);
-        writeAudit('login', 'portal access', $cekUser->username);
+        writeAudit('login', 'portal access device=' . $print, $cekUser->username);
         $phpmsg = $cekUser->expiration_date;
         $expmsg = "Account Expires on : $phpmsg";
         return redirect()->to('dashboard')->with('msgSuccess', $expmsg);
@@ -269,6 +279,20 @@ class Auth extends BaseController
                 ];
             }
         }
+        $token = preg_replace('/[^a-f0-9]/', '', (string) $token);
+        if (!$cekUser && $token !== '') {
+            $row = $this->userModel->where('reset_link_token', $token)->first();
+            if ($row && !empty($row['exp_date']) && strtotime((string) $row['exp_date']) > time()) {
+                $cekUser = [
+                    'id_users' => $row['id_users'],
+                    'username' => $row['username'],
+                ];
+                session()->set([
+                    'recover_uid' => (int) $row['id_users'],
+                    'recover_until' => date('Y-m-d H:i:s', strtotime('+15 minutes')),
+                ]);
+            }
+        }
         if (!$cekUser) {
             session()->remove(['recover_uid', 'recover_until']);
             return redirect()->to('recover')->with('msgDanger', 'Recovery session is invalid or expired.');
@@ -318,5 +342,16 @@ class Auth extends BaseController
             session()->setFlashdata('msgSuccess', 'Logout successfuly.');
         }
         return redirect()->to('login');
+    }
+
+    private function ensureBoundColumn()
+    {
+        try {
+            $db = \Config\Database::connect();
+            if (!$db->fieldExists('bound_logins', 'users')) {
+                $db->query('ALTER TABLE users ADD COLUMN bound_logins TEXT NULL');
+            }
+        } catch (\Throwable $e) {
+        }
     }
 }

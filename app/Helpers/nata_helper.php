@@ -259,3 +259,53 @@ function keyExpirySoon($date, $days = 3)
     $left = $ts - time();
     return $left > 0 && $left <= ($days * 86400);
 }
+
+function hudDevicePrint()
+{
+    $ua = (string) ($_SERVER['HTTP_USER_AGENT'] ?? 'na');
+    $cookie = (string) ($_COOKIE['bb_device'] ?? '');
+    $base = $cookie !== '' ? $cookie : substr(hash('sha256', $ua . '|' . clientIp()), 0, 24);
+    return preg_replace('/[^A-Za-z0-9]/', '', $base);
+}
+
+function hudBindCookie($print)
+{
+    $print = preg_replace('/[^A-Za-z0-9]/', '', (string) $print);
+    if ($print === '') {
+        return;
+    }
+    setcookie('bb_device', $print, [
+        'expires' => time() + 86400 * 400,
+        'path' => '/',
+        'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'),
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+}
+
+function shopLang($en, $hi)
+{
+    $lang = strtolower((string) ($_COOKIE['bb_lang'] ?? 'en'));
+    return $lang === 'hi' ? $hi : $en;
+}
+
+function mintLicenseKey($hours = 24, $prefix = 'BB')
+{
+    $hours = max(1, (int) $hours);
+    $prefix = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', (string) $prefix) ?: 'BB');
+    $chunk = strtoupper(substr(bin2hex(random_bytes(5)), 0, 10));
+    return $prefix . '-' . $hours . 'H-' . $chunk;
+}
+
+function uniqueLicenseKey($model, $hours = 24, $prefix = 'BB', $tries = 8)
+{
+    for ($i = 0; $i < $tries; $i++) {
+        $key = mintLicenseKey($hours, $prefix);
+        $hit = $model->where('user_key', $key)->first();
+        if (!$hit) {
+            return $key;
+        }
+    }
+    return mintLicenseKey($hours, $prefix);
+}

@@ -53,6 +53,9 @@ $routes->get('shop/legal/(:segment)', 'Shop::legal/$1');
 $routes->get('shop/buy/(:num)', 'Shop::buy/$1');
 $routes->post('shop/order', 'Shop::order');
 $routes->get('shop/thanks/(:num)', 'Shop::thanks/$1');
+$routes->get('shop/status/(:num)', 'Shop::status/$1');
+$routes->match(['get', 'post'], 'shop/lookup', 'Shop::lookup');
+$routes->get('shop/lang/(:segment)', 'Shop::lang/$1');
 $routes->match(['get', 'post'], 'public-control', 'Shop::control');
 $routes->get('keys/share/(:segment)', 'Keys::share/$1');
 
@@ -71,6 +74,8 @@ $routes->group('keys', function ($routes) {
 	$routes->post('edit', 'Keys::edit_key');
 	$routes->match(['get', 'post'], 'api', 'Keys::api_get_keys');
 	$routes->match(['get', 'post'], 'resetAll', 'Keys::resetAllKeys');
+	$routes->get('download', 'Keys::download_all_Keys');
+	$routes->get('download/unused', 'Keys::download_new_Keys');
 });
 
 /* --------------------------- Admin Grouping -------------------------- */

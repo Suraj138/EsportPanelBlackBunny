@@ -22,23 +22,26 @@
         <?= view('Layout/BrandMark') ?>
         <span class="brand-copy"><strong>BLACK BUNNY</strong><small>PUBLIC STORE</small></span>
     </a>
-    <nav>
-        <a href="#loader">Loader</a>
-        <a href="#plans">Plans</a>
-        <a href="#gallery">Gallery</a>
-        <a href="#about">About</a>
-        <a href="<?= site_url('shop/legal/contact') ?>">Contact</a>
-        <a class="ghost" href="<?= site_url('login') ?>">Operator</a>
+    <nav id="shopNav">
+        <a href="#loader"><?= shopLang('Loader', 'Loader') ?></a>
+        <a href="#plans"><?= shopLang('Plans', 'Plans') ?></a>
+        <a href="#gallery"><?= shopLang('Gallery', 'Gallery') ?></a>
+        <a href="#about"><?= shopLang('About', 'Baare mein') ?></a>
+        <a href="<?= site_url('shop/lookup') ?>"><?= shopLang('Track', 'Track') ?></a>
+        <a href="<?= site_url('shop/legal/contact') ?>"><?= shopLang('Contact', 'Contact') ?></a>
+        <a href="<?= site_url('shop/lang/' . ((isset($_COOKIE['bb_lang']) && $_COOKIE['bb_lang'] === 'hi') ? 'en' : 'hi')) ?>"><?= (isset($_COOKIE['bb_lang']) && $_COOKIE['bb_lang'] === 'hi') ? 'EN' : 'HI' ?></a>
+        <a class="ghost" href="<?= site_url('login') ?>"><?= shopLang('Operator', 'Operator') ?></a>
     </nav>
+    <button type="button" class="shop-menu neon-menu" id="shopMenuBtn">MENU</button>
 </header>
 
 <section class="shop-hero">
     <div class="shop-hero-copy">
-        <div class="hero-kicker">ONLINE KEY STORE</div>
+        <div class="hero-kicker"><?= shopLang('ONLINE KEY STORE', 'ONLINE KEY STORE') ?></div>
         <h1><?= esc($cfg['hero_title'] ?? 'BLACK BUNNY ARENA') ?></h1>
         <p><?= esc($cfg['hero_sub'] ?? '') ?></p>
         <div class="shop-cta">
-            <a href="<?= site_url('login') ?>" class="submit shop-btn">LOGIN</a>
+            <a href="<?= site_url('login') ?>" class="submit shop-btn"><?= shopLang('LOGIN', 'LOGIN') ?></a>
             <?php
                 $apkHref = trim((string) ($cfg['apk_url'] ?? ''));
                 if ($apkHref !== '' && strpos($apkHref, 'http') !== 0) {
@@ -50,7 +53,7 @@
             <?php else : ?>
                 <a class="ghost-btn" href="#loader">DOWNLOAD APK · 10 MB</a>
             <?php endif; ?>
-            <a href="#plans" class="ghost-btn">BUY KEY</a>
+            <a href="#plans" class="ghost-btn"><?= shopLang('BUY KEY', 'KEY LO') ?></a>
         </div>
     </div>
     <div class="shop-hero-media">
@@ -161,9 +164,9 @@
     <h2>Gameplay + drops</h2>
     <div class="media-rail">
         <?php foreach ($media as $i => $m) : ?>
-            <figure class="media-tile t<?= ($i % 4) + 1 ?>">
+            <figure class="media-tile t<?= ($i % 4) + 1 ?>" data-kind="<?= esc($m['kind']) ?>" data-src="<?= base_url($m['file']) ?>" data-cap="<?= esc($m['caption']) ?>">
                 <?php if ($m['kind'] === 'video') : ?>
-                    <video controls src="<?= base_url($m['file']) ?>"></video>
+                    <video src="<?= base_url($m['file']) ?>" muted></video>
                 <?php else : ?>
                     <img src="<?= base_url($m['file']) ?>" alt="<?= esc($m['caption']) ?>">
                 <?php endif; ?>
@@ -203,6 +206,37 @@
     <a href="<?= site_url('shop/legal/contact') ?>">Contact</a>
     <span>&copy; <?= date('Y') ?> BLACK BUNNY</span>
 </footer>
+<div id="shopLightbox" class="shop-lightbox" hidden>
+    <button type="button" class="shop-lightbox-x" id="lbClose">CLOSE</button>
+    <div id="lbBody"></div>
+</div>
 <script src="<?= base_url('assets/js/blackbunny.js') ?>?v=<?= @filemtime(FCPATH . 'assets/js/blackbunny.js') ?: time() ?>"></script>
+<script>
+(function(){
+  var btn=document.getElementById('shopMenuBtn');
+  var nav=document.getElementById('shopNav');
+  if(btn&&nav) btn.addEventListener('click', function(){ nav.classList.toggle('open'); });
+  var box=document.getElementById('shopLightbox');
+  var body=document.getElementById('lbBody');
+  var close=document.getElementById('lbClose');
+  document.querySelectorAll('.media-tile').forEach(function(tile){
+    tile.addEventListener('click', function(){
+      if(!box||!body) return;
+      var kind=tile.getAttribute('data-kind');
+      var src=tile.getAttribute('data-src');
+      var safe=src||'';
+      body.innerHTML='';
+      if(kind==='video'){
+        var v=document.createElement('video'); v.controls=true; v.autoplay=true; v.src=safe; body.appendChild(v);
+      } else {
+        var img=document.createElement('img'); img.src=safe; img.alt=''; body.appendChild(img);
+      }
+      box.hidden=false;
+    });
+  });
+  if(close) close.addEventListener('click', function(){ box.hidden=true; body.innerHTML=''; });
+  if(box) box.addEventListener('click', function(e){ if(e.target===box){ box.hidden=true; body.innerHTML=''; } });
+})();
+</script>
 </body>
 </html>

@@ -40,6 +40,12 @@
                 
                 <div id="actions-menu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 z-10">
                     <div class="py-2">
+                        <a href="<?= site_url('keys/download') ?>" class="flex items-center space-x-3 px-4 py-3 hover:bg-gradient-to-r hover:from-cyan-50 hover:to-emerald-50 transition-all">
+                            <span class="text-gray-700 font-medium">Download All Keys .txt</span>
+                        </a>
+                        <a href="<?= site_url('keys/download/unused') ?>" class="flex items-center space-x-3 px-4 py-3 hover:bg-gradient-to-r hover:from-cyan-50 hover:to-emerald-50 transition-all">
+                            <span class="text-gray-700 font-medium">Download Unused .txt</span>
+                        </a>
                         <a href="<?= site_url('keys/generate') ?>" class="flex items-center space-x-3 px-4 py-3 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 transition-all">
                             <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>

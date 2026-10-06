@@ -79,37 +79,40 @@ class Keys extends BaseController
     
     public function download_all_Keys()
     {
-        $model = $this->model;
-        $user = $this->user;
-        $keys = $model->select('user_key')->findAll();
-        $data = '';
-        for ($i = 0; $i < count($keys); $i++) {
-            $data .= $keys[$i]['user_key'] . "\n";
-        }
-        $this->downloadFile('Newkeys.txt');
+        return $this->streamKeys('all');
     }
-   
+
     public function download_new_Keys()
     {
-        $this->downloadFile('new.txt');
+        return $this->streamKeys('unused');
     }
 
-    function downloadFile($yourFile)
+    private function streamKeys($mode = 'all')
     {
-        $file = @fopen($yourFile, "rb");
-
-        header('Content-Description: File Transfer');
-        header('Content-Type: application/octet-stream');
-        header('Content-Disposition: attachment; filename=Allkeys.txt');
-        header('Expires: 0');
-        header('Cache-Control: must-revalidate');
-        header('Pragma: public');
-        header('Content-Length: ' . filesize($yourFile));
-        while (!feof($file)) {
-            print(@fread($file, 1024 * 8));
-            ob_flush();
-            flush();
+        $user = $this->user;
+        if (!$user) {
+            return redirect()->to('login')->with('msgWarning', 'Please login first');
         }
+        $q = $this->model->select('user_key, duration, max_devices, devices, expired_date, registrator');
+        if ((int) $user->level != 1) {
+            $q->where('registrator', $user->username);
+        }
+        if ($mode === 'unused') {
+            $q->groupStart()->where('devices', null)->orWhere('devices', '')->groupEnd();
+        }
+        $rows = $q->orderBy('id_keys', 'DESC')->findAll();
+        $lines = [];
+        foreach ($rows as $row) {
+            $lines[] = (string) ($row['user_key'] ?? '');
+        }
+        $body = implode("\n", array_filter($lines)) . "\n";
+        $name = $mode === 'unused' ? 'blackbunny-unused-keys.txt' : 'blackbunny-keys.txt';
+        writeAudit('keys_download', $mode . ' count=' . count($lines), $user->username);
+        return $this->response
+            ->setHeader('Content-Type', 'text/plain; charset=utf-8')
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $name . '"')
+            ->setHeader('Cache-Control', 'no-store')
+            ->setBody($body);
     }
 
     public function alterKeys()
@@ -539,11 +542,13 @@ class Keys extends BaseController
                 }
 
                 for ($i = 0; $i < $loopcount; $i++) {
-                    $license = $user->username . '-' . $drtn . '-' . random_string('alnum', 5);
                     $model = $this->model;
+                    $tag = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', (string) $user->username), 0, 6) ?: 'BB');
+                    $license = uniqueLicenseKey($model, $drtn, $tag);
                     if ($twst == "custom") {
-                        if (strlen($cuslicense) > 3 && strlen($cuslicense) < 20) {
-                            $findKey = $model->getKeysGame(['user_key' => $cuslicense, 'game' => $game]);
+                        $cuslicense = strtoupper(trim((string) $cuslicense));
+                        if (strlen($cuslicense) > 3 && strlen($cuslicense) < 32) {
+                            $findKey = $model->getKeysGame(['user_key' => $cuslicense]);
                             if ($findKey) {
                                 return redirect()->back()->with('msgDanger', 'Key already exists!!');
                             }

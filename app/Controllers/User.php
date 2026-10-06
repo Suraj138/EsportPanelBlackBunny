@@ -363,6 +363,9 @@ class User extends BaseController
                 'uplink' => $uplink,
                 'expiration_date' => $expiration
             ];
+            if ($this->request->getPost('reset_bound')) {
+                $data_update['bound_logins'] = '';
+            }
 
             $update = $model->update($userid, $data_update);
             if ($update) {
@@ -458,6 +461,7 @@ class User extends BaseController
             'online' => (int) $onlineCount,
             'pending' => (int) $pending,
             'fill' => $totalKeys > 0 ? (int) round(($usedCount / $totalKeys) * 100) : 0,
+            'users' => (int) $db->table('users')->countAllResults(),
             'lobby' => date('H:i:s'),
         ]);
     }
