@@ -1135,3 +1135,101 @@ table tbody tr:hover { background: rgba(0,255,208,.06) !important; }
 @keyframes welcomeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes welcomeOut { to { opacity: 0; transform: scale(1.04); } }
 @keyframes welcomeBar { 0% { transform: translateX(-120%); } 100% { transform: translateX(320%); } }
+
+.submit,
+button[type="submit"],
+.btn-gradient,
+.btn-gradient-2,
+.neon-menu,
+.ghost-btn,
+.shop-btn,
+.ctrl-save,
+.plan-save,
+.plan-edit button,
+.hud-chip,
+.op-actions a,
+.lane-grid a,
+.plan-card a,
+.live-chip,
+.hud-pager a {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  box-sizing: border-box;
+}
+.submit,
+button.submit,
+button[type="submit"] {
+  clip-path: none !important;
+  min-height: 50px;
+  height: auto;
+  padding: 0 18px !important;
+  white-space: nowrap;
+}
+.hud-chip {
+  min-height: 32px;
+  padding: 0 12px !important;
+  white-space: nowrap;
+}
+.glass-card,
+.login-card,
+.register-card,
+.cmd-panel,
+.page-hero,
+.ctrl-card {
+  clip-path: none !important;
+}
+.side-item {
+  clip-path: none;
+}
+.op-actions a,
+.lane-grid a {
+  min-height: 42px;
+  padding: 0 10px !important;
+}
+.neon-menu {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 38px;
+  line-height: 1 !important;
+  padding: 0 14px !important;
+}
+.field input,
+.input-field,
+select,
+textarea {
+  line-height: 1.3;
+}
+.field input,
+.input-field {
+  height: 48px;
+  display: flex;
+  align-items: center;
+}
+@media (max-width: 980px) {
+  .submit,
+  button[type="submit"] {
+    min-height: 48px;
+    font-size: 12px;
+    letter-spacing: .08em !important;
+    white-space: normal;
+    text-align: center !important;
+    padding: 10px 14px !important;
+  }
+  .hud-chip {
+    max-width: 100%;
+    white-space: normal;
+    word-break: break-word;
+    min-height: 36px;
+    padding: 8px 12px !important;
+    line-height: 1.3 !important;
+  }
+  .op-actions a,
+  .lane-grid a,
+  .plan-card a {
+    min-height: 44px;
+  }
+}
