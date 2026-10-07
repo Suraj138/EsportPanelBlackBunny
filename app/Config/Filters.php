@@ -34,12 +34,12 @@ class Filters extends BaseConfig
 	public $globals = [
 		'before' => [
 			'csrf' => [
-				'except' => 'connect',
+				'except' => ['connect', 'telegram/hook'],
 			],
 			'auth' => [
 				'except' => [
 					'/', 'login', 'register', 'connect', 'recover', 'recover/*', 'recover/reset/*',
-					'shop', 'shop/*',
+					'shop', 'shop/*', 'telegram/hook',
 				]
 			],
 			// 'honeypot',

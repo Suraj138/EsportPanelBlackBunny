@@ -384,6 +384,7 @@ class User extends BaseController
 
         $user = $this->user;
         $this->ensureOtpColumn();
+        ensureTgUserColumns();
 
         if ($this->request->getPost('otp_enable') && (int) $user->level == 1) {
             $secret = totpSecretMake();
@@ -404,6 +405,9 @@ class User extends BaseController
 
         $user = $this->model->getUser($this->userid);
         $otpSecret = isset($user->otp_secret) ? trim((string) $user->otp_secret) : '';
+        $tgBag = tgShop();
+        $tgToken = trim((string) ($tgBag['tg_bot_token'] ?? ''));
+        $tgMasked = $tgToken === '' ? '' : substr($tgToken, 0, 6) . '...' . substr($tgToken, -4);
         $validation = Services::validation();
         $data = [
             'title' => 'Settings',
@@ -412,6 +416,12 @@ class User extends BaseController
             'validation' => $validation,
             'otp_secret' => $otpSecret,
             'otp_uri' => $otpSecret ? totpUri($otpSecret, $user->username) : '',
+            'tg_chat_id' => isset($user->tg_chat_id) ? trim((string) $user->tg_chat_id) : '',
+            'tg_link_code' => isset($user->tg_link_code) ? trim((string) $user->tg_link_code) : '',
+            'tg_link_exp' => isset($user->tg_link_exp) ? (string) $user->tg_link_exp : '',
+            'tg_bot_set' => $tgToken !== '',
+            'tg_bot_masked' => $tgMasked,
+            'tg_webhook' => !empty($tgBag['tg_webhook_secret']) ? site_url('telegram/hook?k=' . $tgBag['tg_webhook_secret']) : '',
         ];
         
         return view('User/settings', $data);

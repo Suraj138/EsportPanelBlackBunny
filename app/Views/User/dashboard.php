@@ -169,6 +169,7 @@
             <div class="op-actions">
                 <a href="<?= site_url('keys/generate') ?>">GENERATE</a>
                 <a href="<?= site_url('keys') ?>">KEYS</a>
+                <a href="<?= site_url('telegram') ?>">TELEGRAM</a>
                 <?php if ((int) $user->level <= 2) : ?>
                 <a href="<?= site_url('public-control') ?>">STORE</a>
                 <?php endif; ?>

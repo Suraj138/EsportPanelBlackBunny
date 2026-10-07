@@ -309,3 +309,261 @@ function uniqueLicenseKey($model, $hours = 24, $prefix = 'BB', $tries = 8)
     }
     return mintLicenseKey($hours, $prefix);
 }
+
+function licensePriceTable()
+{
+    return [
+        2 => 10,
+        5 => 20,
+        24 => 80,
+        72 => 150,
+        168 => 250,
+        336 => 350,
+        720 => 500,
+        1440 => 900,
+        4320 => 2400,
+        8760 => 4500,
+    ];
+}
+
+function parseLicenseHours($raw)
+{
+    $raw = strtolower(trim((string) $raw));
+    $alias = [
+        '2h' => 2, '5h' => 5, '1d' => 24, '3d' => 72, '7d' => 168,
+        '14d' => 336, '30d' => 720, '60d' => 1440, '6m' => 4320, '1y' => 8760,
+    ];
+    if (isset($alias[$raw])) {
+        return $alias[$raw];
+    }
+    if (preg_match('/^(\d+)h$/', $raw, $m)) {
+        return (int) $m[1];
+    }
+    if (preg_match('/^(\d+)d$/', $raw, $m)) {
+        return (int) $m[1] * 24;
+    }
+    if (ctype_digit($raw)) {
+        return (int) $raw;
+    }
+    return 0;
+}
+
+function panelUserAlive($user)
+{
+    if (!$user || (int) ($user->status ?? 0) !== 1) {
+        return false;
+    }
+    if (!empty($user->expiration_date) && strtotime((string) $user->expiration_date) < time()) {
+        return false;
+    }
+    return true;
+}
+
+function canTouchLicense($user, $row)
+{
+    if (!$user || !$row) {
+        return false;
+    }
+    if ((int) $user->level === 1) {
+        return true;
+    }
+    return (string) ($row->registrator ?? '') === (string) $user->username;
+}
+
+function ensureTgUserColumns()
+{
+    try {
+        $db = \Config\Database::connect();
+        if (!$db->fieldExists('tg_chat_id', 'users')) {
+            $db->query('ALTER TABLE users ADD COLUMN tg_chat_id VARCHAR(32) NULL');
+        }
+        if (!$db->fieldExists('tg_link_code', 'users')) {
+            $db->query('ALTER TABLE users ADD COLUMN tg_link_code VARCHAR(16) NULL');
+        }
+        if (!$db->fieldExists('tg_link_exp', 'users')) {
+            $db->query('ALTER TABLE users ADD COLUMN tg_link_exp DATETIME NULL');
+        }
+    } catch (\Throwable $e) {
+    }
+}
+
+function tgShop($key = null)
+{
+    try {
+        $bag = (new \App\Models\ShopConfig())->bag();
+    } catch (\Throwable $e) {
+        $bag = [];
+    }
+    if ($key === null) {
+        return $bag;
+    }
+    return isset($bag[$key]) ? (string) $bag[$key] : '';
+}
+
+function tgApi($method, $payload = [])
+{
+    $token = trim(tgShop('tg_bot_token'));
+    if ($token === '' || !preg_match('/^\d+:[A-Za-z0-9_-]{20,}$/', $token)) {
+        return false;
+    }
+    $url = 'https://api.telegram.org/bot' . $token . '/' . $method;
+    $ctx = stream_context_create([
+        'http' => [
+            'method' => 'POST',
+            'header' => "Content-Type: application/json\r\n",
+            'content' => json_encode($payload),
+            'timeout' => 8,
+            'ignore_errors' => true,
+        ],
+    ]);
+    $raw = @file_get_contents($url, false, $ctx);
+    $json = json_decode((string) $raw, true);
+    return is_array($json) ? $json : false;
+}
+
+function tgSend($chatId, $text, $markup = null)
+{
+    $chatId = (string) $chatId;
+    $text = substr((string) $text, 0, 3900);
+    if ($chatId === '' || $text === '') {
+        return false;
+    }
+    $payload = [
+        'chat_id' => $chatId,
+        'text' => $text,
+        'disable_web_page_preview' => true,
+    ];
+    if (is_array($markup)) {
+        $payload['reply_markup'] = $markup;
+    }
+    return tgApi('sendMessage', $payload);
+}
+
+function tgAnswer($callbackId, $text = '')
+{
+    $payload = ['callback_query_id' => (string) $callbackId];
+    if ($text !== '') {
+        $payload['text'] = substr($text, 0, 180);
+        $payload['show_alert'] = false;
+    }
+    return tgApi('answerCallbackQuery', $payload);
+}
+
+function tgPadMarkup()
+{
+    return [
+        'keyboard' => [
+            [['text' => '[+] GENERATE'], ['text' => '[#] MY KEYS']],
+            [['text' => '[*] RADAR'], ['text' => '[$] PRICES']],
+            [['text' => '[>] QUICK 5H'], ['text' => '[>] QUICK 1D'], ['text' => '[>] QUICK 7D']],
+            [['text' => '[@] ACCOUNT'], ['text' => '[x] UNLINK']],
+        ],
+        'resize_keyboard' => true,
+        'is_persistent' => true,
+    ];
+}
+
+function tgMenuMarkup()
+{
+    return [
+        'inline_keyboard' => [
+            [
+                ['text' => '[+] GENERATE', 'callback_data' => 'm:gen'],
+                ['text' => '[#] MY KEYS', 'callback_data' => 'l:1'],
+            ],
+            [
+                ['text' => '[~] UNUSED', 'callback_data' => 'l:u1'],
+                ['text' => '[!] LIVE', 'callback_data' => 'm:live'],
+            ],
+            [
+                ['text' => '[*] RADAR', 'callback_data' => 'm:rad'],
+                ['text' => '[$] PRICES', 'callback_data' => 'm:pay'],
+            ],
+            [
+                ['text' => '[@] ACCOUNT', 'callback_data' => 'm:me'],
+                ['text' => '[x] UNLINK', 'callback_data' => 'm:un'],
+            ],
+        ],
+    ];
+}
+
+function tgTapLabel($text)
+{
+    return strtoupper(trim(preg_replace('/[^A-Z0-9 ]+/i', ' ', (string) $text)));
+}
+
+function tgStatePath($chatId)
+{
+    $dir = WRITEPATH . 'cache/tgstate';
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0755, true);
+    }
+    return $dir . '/' . preg_replace('/[^0-9-]/', '', (string) $chatId) . '.json';
+}
+
+function tgStateGet($chatId)
+{
+    $file = tgStatePath($chatId);
+    if (!is_file($file)) {
+        return [];
+    }
+    $raw = json_decode((string) @file_get_contents($file), true);
+    return is_array($raw) ? $raw : [];
+}
+
+function tgStatePut($chatId, $data)
+{
+    @file_put_contents(tgStatePath($chatId), json_encode($data), LOCK_EX);
+}
+
+function tgStateClear($chatId)
+{
+    $file = tgStatePath($chatId);
+    if (is_file($file)) {
+        @file_put_contents($file, '{}', LOCK_EX);
+    }
+}
+
+function forgePanelKeys($user, $hours, $devices = 1, $count = 1)
+{
+    $hours = (int) $hours;
+    $devices = max(1, min(20, (int) $devices));
+    $count = max(1, min(10, (int) $count));
+    $prices = licensePriceTable();
+    if (!isset($prices[$hours])) {
+        return ['ok' => false, 'msg' => 'Duration not in table. Use 2 5 24 72 168 336 720 1440 4320 8760 (or 1d 3d 7d 14d 30d 60d 6m 1y).'];
+    }
+    $unit = getPrice($prices, $hours, $devices);
+    $fees = $unit * $count;
+    if ((int) $user->saldo < $fees) {
+        return ['ok' => false, 'msg' => 'Low saldo. Need Rs ' . $fees . ' / have Rs ' . (int) $user->saldo];
+    }
+    $model = new \App\Models\KeysModel();
+    $userModel = new \App\Models\UserModel();
+    $tag = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', (string) $user->username), 0, 6) ?: 'BB');
+    $keys = [];
+    $idKeys = 0;
+    for ($i = 0; $i < $count; $i++) {
+        $license = uniqueLicenseKey($model, $hours, $tag);
+        $idKeys = $model->insert([
+            'game' => 'PUBG',
+            'user_key' => $license,
+            'duration' => $hours,
+            'max_devices' => $devices,
+            'registrator' => $user->username,
+            'created_by' => (int) $user->id_users,
+            'status' => 1,
+        ]);
+        $keys[] = $license;
+    }
+    $left = (int) $user->saldo - $fees;
+    $userModel->update($user->id_users, ['saldo' => $left]);
+    $history = new \App\Models\HistoryModel();
+    $history->insert([
+        'keys_id' => $idKeys,
+        'user_do' => $user->username,
+        'info' => 'PUBG|' . substr((string) ($keys[0] ?? ''), 0, 5) . "|$hours|$devices",
+    ]);
+    writeAudit('generate_keys', count($keys) . " tg / PUBG / {$hours}h", $user->username);
+    return ['ok' => true, 'keys' => $keys, 'fees' => $fees, 'saldo' => $left, 'hours' => $hours, 'devices' => $devices];
+}

@@ -44,7 +44,7 @@
     <section class="page-hero">
         <div class="hero-kicker">OPERATOR</div>
         <h1>ACCOUNT SETTINGS</h1>
-        <p>Swap cryptographic key, identity alias, and Owner 2FA.</p>
+        <p>Swap cryptographic key, identity alias, Owner 2FA, and Telegram bot link.</p>
     </section>
     <?php if ((int) $user->level == 1) : ?>
     <div class="glass-card rounded-2xl p-6 mb-6">
@@ -65,6 +65,46 @@
                 <input type="hidden" name="otp_enable" value="1">
                 <button class="submit" type="submit">ARM OWNER 2FA</button>
             <?= form_close() ?>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
+
+    <div class="glass-card rounded-2xl p-6 mb-6">
+        <h2>TELEGRAM BOT</h2>
+        <p class="muted">Web login ke bina key generate / block / delete. Role same as panel: Owner all keys, Admin/User own keys + saldo.</p>
+        <?php if (!empty($tg_chat_id)) : ?>
+            <p class="hud-chip" style="margin:10px 0">LINKED CHAT <?= esc($tg_chat_id) ?></p>
+            <?= form_open('telegram/link') ?>
+                <input type="hidden" name="tg_self_unlink" value="1">
+                <button class="submit" type="submit">UNLINK TELEGRAM</button>
+            <?= form_close() ?>
+        <?php else : ?>
+            <?php if (!empty($tg_link_code) && !empty($tg_link_exp) && strtotime($tg_link_exp) > time()) : ?>
+                <p class="muted">Bot me ye bhejo (10 min):</p>
+                <p class="hud-chip" style="margin:10px 0">/start <?= esc($tg_link_code) ?></p>
+            <?php endif; ?>
+            <?= form_open('telegram/link') ?>
+                <input type="hidden" name="tg_make_code" value="1">
+                <button class="submit" type="submit">MAKE LINK CODE</button>
+            <?= form_close() ?>
+        <?php endif; ?>
+        <p class="muted" style="margin-top:12px">Commands: /gen 5 1 1 · /list · /find KEY · /block KEY · /unblock KEY · /reset KEY · /del KEY · /me</p>
+    </div>
+
+    <?php if ((int) $user->level == 1) : ?>
+    <div class="glass-card rounded-2xl p-6 mb-6">
+        <h2>BOT TOKEN (OWNER)</h2>
+        <p class="muted">BotFather se token. SAVE webhook auto set karega.</p>
+        <?php if (!empty($tg_bot_set)) : ?>
+            <p class="hud-chip" style="margin:10px 0">ARMED <?= esc($tg_bot_masked) ?></p>
+        <?php endif; ?>
+        <?= form_open('telegram/setup') ?>
+            <input type="hidden" name="tg_save" value="1">
+            <div class="field"><label>BOT TOKEN</label><input name="tg_bot_token" placeholder="123456:ABC..." autocomplete="off"></div>
+            <button class="submit" type="submit">SAVE BOT + WEBHOOK</button>
+        <?= form_close() ?>
+        <?php if (!empty($tg_webhook)) : ?>
+            <p class="muted" style="margin-top:10px;word-break:break-all">HOOK <?= esc($tg_webhook) ?></p>
         <?php endif; ?>
     </div>
     <?php endif; ?>
