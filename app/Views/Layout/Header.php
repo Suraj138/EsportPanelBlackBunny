@@ -24,6 +24,7 @@ $initial = strtoupper(substr(session()->has('userid') && isset($user) ? getName(
             <a href="<?= site_url('search') ?>" class="side-item <?= strpos($uri, 'search') === 0 ? 'active' : '' ?>"><i></i><span>SCAN</span></a>
             <a href="<?= site_url('settings') ?>" class="side-item <?= strpos($uri, 'settings') === 0 ? 'active' : '' ?>"><i></i><span>Settings</span></a>
             <a href="<?= site_url('telegram') ?>" class="side-item <?= $uri === 'telegram' ? 'active' : '' ?>"><i></i><span>Telegram Bot</span></a>
+            <a href="<?= site_url('wallet') ?>" class="side-item <?= strpos($uri, 'wallet') === 0 ? 'active' : '' ?>"><i></i><span>Wallet</span></a>
             <?php if (($user->level == 1) || ($user->level == 2)) : ?>
                 <a href="<?= site_url('Server') ?>" class="side-item <?= strpos($uri, 'Server') === 0 ? 'active' : '' ?>"><i></i><span>Online System</span></a>
                 <a href="<?= site_url('admin/create-referral') ?>" class="side-item <?= strpos($uri, 'admin/create-referral') === 0 ? 'active' : '' ?>"><i></i><span>Create Referral</span></a>

@@ -16,6 +16,10 @@ Options All -Indexes
 	# http://httpd.apache.org/docs/current/mod/mod_rewrite.html#rewritebase
 	# RewriteBase /
 
+	RewriteCond %{REQUEST_URI} (^|/)\.env [NC,OR]
+	RewriteCond %{REQUEST_URI} (^|/)(conn\.php|env\.php|phpinfo\.php|test\.php)$ [NC]
+	RewriteRule ^ - [F,L]
+
 	# Redirect Trailing Slashes...
 	RewriteCond %{REQUEST_FILENAME} !-d
 	RewriteCond %{REQUEST_URI} (.+)/$
@@ -61,11 +65,11 @@ RewriteRule . /index.php [L]
 # ----------------------------------------------------------------------
 # Security hardening
 # ----------------------------------------------------------------------
-<FilesMatch "^(\.env|\.env\..*|.*\.log|.*\.sql|.*\.sqlite|.*\.bak|.*\.old|.*\.orig|composer\.(json|lock)|spark)$">
+<FilesMatch "^(\.env|\.env\..*|.*\.log|.*\.sql|.*\.sqlite|.*\.bak|.*\.old|.*\.orig|.*\.pem|.*\.key|composer\.(json|lock)|spark)$">
     Require all denied
 </FilesMatch>
 
-<FilesMatch "^(conn\.php|lib\.php|error_log|phpinfo\.php)$">
+<FilesMatch "^(conn\.php|lib\.php|error_log|phpinfo\.php|test\.php)$">
     Require all denied
 </FilesMatch>
 

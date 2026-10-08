@@ -567,3 +567,265 @@ function forgePanelKeys($user, $hours, $devices = 1, $count = 1)
     writeAudit('generate_keys', count($keys) . " tg / PUBG / {$hours}h", $user->username);
     return ['ok' => true, 'keys' => $keys, 'fees' => $fees, 'saldo' => $left, 'hours' => $hours, 'devices' => $devices];
 }
+
+function tgStaffChats($levels = [1, 2])
+{
+    ensureTgUserColumns();
+    $out = [];
+    try {
+        $db = \Config\Database::connect();
+        $rows = $db->table('users')
+            ->whereIn('level', $levels)
+            ->where('status', 1)
+            ->where('tg_chat_id IS NOT NULL', null, false)
+            ->where('tg_chat_id !=', '')
+            ->get()
+            ->getResult();
+        foreach ($rows as $row) {
+            $chat = trim((string) ($row->tg_chat_id ?? ''));
+            if ($chat !== '') {
+                $out[] = $chat;
+            }
+        }
+    } catch (\Throwable $e) {
+        return [];
+    }
+    return array_values(array_unique($out));
+}
+
+function tgNotifyStaff($text, $markup = null, $levels = [1, 2])
+{
+    $n = 0;
+    foreach (tgStaffChats($levels) as $chat) {
+        if (tgSend($chat, $text, $markup)) {
+            $n++;
+        }
+    }
+    return $n;
+}
+
+function tgBotHealth()
+{
+    $token = trim(tgShop('tg_bot_token'));
+    $out = [
+        'token' => $token !== '',
+        'live' => false,
+        'username' => '',
+        'hook_url' => '',
+        'hook_ok' => false,
+        'hook_error' => '',
+        'pending' => 0,
+        'masked' => '',
+    ];
+    if ($token === '') {
+        return $out;
+    }
+    $out['masked'] = substr($token, 0, 8) . '...' . substr($token, -5);
+    $me = tgApi('getMe', []);
+    if (empty($me['ok']) || empty($me['result'])) {
+        $out['hook_error'] = (string) ($me['description'] ?? 'getMe fail');
+        return $out;
+    }
+    $out['live'] = true;
+    $out['username'] = '@' . (string) ($me['result']['username'] ?? 'bot');
+    $info = tgApi('getWebhookInfo', []);
+    if (!empty($info['ok']) && !empty($info['result']) && is_array($info['result'])) {
+        $r = $info['result'];
+        $out['hook_url'] = (string) ($r['url'] ?? '');
+        $out['hook_error'] = (string) ($r['last_error_message'] ?? '');
+        $out['pending'] = (int) ($r['pending_update_count'] ?? 0);
+        $out['hook_ok'] = $out['hook_url'] !== '' && $out['hook_error'] === '';
+    }
+    return $out;
+}
+
+function shopOrderMarkup($oid)
+{
+    $oid = (int) $oid;
+    return [
+        'inline_keyboard' => [[
+            ['text' => '[+] APPROVE + KEY', 'callback_data' => 'o:a:' . $oid],
+            ['text' => '[x] REJECT', 'callback_data' => 'o:r:' . $oid],
+        ]],
+    ];
+}
+
+function pingShopOrder($id, $plan = null)
+{
+    $order = (new \App\Models\ShopOrder())->find((int) $id);
+    if (!$order) {
+        return 0;
+    }
+    $title = is_array($plan) ? (string) ($plan['title'] ?? 'PLAN') : 'PLAN';
+    $hours = is_array($plan) ? hoursToDays((int) ($plan['hours'] ?? 0)) : '';
+    $text = "[ SHOP ORDER #{$id} ]\n{$title}" . ($hours !== '' ? " · {$hours}" : '')
+        . "\nRs " . (int) $order['amount']
+        . "\nNAME " . $order['customer_name']
+        . "\nPHONE " . $order['customer_phone']
+        . "\nTXN " . $order['txn_id'];
+    if (trim((string) ($order['customer_note'] ?? '')) !== '') {
+        $text .= "\nNOTE " . $order['customer_note'];
+    }
+    $text .= "\nTap Approve / Reject.";
+    return tgNotifyStaff($text, shopOrderMarkup($id));
+}
+
+function shopVerifyOrder($oid, $actor)
+{
+    $oid = (int) $oid;
+    if (!$actor || (int) ($actor->level ?? 9) > 2) {
+        return ['ok' => false, 'msg' => 'Owner/Admin only.'];
+    }
+    $orderModel = new \App\Models\ShopOrder();
+    $order = $orderModel->find($oid);
+    if (!$order || ($order['status'] ?? '') !== 'pending') {
+        return ['ok' => false, 'msg' => 'Order nahi / already done.'];
+    }
+    $plan = (new \App\Models\ShopPlan())->find((int) $order['plan_id']);
+    $hours = $plan ? (int) $plan['hours'] : 24;
+    $devices = $plan ? (int) $plan['devices'] : 1;
+    $license = uniqueLicenseKey(new \App\Models\KeysModel(), $hours, 'SHOP');
+    (new \App\Models\KeysModel())->insert([
+        'game' => 'PUBG',
+        'user_key' => $license,
+        'duration' => $hours,
+        'max_devices' => $devices,
+        'registrator' => $actor->username,
+        'created_by' => (int) $actor->id_users,
+        'status' => 1,
+    ]);
+    $orderModel->update($oid, [
+        'status' => 'verified',
+        'issued_key' => $license,
+        'verified_by' => $actor->username,
+    ]);
+    writeAudit('shop_verify', 'order#' . $oid . ' key=' . $license, $actor->username);
+    $cfgNow = (new \App\Models\ShopConfig())->bag();
+    $msg = 'BLACK BUNNY KEY READY' . "\n" . 'Order #' . $oid . "\n" . 'Key: ' . $license . "\n" . 'Txn: ' . (string) $order['txn_id'];
+    $phone = waDigits($order['customer_phone'] ?: ($cfgNow['owner_whatsapp'] ?? ''));
+    $waLink = $phone ? ('https://wa.me/' . $phone . '?text=' . rawurlencode($msg)) : '';
+    tgNotifyStaff("[ ORDER #{$oid} VERIFIED ]\nKEY {$license}\nby " . $actor->username);
+    return ['ok' => true, 'msg' => 'Order verified. Key: ' . $license, 'key' => $license, 'wa' => $waLink, 'order' => $order];
+}
+
+function shopRejectOrder($oid, $actor)
+{
+    $oid = (int) $oid;
+    if (!$actor || (int) ($actor->level ?? 9) > 2) {
+        return ['ok' => false, 'msg' => 'Owner/Admin only.'];
+    }
+    $orderModel = new \App\Models\ShopOrder();
+    $order = $orderModel->find($oid);
+    if (!$order || ($order['status'] ?? '') !== 'pending') {
+        return ['ok' => false, 'msg' => 'Order nahi / already done.'];
+    }
+    $orderModel->update($oid, ['status' => 'rejected', 'verified_by' => $actor->username]);
+    writeAudit('shop_reject', 'order#' . $oid, $actor->username);
+    tgNotifyStaff("[ ORDER #{$oid} REJECTED ]\nTXN " . $order['txn_id'] . "\nby " . $actor->username);
+    return ['ok' => true, 'msg' => 'Order rejected.', 'order' => $order];
+}
+
+function ensureWalletTable()
+{
+    try {
+        $db = \Config\Database::connect();
+        $db->query("CREATE TABLE IF NOT EXISTS wallet_topups (
+            id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+            user_id INT NOT NULL,
+            username VARCHAR(64) NOT NULL DEFAULT '',
+            amount INT NOT NULL DEFAULT 0,
+            txn_id VARCHAR(80) NOT NULL DEFAULT '',
+            note VARCHAR(255) NULL,
+            status VARCHAR(16) NOT NULL DEFAULT 'pending',
+            verified_by VARCHAR(64) NULL,
+            created_at DATETIME NULL,
+            PRIMARY KEY (id),
+            KEY user_id (user_id),
+            KEY status (status)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    } catch (\Throwable $e) {
+    }
+}
+
+function walletTopupMarkup($id)
+{
+    $id = (int) $id;
+    return [
+        'inline_keyboard' => [[
+            ['text' => '[+] CREDIT SALDO', 'callback_data' => 'w:a:' . $id],
+            ['text' => '[x] REJECT', 'callback_data' => 'w:r:' . $id],
+        ]],
+    ];
+}
+
+function pingWalletTopup($id)
+{
+    $row = (new \App\Models\WalletTopup())->find((int) $id);
+    if (!$row) {
+        return 0;
+    }
+    $text = "[ WALLET TOPUP #{$id} ]\nUSER " . $row['username']
+        . "\nRs " . (int) $row['amount']
+        . "\nTXN " . $row['txn_id'];
+    if (trim((string) ($row['note'] ?? '')) !== '') {
+        $text .= "\nNOTE " . $row['note'];
+    }
+    $text .= "\nOwner tap Credit / Reject.";
+    return tgNotifyStaff($text, walletTopupMarkup($id), [1]);
+}
+
+function walletApprove($id, $actor)
+{
+    $id = (int) $id;
+    if (!$actor || (int) ($actor->level ?? 9) !== 1) {
+        return ['ok' => false, 'msg' => 'Owner only.'];
+    }
+    ensureWalletTable();
+    $model = new \App\Models\WalletTopup();
+    $row = $model->find($id);
+    if (!$row || ($row['status'] ?? '') !== 'pending') {
+        return ['ok' => false, 'msg' => 'Top-up nahi / already done.'];
+    }
+    $userModel = new \App\Models\UserModel();
+    $target = $userModel->getUser((int) $row['user_id'], 'id_users');
+    if (!$target) {
+        return ['ok' => false, 'msg' => 'User nahi mila.'];
+    }
+    $add = (int) $row['amount'];
+    $left = (int) $target->saldo + $add;
+    $userModel->update($target->id_users, ['saldo' => $left]);
+    $model->update($id, ['status' => 'verified', 'verified_by' => $actor->username]);
+    writeAudit('wallet_ok', 'topup#' . $id . ' +' . $add . ' -> ' . $target->username, $actor->username);
+    $chat = trim((string) ($target->tg_chat_id ?? ''));
+    if ($chat !== '') {
+        tgSend($chat, "[ WALLET +Rs {$add} ]\nSALDO Rs {$left}\nTXN " . $row['txn_id']);
+    }
+    tgNotifyStaff("[ WALLET #{$id} CREDITED ]\n{$target->username} +Rs {$add}\nSALDO Rs {$left}\nby " . $actor->username, null, [1]);
+    return ['ok' => true, 'msg' => 'Credited Rs ' . $add . ' to ' . $target->username, 'saldo' => $left];
+}
+
+function walletReject($id, $actor)
+{
+    $id = (int) $id;
+    if (!$actor || (int) ($actor->level ?? 9) !== 1) {
+        return ['ok' => false, 'msg' => 'Owner only.'];
+    }
+    ensureWalletTable();
+    $model = new \App\Models\WalletTopup();
+    $row = $model->find($id);
+    if (!$row || ($row['status'] ?? '') !== 'pending') {
+        return ['ok' => false, 'msg' => 'Top-up nahi / already done.'];
+    }
+    $model->update($id, ['status' => 'rejected', 'verified_by' => $actor->username]);
+    writeAudit('wallet_no', 'topup#' . $id, $actor->username);
+    $userModel = new \App\Models\UserModel();
+    $target = $userModel->getUser((int) $row['user_id'], 'id_users');
+    if ($target) {
+        $chat = trim((string) ($target->tg_chat_id ?? ''));
+        if ($chat !== '') {
+            tgSend($chat, "[ WALLET REJECTED ]\nRs " . (int) $row['amount'] . "\nTXN " . $row['txn_id']);
+        }
+    }
+    tgNotifyStaff("[ WALLET #{$id} REJECTED ]\n" . $row['username'] . " Rs " . (int) $row['amount'] . "\nby " . $actor->username, null, [1]);
+    return ['ok' => true, 'msg' => 'Top-up rejected.'];
+}

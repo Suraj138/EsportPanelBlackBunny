@@ -20,16 +20,17 @@ class Connect extends BaseController
         $this->staticWords = "Vm8Lk7Uj2JmsjCPVPVjrLa7zgfx3uz9E";
     }
 
+    public function gone()
+    {
+        return $this->response->setStatusCode(404)->setBody('');
+    }
+
     public function index()
     {
-        if ($this->request->getPost()) {
-            return $this->index_post();
+        if (strtoupper((string) $this->request->getMethod()) !== 'POST') {
+            return $this->gone();
         }
-        return $this->response->setStatusCode(405)->setJSON([
-            'status' => false,
-            'reason' => 'POST required',
-            'client' => BASE_NAME,
-        ]);
+        return $this->index_post();
     }
 
     public function index_post()
@@ -47,7 +48,7 @@ class Connect extends BaseController
 
         $form_rules = [
             'game' => 'required|alpha_dash',
-            'user_key' => 'required|min_length[1]|max_length[36]',
+            'user_key' => 'required|min_length[1]|max_length[64]',
             'serial' => 'required|alpha_dash'
         ];
 
@@ -126,7 +127,7 @@ class Connect extends BaseController
         $ftext = (new _ftext())->find(1);
         $feature = (new Feature())->find(1);
         $rngcnt = $time->getTimestamp();
-        $real = "$game-$uKey-$sDev-$this->staticWords";
+        $real = $game . '-' . $uKey . '-' . $sDev . '-' . $this->staticWords;
         $expiry = $findKey->expired_date;
         if ($expiry == null) {
             $expiry = $time::now()->addHours($duration);
@@ -137,7 +138,6 @@ class Connect extends BaseController
         return $this->response->setJSON([
             'status' => true,
             'data' => [
-                'real' => $real,
                 'token' => md5($real),
                 'modname' => $mod ? $mod['modname'] : BASE_NAME,
                 'mod_status' => $ftext ? $ftext['_status'] : '',

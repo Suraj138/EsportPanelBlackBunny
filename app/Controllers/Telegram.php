@@ -230,6 +230,14 @@ class Telegram extends BaseController
             $this->keyAction($user, $chatId, $b, (int) $c);
             return;
         }
+        if ($a === 'o') {
+            $this->orderTap($user, $chatId, $b, (int) $c);
+            return;
+        }
+        if ($a === 'w') {
+            $this->walletTap($user, $chatId, $b, (int) $c);
+            return;
+        }
         $this->sendMenu($chatId, $user);
     }
 
@@ -493,6 +501,44 @@ class Telegram extends BaseController
         return $row;
     }
 
+    private function orderTap($user, $chatId, $act, $oid)
+    {
+        if ((int) $user->level > 2) {
+            tgSend($chatId, "Owner/Admin only.", tgMenuMarkup());
+            return;
+        }
+        if ($act === 'a') {
+            $out = shopVerifyOrder($oid, $user);
+            tgSend($chatId, $out['msg'] ?? 'Fail', tgMenuMarkup());
+            return;
+        }
+        if ($act === 'r') {
+            $out = shopRejectOrder($oid, $user);
+            tgSend($chatId, $out['msg'] ?? 'Fail', tgMenuMarkup());
+            return;
+        }
+        tgSend($chatId, "Unknown order tap.", tgMenuMarkup());
+    }
+
+    private function walletTap($user, $chatId, $act, $id)
+    {
+        if ((int) $user->level !== 1) {
+            tgSend($chatId, "Owner only.", tgMenuMarkup());
+            return;
+        }
+        if ($act === 'a') {
+            $out = walletApprove($id, $user);
+            tgSend($chatId, $out['msg'] ?? 'Fail', tgMenuMarkup());
+            return;
+        }
+        if ($act === 'r') {
+            $out = walletReject($id, $user);
+            tgSend($chatId, $out['msg'] ?? 'Fail', tgMenuMarkup());
+            return;
+        }
+        tgSend($chatId, "Unknown wallet tap.", tgMenuMarkup());
+    }
+
     private function linkAccount($chatId, $fromId, $code)
     {
         $userModel = new UserModel();
@@ -537,6 +583,7 @@ class Telegram extends BaseController
         $bag = $cfg->bag();
         $tgToken = trim((string) ($bag['tg_bot_token'] ?? ''));
         $secret = trim((string) ($bag['tg_webhook_secret'] ?? ''));
+        $health = tgBotHealth();
         return view('User/telegram', [
             'title' => 'Telegram Bot',
             'user' => $user,
@@ -545,8 +592,9 @@ class Telegram extends BaseController
             'tg_link_code' => isset($user->tg_link_code) ? trim((string) $user->tg_link_code) : '',
             'tg_link_exp' => isset($user->tg_link_exp) ? (string) $user->tg_link_exp : '',
             'tg_bot_set' => $tgToken !== '',
-            'tg_bot_masked' => $tgToken === '' ? '' : substr($tgToken, 0, 8) . '...' . substr($tgToken, -5),
+            'tg_bot_masked' => $health['masked'] ?: ($tgToken === '' ? '' : substr($tgToken, 0, 8) . '...' . substr($tgToken, -5)),
             'tg_webhook' => $secret !== '' ? site_url('telegram/hook?k=' . $secret) : '',
+            'tg_health' => $health,
         ]);
     }
 

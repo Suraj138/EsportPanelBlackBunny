@@ -4,6 +4,7 @@ namespace Config;
 
 use App\Filters\AuthFilter;
 use App\Filters\AdminFilter;
+use App\Filters\ShieldFilter;
 use CodeIgniter\Config\BaseConfig;
 use CodeIgniter\Filters\CSRF;
 use CodeIgniter\Filters\DebugToolbar;
@@ -23,6 +24,7 @@ class Filters extends BaseConfig
 		'honeypot' => Honeypot::class,
 		'auth'     => AuthFilter::class,
 		'admin'    => AdminFilter::class,
+		'shield'   => ShieldFilter::class,
 	];
 
 	/**
@@ -33,6 +35,7 @@ class Filters extends BaseConfig
 	 */
 	public $globals = [
 		'before' => [
+			'shield',
 			'csrf' => [
 				'except' => ['connect', 'telegram/hook'],
 			],
@@ -46,8 +49,7 @@ class Filters extends BaseConfig
 			// 'csrf',
 		],
 		'after'  => [
-		//	'toolbar',
-			// 'honeypot',
+			'shield',
 		],
 	];
 

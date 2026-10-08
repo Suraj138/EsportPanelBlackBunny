@@ -170,6 +170,7 @@
                 <a href="<?= site_url('keys/generate') ?>">GENERATE</a>
                 <a href="<?= site_url('keys') ?>">KEYS</a>
                 <a href="<?= site_url('telegram') ?>">TELEGRAM</a>
+                <a href="<?= site_url('wallet') ?>">WALLET</a>
                 <?php if ((int) $user->level <= 2) : ?>
                 <a href="<?= site_url('public-control') ?>">STORE</a>
                 <?php endif; ?>
@@ -208,6 +209,7 @@
                 <a href="<?= site_url('keys') ?>"><b>02</b> View Keys</a>
                 <a href="<?= site_url('search') ?>"><b>03</b> Search</a>
                 <a href="<?= site_url('settings') ?>"><b>04</b> Settings</a>
+                <a href="<?= site_url('wallet') ?>"><b>04B</b> Wallet Top-up</a>
                 <?php if ((int) $user->level <= 2) : ?>
                 <a href="<?= site_url('shop') ?>" target="_blank" rel="noopener"><b>05</b> Public Shop</a>
                 <a href="<?= site_url('public-control') ?>"><b>06</b> Public Control</a>

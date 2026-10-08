@@ -152,7 +152,7 @@
                     data: 'user_key',
                     render: function(data, type, row, meta) {
                         var is_valid = (row.status == 'Active') ? "text-success" : "text-danger";
-                        return `<span class="${is_valid} keyBlur key-sensi">${(row.user_key ? row.user_key : '&mdash;')}</span> `;
+                        return `<span class="${is_valid} keyBlur key-sensi key-chip" data-key="${row.user_key || ''}" style="cursor:pointer">${(row.user_key ? row.user_key : '&mdash;')}</span> `;
                     }
                 },
                 {
@@ -192,7 +192,7 @@
                         var btnReset = `<button class="btn btn-outline-danger btn-sm" onclick="resetUserKey('${row.user_key}')" title="Reset HWID">HWID</button>`;
                         var btnalterOne = `<button class="btn btn-outline-warning btn-sm" onclick="resetUserKey1('${row.user_key}')" title="Delete key">DEL</button>`;
                         var btnEdits = `<a href="${window.location.origin}/keys/${row.id}" class="btn btn-outline-info btn-sm" title="Edit">EDIT</a>`;
-                        var btnCopy = `<button class="btn btn-outline-success btn-sm" onclick="copyKey('${row.user_key}')" title="Copy">COPY</button>`;
+                        var btnCopy = `<button class="btn btn-outline-success btn-sm" onclick="copyKeyDetails('${row.user_key}','${row.game}','${row.duration}')" title="Copy">COPY</button>`;
                         var btnShare = `<button class="btn btn-outline-primary btn-sm" onclick="shareKey('${row.user_key}','${row.game}','${row.duration}')" title="Share">SHARE</button>`;
                         return `<div class="d-flex flex-wrap gap-1">${btnReset} ${btnalterOne} ${btnEdits} ${btnCopy} ${btnShare}</div>`;
                     }
@@ -261,18 +261,34 @@
         });
     }
 
-    function copyKey(key) {
-        if (navigator.clipboard) navigator.clipboard.writeText(key);
+    function bbClip(v, toast) {
+        v = String(v || '');
+        if (navigator.clipboard) navigator.clipboard.writeText(v);
         else {
             var t = document.createElement('textarea');
-            t.value = key; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove();
+            t.value = v; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove();
         }
-        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Key copied', showConfirmButton: false, timer: 1400 });
+        if (window.bbToast) window.bbToast(toast || 'COPIED', 'ok');
+        else Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: toast || 'Copied', showConfirmButton: false, timer: 1400 });
     }
+    function copyKey(key) {
+        bbClip(String(key || '').trim() + '\nThanks for purchase.', 'KEY COPIED');
+    }
+    function copyKeyDetails(key, game, duration) {
+        var text = 'BLACK BUNNY KEY\nKeys: 1\nDuration: ' + duration + '\n' + String(key || '').trim() + '\nThanks for purchase.';
+        bbClip(text, 'DETAILS COPIED');
+    }
+    $(document).on('click', '.key-chip', function() {
+        var k = $(this).data('key') || $(this).attr('data-key');
+        if (k) copyKey(k);
+    });
     function shareKey(key, game, duration) {
-        var text = 'BLACK BUNNY KEY\\nGame: ' + game + '\\nKey: ' + key + '\\nDuration: ' + duration;
+        var text = 'BLACK BUNNY KEY\nKeys: 1\nDuration: ' + duration + '\n' + key + '\nThanks for purchase.';
         if (navigator.share) navigator.share({ title: 'BLACK BUNNY KEY', text: text });
-        else copyKey(key);
+        else {
+            if (navigator.clipboard) navigator.clipboard.writeText(text);
+            if (window.bbToast) window.bbToast('DETAILS COPIED', 'ok');
+        }
     }
     function resetUserKey(keys) {
         Swal.fire({

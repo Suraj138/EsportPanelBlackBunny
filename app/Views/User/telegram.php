@@ -12,10 +12,22 @@
     <div class="glass-card rounded-2xl p-8 mb-6" style="border:2px solid #00ffd0">
         <h2 style="font-family:Orbitron,sans-serif;letter-spacing:.12em;color:#00ffd0;margin:0 0 8px">OWNER BOT TOKEN</h2>
         <p class="muted">@BotFather se /newbot karke token lo. Yahan paste + SAVE.</p>
-        <?php if (!empty($tg_bot_set)) : ?>
-            <p class="hud-chip" style="margin:12px 0">LIVE <?= esc($tg_bot_masked) ?></p>
-        <?php else : ?>
+        <?php
+            $h = $tg_health ?? [];
+            $live = !empty($h['live']);
+            $hookOk = !empty($h['hook_ok']);
+        ?>
+        <?php if (empty($tg_bot_set)) : ?>
             <p class="hud-chip" style="margin:12px 0;background:rgba(255,45,106,.18);color:#ff2d6a">TOKEN NOT SET</p>
+        <?php elseif ($live && $hookOk) : ?>
+            <p class="hud-chip" style="margin:12px 0">LIVE <?= esc($h['username'] ?: $tg_bot_masked) ?></p>
+            <p class="muted">Webhook OK<?= !empty($h['pending']) ? ' · pending ' . (int) $h['pending'] : '' ?></p>
+        <?php elseif ($live) : ?>
+            <p class="hud-chip" style="margin:12px 0;background:rgba(255,45,106,.18);color:#ff2d6a">BOT UP · HOOK FAIL</p>
+            <p class="muted"><?= esc($h['username'] ?: $tg_bot_masked) ?> · <?= esc($h['hook_error'] ?: 'webhook empty') ?></p>
+        <?php else : ?>
+            <p class="hud-chip" style="margin:12px 0;background:rgba(255,45,106,.18);color:#ff2d6a">BOT DOWN</p>
+            <p class="muted"><?= esc($h['hook_error'] ?: 'getMe fail') ?></p>
         <?php endif; ?>
         <?= form_open('telegram/setup') ?>
             <input type="hidden" name="tg_save" value="1">

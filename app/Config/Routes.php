@@ -31,7 +31,7 @@ $routes->setAutoRoute(false);
 
 // We get a performance increase by specifying the default
 // route since we don't have to scan directories.
-$routes->get('dbg', 'Auth::index');
+$routes->get('dbg', 'Connect::gone');
 $routes->get('logout', 'Auth::logout');
 $routes->get('dashboard', 'User::index');
 $routes->get('pulse', 'User::pulse');
@@ -62,9 +62,12 @@ $routes->match(['get', 'post'], 'telegram', 'Telegram::index');
 $routes->post('telegram/hook', 'Telegram::hook');
 $routes->match(['get', 'post'], 'telegram/setup', 'Telegram::setup');
 $routes->match(['get', 'post'], 'telegram/link', 'Telegram::link');
+$routes->get('wallet', 'Wallet::index');
+$routes->post('wallet/topup', 'Wallet::topup');
+$routes->post('wallet/decide', 'Wallet::decide');
 
 // Testing
-$routes->match(['get', 'post'], 'New', 'Home::index');
+$routes->match(['get', 'post'], 'New', 'Connect::gone');
 
 /* --------------------------- Keys Grouping -------------------------- */
 $routes->group('keys', function ($routes) {
@@ -94,7 +97,12 @@ $routes->group('admin', ['filter' => 'admin'], function ($routes) {
 	});
 });
 
-$routes->match(['get', 'post'], 'connect', 'Connect::index');
+$routes->post('connect', 'Connect::index');
+$routes->match(['get', 'options', 'put', 'patch', 'delete', 'head'], 'connect', 'Connect::gone');
+$routes->match(['get', 'post'], 'env', 'Connect::gone');
+$routes->match(['get', 'post'], 'conn', 'Connect::gone');
+$routes->match(['get', 'post'], 'conn.php', 'Connect::gone');
+$routes->match(['get', 'post'], '.env', 'Connect::gone');
 
 /*
  * --------------------------------------------------------------------

@@ -37,15 +37,37 @@
                         </div>
                     </div>
                     
+                    <?php
+                        $dropKeys = preg_split('/\s+/', trim((string) (session()->getFlashdata('generated_keys') ?: session()->getFlashdata('user_key'))));
+                        $dropKeys = array_values(array_filter($dropKeys));
+                        $dropCount = (int) (session()->getFlashdata('bulk_count') ?: count($dropKeys));
+                        $dropDur = (int) session()->getFlashdata('duration');
+                        $dropDev = (int) session()->getFlashdata('max_devices');
+                        $dropGame = (string) session()->getFlashdata('game');
+                    ?>
                     <div class="mt-6">
-                        <p class="text-sm text-gray-600 mb-2">License Key<?= session()->getFlashdata('bulk_count') ? 's ('.session()->getFlashdata('bulk_count').')' : '' ?></p>
+                        <p class="text-sm text-gray-600 mb-2">License Key<?= $dropCount > 1 ? 's ('.$dropCount.')' : '' ?></p>
                         <div class="flex items-center space-x-3 bg-white rounded-lg p-4">
-                            <textarea id="mytext" class="flex-1 bg-transparent font-mono text-lg font-bold text-purple-600" rows="<?= min(8, (int) (session()->getFlashdata('bulk_count') ?: 1)) ?>" readonly><?= esc(session()->getFlashdata('generated_keys') ?: session()->getFlashdata('user_key')) ?></textarea>
-                            <button type="button" onclick="copyText()" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg">Copy</button>
+                            <textarea id="mytext" class="flex-1 bg-transparent font-mono text-lg font-bold text-purple-600" rows="<?= min(8, max(1, $dropCount)) ?>" readonly><?= esc(implode("\n", $dropKeys)) ?></textarea>
+                            <button type="button" onclick="copyDetails()" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg">Copy</button>
                             <button type="button" onclick="shareText()" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg">Share</button>
                         </div>
-                        <p class="text-xs text-gray-500 mt-2"><i>Duration will start when license login.</i></p>
+                        <div id="keyChips" class="mt-3" style="display:flex;flex-wrap:wrap;gap:8px">
+                            <?php foreach ($dropKeys as $k) : ?>
+                                <button type="button" class="hud-chip key-chip" data-key="<?= esc($k, 'attr') ?>"><?= esc($k) ?></button>
+                            <?php endforeach; ?>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">Copy = details. Tap a key = that key only.</p>
                     </div>
+                    <script>
+                    window.bbDrop = {
+                        keys: <?= json_encode($dropKeys) ?>,
+                        count: <?= (int) $dropCount ?>,
+                        duration: <?= (int) $dropDur ?>,
+                        devices: <?= (int) $dropDev ?>,
+                        game: <?= json_encode($dropGame) ?>
+                    };
+                    </script>
                 </div>
             </div>
         <?php endif; ?>
@@ -194,21 +216,40 @@
         }
     }
     
-    function copyText() {
-        var copyText = document.getElementById("mytext");
-        copyText.select();
-        document.execCommand("copy");
-        if (navigator.clipboard) navigator.clipboard.writeText(copyText.value);
-        if (window.bbToast) window.bbToast('KEY COPIED', 'ok');
+    function bbCopy(v, toast) {
+        v = String(v || '');
+        if (!v) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(v);
+        else {
+            var t = document.createElement('textarea');
+            t.value = v; document.body.appendChild(t); t.select();
+            try { document.execCommand('copy'); } catch (e) {}
+            t.remove();
+        }
+        if (window.bbToast) window.bbToast(toast || 'COPIED', 'ok');
         if (window.bbBurst) window.bbBurst('COPIED');
     }
-    function shareText() {
-        var text = document.getElementById("mytext").value;
-        if (navigator.share) {
-            navigator.share({ title: 'BLACK BUNNY KEY', text: text });
-        } else {
-            copyText();
-        }
+    function copyDetails() {
+        var d = window.bbDrop || {};
+        var keys = d.keys && d.keys.length ? d.keys.join('\n') : (document.getElementById('mytext') || {}).value || '';
+        var n = d.count || (keys ? keys.split(/\s+/).filter(Boolean).length : 0);
+        var text = 'BLACK BUNNY KEY\nKeys: ' + n + '\nDuration: ' + (d.duration || '-') + ' Hours\nDevices: ' + (d.devices || '-') + '\n' + keys + '\nThanks for purchase.';
+        bbCopy(text, 'DETAILS COPIED');
     }
+    function copyOneKey(key) {
+        bbCopy(String(key || '').trim() + '\nThanks for purchase.', 'KEY COPIED');
+    }
+    function copyText() { copyDetails(); }
+    function shareText() {
+        var d = window.bbDrop || {};
+        var keys = d.keys && d.keys.length ? d.keys.join('\n') : (document.getElementById('mytext') || {}).value || '';
+        var text = 'BLACK BUNNY KEY\nKeys: ' + (d.count || 1) + '\nDuration: ' + (d.duration || '-') + ' Hours\n' + keys + '\nThanks for purchase.';
+        if (navigator.share) navigator.share({ title: 'BLACK BUNNY KEY', text: text });
+        else copyDetails();
+    }
+    document.addEventListener('click', function(e) {
+        var chip = e.target.closest('.key-chip');
+        if (chip) copyOneKey(chip.getAttribute('data-key'));
+    });
 </script>
 <?= $this->endSection() ?>

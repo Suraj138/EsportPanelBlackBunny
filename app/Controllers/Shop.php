@@ -2,7 +2,6 @@
 
 namespace App\Controllers;
 
-use App\Models\KeysModel;
 use App\Models\ShopConfig;
 use App\Models\ShopMedia;
 use App\Models\ShopOrder;
@@ -116,6 +115,7 @@ class Shop extends BaseController
             'created_at' => date('Y-m-d H:i:s'),
         ]);
         writeAudit('shop_order', 'order#' . $id . ' plan=' . $plan['title'], 'public');
+        pingShopOrder($id, $plan);
         return redirect()->to('shop/thanks/' . $id);
     }
 
@@ -299,36 +299,13 @@ class Shop extends BaseController
         }
 
         if ($this->request->getPost('verify_order') && (int) $user->level <= 2) {
-            $oid = (int) $this->request->getPost('order_id');
-            $order = $orderModel->find($oid);
-            if ($order && $order['status'] === 'pending') {
-                $plan = $planModel->find((int) $order['plan_id']);
-                $hours = $plan ? (int) $plan['hours'] : 24;
-                $devices = $plan ? (int) $plan['devices'] : 1;
-                $license = uniqueLicenseKey(new KeysModel(), $hours, 'SHOP');
-                (new KeysModel())->insert([
-                    'game' => 'PUBG',
-                    'user_key' => $license,
-                    'duration' => $hours,
-                    'max_devices' => $devices,
-                    'registrator' => $user->username,
-                    'created_by' => (int) session('userid'),
-                ]);
-                $orderModel->update($oid, [
-                    'status' => 'verified',
-                    'issued_key' => $license,
-                    'verified_by' => $user->username,
-                ]);
-                writeAudit('shop_verify', 'order#' . $oid . ' key=' . $license, $user->username);
-                $cfgNow = $cfgModel->bag();
-                $msg = 'BLACK BUNNY KEY READY' . "\n" . 'Order #' . $oid . "\n" . 'Key: ' . $license . "\n" . 'Txn: ' . (string) $order['txn_id'];
-                $phone = waDigits($order['customer_phone'] ?: ($cfgNow['owner_whatsapp'] ?? ''));
-                $waLink = $phone ? ('https://wa.me/' . $phone . '?text=' . rawurlencode($msg)) : '';
-                if ($waLink) {
-                    session()->setFlashdata('shop_wa_ping', $waLink);
-                }
-                return redirect()->to('public-control')->with('msgSuccess', 'Order verified. Key: ' . $license . ($waLink ? ' · open WhatsApp ping' : ''));
+            $out = shopVerifyOrder((int) $this->request->getPost('order_id'), $user);
+            if (!empty($out['wa'])) {
+                session()->setFlashdata('shop_wa_ping', $out['wa']);
             }
+            $key = !empty($out['ok']) ? 'msgSuccess' : 'msgDanger';
+            $extra = (!empty($out['ok']) && !empty($out['wa'])) ? ' · open WhatsApp ping' : '';
+            return redirect()->to('public-control')->with($key, ($out['msg'] ?? 'Fail') . $extra);
         }
 
         if ($this->request->getPost('delete_plan')) {
@@ -351,13 +328,9 @@ class Shop extends BaseController
         }
 
         if ($this->request->getPost('reject_order')) {
-            $oid = (int) $this->request->getPost('order_id');
-            $order = $orderModel->find($oid);
-            if ($order && $order['status'] === 'pending') {
-                $orderModel->update($oid, ['status' => 'rejected', 'verified_by' => $user->username]);
-                writeAudit('shop_reject', 'order#' . $oid, $user->username);
-                return redirect()->to('public-control')->with('msgSuccess', 'Order rejected.');
-            }
+            $out = shopRejectOrder((int) $this->request->getPost('order_id'), $user);
+            $key = !empty($out['ok']) ? 'msgSuccess' : 'msgDanger';
+            return redirect()->to('public-control')->with($key, $out['msg'] ?? 'Fail');
         }
 
         return view('Shop/control', [
