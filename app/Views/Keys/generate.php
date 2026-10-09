@@ -46,18 +46,18 @@
                         $dropGame = (string) session()->getFlashdata('game');
                     ?>
                     <div class="mt-6">
-                        <p class="text-sm text-gray-600 mb-2">License Key<?= $dropCount > 1 ? 's ('.$dropCount.')' : '' ?></p>
-                        <div class="flex items-center space-x-3 bg-white rounded-lg p-4">
-                            <textarea id="mytext" class="flex-1 bg-transparent font-mono text-lg font-bold text-purple-600" rows="<?= min(8, max(1, $dropCount)) ?>" readonly><?= esc(implode("\n", $dropKeys)) ?></textarea>
-                            <button type="button" onclick="copyDetails()" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg">Copy</button>
-                            <button type="button" onclick="shareText()" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg">Share</button>
+                        <p class="muted mb-2">License Key<?= $dropCount > 1 ? 's ('.$dropCount.')' : '' ?></p>
+                        <textarea id="mytext" class="w-full font-mono" rows="<?= min(8, max(1, $dropCount)) ?>" readonly style="color:#00ffd0;background:rgba(0,0,0,.35);border:1px solid rgba(0,255,208,.28);padding:12px"><?= esc(implode("\n", $dropKeys)) ?></textarea>
+                        <div class="shop-cta" style="display:flex;gap:10px;flex-wrap:wrap;margin:12px 0">
+                            <button type="button" class="submit" onclick="copyDetails()">COPY</button>
+                            <button type="button" class="ghost-btn" onclick="shareText()">SHARE</button>
                         </div>
                         <div id="keyChips" class="mt-3" style="display:flex;flex-wrap:wrap;gap:8px">
                             <?php foreach ($dropKeys as $k) : ?>
                                 <button type="button" class="hud-chip key-chip" data-key="<?= esc($k, 'attr') ?>"><?= esc($k) ?></button>
                             <?php endforeach; ?>
                         </div>
-                        <p class="text-xs text-gray-500 mt-2">Copy = details. Tap a key = that key only.</p>
+                        <p class="muted mt-2">Copy = details. Tap a key = that key only.</p>
                     </div>
                     <script>
                     window.bbDrop = {
@@ -136,7 +136,7 @@
                 <div id="bulk-section">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Bulk Keys</label>
                      <select name="loopcount" id="hulala" class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all">
-                         <option value="1">1 Keys</option>
+                          <option value="1">1 Key</option>
                          <option value="5">5 Keys</option>
                          <option value="10">10 Keys</option>
                          <option value="25">25 Keys</option>

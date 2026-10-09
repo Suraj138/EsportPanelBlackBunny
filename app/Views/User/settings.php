@@ -44,8 +44,9 @@
     <section class="page-hero">
         <div class="hero-kicker">OPERATOR</div>
         <h1>ACCOUNT SETTINGS</h1>
-        <p>Swap cryptographic key, identity alias, Owner 2FA, and Telegram bot link.</p>
+        <p>Swap cryptographic key, identity alias, and Owner 2FA. Bot bind lives on Telegram.</p>
     </section>
+    <div class="mb-6"><?= $this->include('Layout/msgStatus') ?></div>
     <?php if ((int) $user->level == 1) : ?>
     <div class="glass-card rounded-2xl p-6 mb-6">
         <h2>OWNER 2FA</h2>
@@ -68,52 +69,8 @@
         <?php endif; ?>
     </div>
     <?php endif; ?>
+    <p class="muted mb-6">Bot bind: <a href="<?= site_url('telegram') ?>" style="color:#00ffd0">Telegram Bot</a></p>
 
-    <div class="glass-card rounded-2xl p-6 mb-6">
-        <h2>TELEGRAM BOT</h2>
-        <p class="muted">Web login ke bina key generate / block / delete. Role same as panel: Owner all keys, Admin/User own keys + saldo.</p>
-        <?php if (!empty($tg_chat_id)) : ?>
-            <p class="hud-chip" style="margin:10px 0">LINKED CHAT <?= esc($tg_chat_id) ?></p>
-            <?= form_open('telegram/link') ?>
-                <input type="hidden" name="tg_self_unlink" value="1">
-                <button class="submit" type="submit">UNLINK TELEGRAM</button>
-            <?= form_close() ?>
-        <?php else : ?>
-            <?php if (!empty($tg_link_code) && !empty($tg_link_exp) && strtotime($tg_link_exp) > time()) : ?>
-                <p class="muted">Bot me ye bhejo (10 min):</p>
-                <p class="hud-chip" style="margin:10px 0">/start <?= esc($tg_link_code) ?></p>
-            <?php endif; ?>
-            <?= form_open('telegram/link') ?>
-                <input type="hidden" name="tg_make_code" value="1">
-                <button class="submit" type="submit">MAKE LINK CODE</button>
-            <?= form_close() ?>
-        <?php endif; ?>
-        <p class="muted" style="margin-top:12px">Commands: /gen 5 1 1 · /list · /find KEY · /block KEY · /unblock KEY · /reset KEY · /del KEY · /me</p>
-    </div>
-
-    <?php if ((int) $user->level == 1) : ?>
-    <div class="glass-card rounded-2xl p-6 mb-6">
-        <h2>BOT TOKEN (OWNER)</h2>
-        <p class="muted">BotFather se token. SAVE webhook auto set karega.</p>
-        <?php if (!empty($tg_bot_set)) : ?>
-            <p class="hud-chip" style="margin:10px 0">ARMED <?= esc($tg_bot_masked) ?></p>
-        <?php endif; ?>
-        <?= form_open('telegram/setup') ?>
-            <input type="hidden" name="tg_save" value="1">
-            <div class="field"><label>BOT TOKEN</label><input name="tg_bot_token" placeholder="123456:ABC..." autocomplete="off"></div>
-            <button class="submit" type="submit">SAVE BOT + WEBHOOK</button>
-        <?= form_close() ?>
-        <?php if (!empty($tg_webhook)) : ?>
-            <p class="muted" style="margin-top:10px;word-break:break-all">HOOK <?= esc($tg_webhook) ?></p>
-        <?php endif; ?>
-    </div>
-    <?php endif; ?>
-
-    <!-- Message Status -->
-    <div class="mb-6 animate-fade-in-up" style="animation-delay: 0.1s">
-        <?= $this->include('Layout/msgStatus') ?>
-    </div>
-    
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Change Password Card -->
         <div class="glass-card rounded-2xl p-8 animate-fade-in-left" style="animation-delay: 0.2s">
@@ -335,7 +292,7 @@
                 <h3 class="text-lg font-bold text-gray-800">Quick Actions</h3>
             </div>
             <div class="space-y-2">
-                <a href="<?= base_url('user/dashboard') ?>" class="flex items-center text-sm text-gray-700 hover:text-purple-600 transition-colors py-2">
+                <a href="<?= site_url('dashboard') ?>" class="flex items-center text-sm text-gray-700 hover:text-purple-600 transition-colors py-2">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                     </svg>

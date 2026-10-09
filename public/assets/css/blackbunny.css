@@ -111,11 +111,12 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   background: linear-gradient(180deg, rgba(4,10,20,.97), rgba(5,12,24,.9));
   border-right: 1px solid var(--line);
   box-shadow: 20px 0 60px rgba(0,0,0,.5);
-  clip-path: polygon(0 0, 100% 0, 94% 100%, 0 100%);
+  clip-path: none;
 }
 .app-sidebar:after {
   content: "";
@@ -408,8 +409,8 @@ main {
   border: 1px solid var(--line) !important;
   box-shadow: var(--shadow) !important;
   color: var(--text) !important;
-  overflow: hidden;
-  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+  overflow: visible;
+  clip-path: none;
   animation: riseIn .75s var(--ease) both;
   transition: transform .4s var(--ease), box-shadow .4s, border-color .4s;
 }
@@ -1171,7 +1172,9 @@ button[type="submit"] {
 .hud-chip {
   min-height: 32px;
   padding: 0 12px !important;
-  white-space: nowrap;
+  white-space: normal;
+  max-width: 100%;
+  word-break: break-word;
 }
 .glass-card,
 .login-card,

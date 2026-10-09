@@ -37,7 +37,7 @@
 .flow-track b.gold{background:#7dffea!important}
 .op-list{list-style:none!important;margin:0!important;padding:0!important;display:grid!important;gap:8px!important}
 .op-list li{display:flex!important;justify-content:space-between!important;padding:8px 0!important;border-bottom:1px solid rgba(0,255,208,.1)!important}
-.op-actions,.lane-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;margin-top:14px!important}
+.op-actions,.lane-grid{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(120px,1fr))!important;gap:8px!important;margin-top:14px!important}
 .op-actions a,.lane-grid a{text-decoration:none!important;color:#031018!important;background:#00ffd0!important;padding:10px!important;font-family:Orbitron,sans-serif!important;font-size:11px!important;letter-spacing:.08em!important;text-align:center!important}
 .lane-grid a{background:transparent!important;color:#e8f6ff!important;border:1px solid rgba(0,255,208,.25)!important;text-align:left!important}
 .lane-grid a b{color:#00ffd0!important;margin-right:8px!important;display:inline!important}
@@ -205,18 +205,20 @@
                 <em>jump</em>
             </header>
             <div class="lane-grid">
-                <a href="<?= site_url('keys/generate') ?>"><b>01</b> Generate Key</a>
-                <a href="<?= site_url('keys') ?>"><b>02</b> View Keys</a>
-                <a href="<?= site_url('search') ?>"><b>03</b> Search</a>
-                <a href="<?= site_url('settings') ?>"><b>04</b> Settings</a>
-                <a href="<?= site_url('wallet') ?>"><b>04B</b> Wallet Top-up</a>
+                <?php $n = 1; ?>
+                <a href="<?= site_url('keys/generate') ?>"><b><?= sprintf('%02d', $n++) ?></b> Generate Key</a>
+                <a href="<?= site_url('keys') ?>"><b><?= sprintf('%02d', $n++) ?></b> View Keys</a>
+                <a href="<?= site_url('search') ?>"><b><?= sprintf('%02d', $n++) ?></b> Search</a>
+                <a href="<?= site_url('settings') ?>"><b><?= sprintf('%02d', $n++) ?></b> Settings</a>
+                <a href="<?= site_url('wallet') ?>"><b><?= sprintf('%02d', $n++) ?></b> Wallet</a>
+                <a href="<?= site_url('telegram') ?>"><b><?= sprintf('%02d', $n++) ?></b> Telegram</a>
                 <?php if ((int) $user->level <= 2) : ?>
-                <a href="<?= site_url('shop') ?>" target="_blank" rel="noopener"><b>05</b> Public Shop</a>
-                <a href="<?= site_url('public-control') ?>"><b>06</b> Public Control</a>
+                <a href="<?= site_url('shop') ?>" target="_blank" rel="noopener"><b><?= sprintf('%02d', $n++) ?></b> Public Shop</a>
+                <a href="<?= site_url('public-control') ?>"><b><?= sprintf('%02d', $n++) ?></b> Public Control</a>
                 <?php endif; ?>
                 <?php if ((int) $user->level == 1) : ?>
-                <a href="<?= site_url('admin/manage-users') ?>"><b>07</b> Manage Users</a>
-                <a href="<?= site_url('audit') ?>"><b>08</b> Audit Log</a>
+                <a href="<?= site_url('admin/manage-users') ?>"><b><?= sprintf('%02d', $n++) ?></b> Manage Users</a>
+                <a href="<?= site_url('audit') ?>"><b><?= sprintf('%02d', $n++) ?></b> Audit Log</a>
                 <?php endif; ?>
             </div>
         </section>

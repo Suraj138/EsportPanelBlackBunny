@@ -25,7 +25,9 @@
     <nav id="shopNav">
         <a href="#loader"><?= shopLang('Loader', 'Loader') ?></a>
         <a href="#plans"><?= shopLang('Plans', 'Plans') ?></a>
+        <?php if (!empty($media)) : ?>
         <a href="#gallery"><?= shopLang('Gallery', 'Gallery') ?></a>
+        <?php endif; ?>
         <a href="#about"><?= shopLang('About', 'Baare mein') ?></a>
         <a href="<?= site_url('shop/lookup') ?>"><?= shopLang('Track', 'Track') ?></a>
         <a href="<?= site_url('shop/legal/contact') ?>"><?= shopLang('Contact', 'Contact') ?></a>
@@ -51,7 +53,7 @@
             <?php if ($apkHref) : ?>
                 <a class="ghost-btn" href="<?= esc($apkHref) ?>" download>DOWNLOAD APK</a>
             <?php else : ?>
-                <a class="ghost-btn" href="#loader">DOWNLOAD APK · 10 MB</a>
+                <a class="ghost-btn" href="#loader">GET LOADER</a>
             <?php endif; ?>
             <a href="#plans" class="ghost-btn"><?= shopLang('BUY KEY', 'KEY LO') ?></a>
         </div>

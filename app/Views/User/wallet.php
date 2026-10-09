@@ -1,4 +1,12 @@
 <?= $this->extend('Layout/Starter') ?>
+<?= $this->section('css') ?>
+<link rel="stylesheet" href="<?= base_url('assets/css/shop.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/shop.css') ?: time() ?>">
+<style>
+.wallet-row{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid rgba(0,255,208,.12)}
+.wallet-row form{display:flex;gap:8px;flex-wrap:wrap}
+@media (max-width:720px){.wallet-row{flex-direction:column;align-items:stretch}}
+</style>
+<?= $this->endSection() ?>
 <?= $this->section('content') ?>
 <?php
 $upi = trim((string) ($cfg['upi_id'] ?? ''));
@@ -25,8 +33,8 @@ $upiLink = $upi ? ('upi://pay?pa=' . rawurlencode($upi) . '&pn=' . $pn . '&am=' 
                 <?php if ($upi) : ?>
                     <button type="button" class="ghost-btn" id="copyUpi">COPY UPI</button>
                 <?php endif; ?>
-                <?php if ($upiLink) : ?>
-                    <a class="submit shop-btn" href="<?= esc($upiLink) ?>">PAY UPI</a>
+                <?php if ($upi) : ?>
+                    <a class="submit shop-btn" id="payUpi" href="<?= esc($upiLink) ?>" data-pa="<?= esc($upi, 'attr') ?>" data-pn="<?= esc($cfg['upi_name'] ?? 'BLACK BUNNY', 'attr') ?>">PAY UPI</a>
                 <?php endif; ?>
             </div>
             <?php if (!empty($cfg['qr_image'])) : ?>
@@ -37,7 +45,7 @@ $upiLink = $upi ? ('upi://pay?pa=' . rawurlencode($upi) . '&pn=' . $pn . '&am=' 
         <?= form_open('wallet/topup', ['class' => 'login-form']) ?>
             <div class="field">
                 <label>AMOUNT Rs</label>
-                <input type="number" name="amount" min="50" max="50000" required value="<?= esc(old('amount', '100')) ?>" placeholder="100">
+                <input type="number" name="amount" id="walletAmt" min="50" max="50000" required value="<?= esc(old('amount', '100')) ?>" placeholder="100">
             </div>
             <div class="field">
                 <label>UPI TXN ID</label>
@@ -55,7 +63,7 @@ $upiLink = $upi ? ('upi://pay?pa=' . rawurlencode($upi) . '&pn=' . $pn . '&am=' 
         <h2 style="font-family:Orbitron,sans-serif;letter-spacing:.12em;color:#00ffd0;margin:0 0 12px">MY REQUESTS</h2>
         <?php if (!$mine) : ?><p class="muted">No top-ups yet.</p><?php endif; ?>
         <?php foreach ($mine as $r) : ?>
-            <div class="order-row" style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(0,255,208,.12)">
+            <div class="wallet-row">
                 <div>
                     <strong>#<?= (int) $r['id'] ?> · Rs <?= (int) $r['amount'] ?></strong>
                     <small style="display:block">txn <?= esc($r['txn_id']) ?> · <?= esc($r['created_at']) ?></small>
@@ -70,14 +78,14 @@ $upiLink = $upi ? ('upi://pay?pa=' . rawurlencode($upi) . '&pn=' . $pn . '&am=' 
         <h2 style="font-family:Orbitron,sans-serif;letter-spacing:.12em;color:#00ffd0;margin:0 0 12px">OWNER QUEUE</h2>
         <?php if (!$queue) : ?><p class="muted">No wallet requests.</p><?php endif; ?>
         <?php foreach ($queue as $r) : ?>
-            <div class="order-row" style="display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid rgba(0,255,208,.12)">
+            <div class="wallet-row">
                 <div>
                     <strong>#<?= (int) $r['id'] ?> · <?= esc($r['username']) ?> · Rs <?= (int) $r['amount'] ?></strong>
                     <small style="display:block">txn <?= esc($r['txn_id']) ?><?= $r['note'] ? ' · ' . esc($r['note']) : '' ?></small>
                     <span class="hud-chip"><?= esc(strtoupper($r['status'])) ?></span>
                 </div>
                 <?php if ($r['status'] === 'pending') : ?>
-                <form method="post" action="<?= site_url('wallet/decide') ?>" style="display:flex;gap:8px">
+                <form method="post" action="<?= site_url('wallet/decide') ?>">
                     <?= csrf_field() ?>
                     <input type="hidden" name="topup_id" value="<?= (int) $r['id'] ?>">
                     <button class="submit" name="approve_topup" value="1" type="submit">CREDIT</button>
@@ -102,7 +110,7 @@ $upiLink = $upi ? ('upi://pay?pa=' . rawurlencode($upi) . '&pn=' . $pn . '&am=' 
     try{document.execCommand('copy');}catch(e){}
     document.body.removeChild(a);
   }
-  b.addEventListener('click', function(){
+  if(b) b.addEventListener('click', function(){
     var v=(t.textContent||'').trim();
     if(!v) return;
     copyText(v);
@@ -110,6 +118,18 @@ $upiLink = $upi ? ('upi://pay?pa=' . rawurlencode($upi) . '&pn=' . $pn . '&am=' 
     if(window.bbToast) window.bbToast('UPI COPIED','ok');
     setTimeout(function(){ b.textContent='COPY UPI'; }, 1400);
   });
+  var amt=document.getElementById('walletAmt');
+  var pay=document.getElementById('payUpi');
+  function syncPay(){
+    if(!amt||!pay) return;
+    var n=parseInt(amt.value,10)||100;
+    var pa=pay.getAttribute('data-pa')||'';
+    var pn=encodeURIComponent(pay.getAttribute('data-pn')||'BLACK BUNNY');
+    pay.href='upi://pay?pa='+encodeURIComponent(pa)+'&pn='+pn+'&am='+n+'&cu=INR&tn='+encodeURIComponent('BLACK BUNNY WALLET');
+    pay.textContent='PAY Rs '+n;
+  }
+  if(amt) amt.addEventListener('input', syncPay);
+  syncPay();
 })();
 </script>
 <?= $this->endSection() ?>

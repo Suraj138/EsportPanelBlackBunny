@@ -100,7 +100,7 @@
                 </table>
             </div>
         <?php else : ?>
-            <p class="text-center text-gray-500 py-8">Nothing keys to show</p>
+            <p class="text-center muted py-8">No keys to show.</p>
         <?php endif; ?>
     </div>
 </div>
