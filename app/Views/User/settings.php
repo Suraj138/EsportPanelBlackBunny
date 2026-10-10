@@ -44,9 +44,39 @@
     <section class="page-hero">
         <div class="hero-kicker">OPERATOR</div>
         <h1>ACCOUNT SETTINGS</h1>
-        <p>Swap cryptographic key, identity alias, and Owner 2FA. Bot bind lives on Telegram.</p>
+        <p>Swap cryptographic key, identity alias, profile pic, and Owner 2FA. Bot bind lives on Telegram.</p>
     </section>
     <div class="mb-6"><?= $this->include('Layout/msgStatus') ?></div>
+    <?php $avatarUrl = function_exists('userAvatarUrl') ? userAvatarUrl($user) : ''; ?>
+    <div class="glass-card rounded-2xl p-8 mb-6">
+        <h2>PROFILE PIC</h2>
+        <p class="muted">Owner, Admin and User can lock a HUD mugshot. JPG / PNG / WEBP / GIF · max 2 MB.</p>
+        <div class="profile-pic-row">
+            <div class="profile-pic-preview">
+                <?php if ($avatarUrl) : ?>
+                    <img src="<?= esc($avatarUrl) ?>" alt="Profile">
+                <?php else : ?>
+                    <span><?= esc(strtoupper(substr(getName($user), 0, 1))) ?></span>
+                <?php endif; ?>
+            </div>
+            <div class="profile-pic-form">
+                <?= form_open_multipart('settings') ?>
+                    <input type="hidden" name="avatar_form" value="1">
+                    <div class="field">
+                        <label>IMAGE</label>
+                        <input type="file" name="avatar" accept="image/jpeg,image/png,image/webp,image/gif" required>
+                    </div>
+                    <button class="submit" type="submit">LOCK PIC</button>
+                <?= form_close() ?>
+                <?php if ($avatarUrl) : ?>
+                <?= form_open('settings') ?>
+                    <input type="hidden" name="avatar_remove" value="1">
+                    <button class="ghost-btn" type="submit">CLEAR PIC</button>
+                <?= form_close() ?>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
     <?php if ((int) $user->level == 1) : ?>
     <div class="glass-card rounded-2xl p-6 mb-6">
         <h2>OWNER 2FA</h2>

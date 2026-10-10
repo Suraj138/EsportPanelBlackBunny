@@ -7,6 +7,7 @@ if (isset($user) && isset($user->level)) {
     else $roleLabel = 'User';
 }
 $initial = strtoupper(substr(session()->has('userid') && isset($user) ? getName($user) : 'G', 0, 1));
+$avatarUrl = (session()->has('userid') && isset($user) && function_exists('userAvatarUrl')) ? userAvatarUrl($user) : '';
 ?>
 <header class="app-shell-header">
     <aside class="app-sidebar" id="appSidebar">
@@ -39,7 +40,7 @@ $initial = strtoupper(substr(session()->has('userid') && isset($user) ? getName(
             <a href="<?= site_url('logout') ?>" class="side-item logout"><i></i><span>Logout</span></a>
         </nav>
         <div class="sidebar-user">
-            <div class="avatar-orb"><?= esc($initial) ?></div>
+            <div class="avatar-orb"><?php if ($avatarUrl) : ?><img src="<?= esc($avatarUrl) ?>" alt=""><?php else : ?><?= esc($initial) ?><?php endif; ?></div>
             <div>
                 <strong><?= getName($user) ?></strong>
                 <small><?= $roleLabel ?></small>
@@ -63,7 +64,7 @@ $initial = strtoupper(substr(session()->has('userid') && isset($user) ? getName(
         </form>
         <div class="topbar-actions">
             <span class="live-chip"><i></i> LIVE</span>
-            <span class="top-avatar"><?= esc($initial) ?></span>
+            <span class="top-avatar"><?php if ($avatarUrl) : ?><img src="<?= esc($avatarUrl) ?>" alt=""><?php else : ?><?= esc($initial) ?><?php endif; ?></span>
             <div>
                 <strong><?= session()->has('userid') ? getName($user) : 'Guest' ?></strong>
                 <small><?= session()->has('userid') ? $roleLabel : 'Guest' ?></small>

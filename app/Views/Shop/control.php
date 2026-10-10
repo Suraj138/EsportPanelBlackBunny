@@ -5,10 +5,27 @@
 <?= $this->section('content') ?>
 <?php
 $pendingCount = 0;
+$verifiedCount = 0;
+$rejectedCount = 0;
+$pendingOrders = [];
+$doneOrders = [];
 foreach ($orders as $o) {
-    if (($o['status'] ?? '') === 'pending') $pendingCount++;
+    $st = $o['status'] ?? '';
+    if ($st === 'pending') {
+        $pendingCount++;
+        $pendingOrders[] = $o;
+    } else {
+        $doneOrders[] = $o;
+        if ($st === 'verified') $verifiedCount++;
+        if ($st === 'rejected') $rejectedCount++;
+    }
 }
+$queueOrders = array_merge($pendingOrders, $doneOrders);
 $storeOn = !empty($cfg['page_on']) && $cfg['page_on'] === '1';
+$planMap = [];
+foreach ($plans as $p) {
+    $planMap[(int) $p['id']] = $p;
+}
 ?>
 <div class="control-deck">
     <div class="mb-4"><?= $this->include('Layout/msgStatus') ?></div>
@@ -21,17 +38,33 @@ $storeOn = !empty($cfg['page_on']) && $cfg['page_on'] === '1';
         <a class="ghost-btn" href="<?= site_url('shop') ?>" target="_blank" rel="noopener">OPEN PUBLIC STORE</a>
     </section>
 
+    <?php if ($pendingCount > 0) : ?>
+    <a class="hud-alert warn ctrl-pend-banner" href="#ctrl-queue" data-stamp="QUEUE">
+        <?= (int) $pendingCount ?> pending UPI order<?= $pendingCount === 1 ? '' : 's' ?> · jump to payment queue
+    </a>
+    <?php endif; ?>
+
+    <nav class="ctrl-jump" aria-label="Control sections">
+        <a href="#ctrl-store"><b>01</b> STORE</a>
+        <a href="#ctrl-loader"><b>02</b> LOADER</a>
+        <a href="#ctrl-copy"><b>03</b> COPY</a>
+        <a href="#ctrl-pay"><b>04</b> PAY</a>
+        <a href="#ctrl-plans"><b>05</b> PLANS</a>
+        <a href="#ctrl-gallery"><b>06</b> GALLERY</a>
+        <a href="#ctrl-queue" class="<?= $pendingCount ? 'hot' : '' ?>"><b>07</b> QUEUE<?php if ($pendingCount) : ?><i><?= (int) $pendingCount ?></i><?php endif; ?></a>
+    </nav>
+
     <div class="ctrl-strip">
         <article><small>STORE</small><b class="<?= $storeOn ? 'hud-stat lime' : 'hud-stat rose' ?>"><?= $storeOn ? 'LIVE' : 'OFF' ?></b></article>
         <article><small>PLANS</small><b class="hud-stat"><?= count($plans) ?></b></article>
         <article><small>GALLERY</small><b class="hud-stat"><?= count($media) ?></b></article>
-        <article><small>QUEUE</small><b class="hud-stat rose"><?= $pendingCount ?></b></article>
+        <a class="ctrl-strip-link" href="#ctrl-queue"><small>QUEUE</small><b class="hud-stat rose"><?= $pendingCount ?></b></a>
     </div>
 
     <?= form_open_multipart('public-control', ['class' => 'ctrl-page-form']) ?>
         <input type="hidden" name="save_page" value="1">
 
-        <section class="ctrl-card">
+        <section class="ctrl-card" id="ctrl-store">
             <header><span>01 · STORE / HERO</span><em>live switch</em></header>
             <label class="toggle-row">
                 <input type="checkbox" name="page_on" value="1" <?= $storeOn ? 'checked' : '' ?>>
@@ -48,10 +81,13 @@ $storeOn = !empty($cfg['page_on']) && $cfg['page_on'] === '1';
                 </div>
                 <div class="field"><label>HERO MEDIA</label><input type="file" name="hero_media"></div>
             </div>
+            <?php if (!empty($cfg['hero_media'])) : ?>
+            <p class="ctrl-hint">Current hero: <?= esc(basename((string) $cfg['hero_media'])) ?></p>
+            <?php endif; ?>
             <div class="ctrl-actions"><button class="submit ctrl-save" type="submit">SAVE STORE / HERO</button></div>
         </section>
 
-        <section class="ctrl-card">
+        <section class="ctrl-card" id="ctrl-loader">
             <header><span>02 · LOADER / APK</span><em>public deck</em></header>
             <div class="ctrl-fields">
                 <div class="field"><label>LOADER NAME</label><input name="loader_name" value="<?= esc($cfg['loader_name'] ?? 'BLACK BUNNY') ?>" placeholder="BLACK BUNNY"></div>
@@ -63,7 +99,7 @@ $storeOn = !empty($cfg['page_on']) && $cfg['page_on'] === '1';
             <div class="ctrl-actions"><button class="submit ctrl-save" type="submit">SAVE LOADER / APK</button></div>
         </section>
 
-        <section class="ctrl-card">
+        <section class="ctrl-card" id="ctrl-copy">
             <header><span>03 · COPY / LEGAL</span><em>store text</em></header>
             <div class="ctrl-fields">
                 <div class="field"><label>ABOUT</label><textarea name="about_text" rows="4" placeholder="Who you are · what the store sells"><?= esc($cfg['about_text'] ?? '') ?></textarea></div>
@@ -77,7 +113,7 @@ $storeOn = !empty($cfg['page_on']) && $cfg['page_on'] === '1';
             <div class="ctrl-actions"><button class="submit ctrl-save" type="submit">SAVE COPY / LEGAL</button></div>
         </section>
 
-        <section class="ctrl-card">
+        <section class="ctrl-card" id="ctrl-pay">
             <header><span>04 · PAY / SOCIAL</span><em>upi + links</em></header>
             <div class="ctrl-fields">
                 <div class="field"><label>UPI ID</label><input name="upi_id" value="<?= esc($cfg['upi_id'] ?? '') ?>" placeholder="e.g. blackbunny@upi"></div>
@@ -95,7 +131,7 @@ $storeOn = !empty($cfg['page_on']) && $cfg['page_on'] === '1';
     <?= form_close() ?>
 
     <div class="ctrl-split">
-        <section class="ctrl-card">
+        <section class="ctrl-card" id="ctrl-plans">
             <header><span>05 · KEY PLANS</span><em>price + show/hide</em></header>
             <?= form_open('public-control', ['class' => 'ctrl-add-plan']) ?>
                 <input type="hidden" name="save_plan" value="1">
@@ -157,7 +193,7 @@ $storeOn = !empty($cfg['page_on']) && $cfg['page_on'] === '1';
             </div>
         </section>
 
-        <section class="ctrl-card">
+        <section class="ctrl-card" id="ctrl-gallery">
             <header><span>06 · GALLERY</span><em>photo + video</em></header>
             <?= form_open_multipart('public-control') ?>
                 <input type="hidden" name="upload_media" value="1">
@@ -172,7 +208,14 @@ $storeOn = !empty($cfg['page_on']) && $cfg['page_on'] === '1';
                 <?php if (!$media) : ?><p class="muted">No media yet.</p><?php endif; ?>
                 <?php foreach ($media as $m) : ?>
                     <div class="media-mini-row">
-                        <span><?= esc($m['kind']) ?> · <?= esc($m['caption'] ?: basename($m['file'])) ?></span>
+                        <button type="button" class="media-preview" data-kind="<?= esc($m['kind']) ?>" data-src="<?= esc(base_url($m['file']), 'attr') ?>" data-cap="<?= esc($m['caption'] ?: basename($m['file']), 'attr') ?>">
+                            <?php if (($m['kind'] ?? '') === 'video') : ?>
+                                <video src="<?= base_url($m['file']) ?>" muted></video>
+                            <?php else : ?>
+                                <img src="<?= base_url($m['file']) ?>" alt="<?= esc($m['caption'] ?: 'media') ?>">
+                            <?php endif; ?>
+                            <span><?= esc($m['kind']) ?> · <?= esc($m['caption'] ?: basename($m['file'])) ?></span>
+                        </button>
                         <form method="post" action="<?= site_url('public-control') ?>" onsubmit="return confirm('Delete this media?')">
                             <?= csrf_field() ?>
                             <input type="hidden" name="delete_media" value="1">
@@ -185,19 +228,40 @@ $storeOn = !empty($cfg['page_on']) && $cfg['page_on'] === '1';
         </section>
     </div>
 
-    <section class="ctrl-card">
-        <header><span>07 · PAYMENT QUEUE</span><em>manual verify</em></header>
+    <section class="ctrl-card" id="ctrl-queue">
+        <header>
+            <span>07 · PAYMENT QUEUE</span>
+            <em><?= (int) $pendingCount ?> pending · <?= (int) $verifiedCount ?> verified · <?= (int) $rejectedCount ?> rejected</em>
+        </header>
+        <div class="ctrl-filters" data-filter-wrap>
+            <button type="button" class="ghost-btn is-on" data-filter="all">ALL</button>
+            <button type="button" class="ghost-btn" data-filter="pending">PENDING <?= $pendingCount ? '(' . (int) $pendingCount . ')' : '' ?></button>
+            <button type="button" class="ghost-btn" data-filter="verified">VERIFIED</button>
+            <button type="button" class="ghost-btn" data-filter="rejected">REJECTED</button>
+        </div>
         <div class="order-table">
-            <?php foreach ($orders as $o) : ?>
-            <div class="order-row">
+            <?php foreach ($queueOrders as $o) : ?>
+            <?php
+                $plan = $planMap[(int) ($o['plan_id'] ?? 0)] ?? null;
+                $hours = $plan ? (int) $plan['hours'] : 0;
+                $duration = $hours ? hoursToDays($hours) : '-';
+                $issued = trim((string) ($o['issued_key'] ?? ''));
+            ?>
+            <div class="order-row" data-status="<?= esc($o['status']) ?>">
                 <div class="order-meta">
                     <strong>#<?= (int) $o['id'] ?> · <?= esc($o['customer_name']) ?></strong>
-                    <small><?= esc($o['customer_phone']) ?> · txn <?= esc($o['txn_id']) ?> · Rs <?= (int) $o['amount'] ?></small>
+                    <small><?= esc($o['customer_phone']) ?> · txn <?= esc($o['txn_id']) ?> · Rs <?= (int) $o['amount'] ?><?= $plan ? ' · ' . esc($plan['title']) : '' ?></small>
+                    <?php if (!empty($o['created_at'])) : ?><small><?= esc($o['created_at']) ?></small><?php endif; ?>
                     <span class="order-status <?= esc($o['status']) ?>"><?= esc(strtoupper($o['status'])) ?></span>
-                    <?php if ($o['issued_key']) : ?><small>KEY <?= esc($o['issued_key']) ?></small><?php endif; ?>
+                    <?php if ($issued) : ?>
+                        <div class="order-key-row">
+                            <button type="button" class="key-chip" data-key="<?= esc($issued, 'attr') ?>"><?= esc($issued) ?></button>
+                            <button type="button" class="ghost-btn copy-details" data-key="<?= esc($issued, 'attr') ?>" data-duration="<?= esc($duration, 'attr') ?>">COPY</button>
+                        </div>
+                    <?php endif; ?>
                     <?php $wa = waDigits($o['customer_phone']); ?>
                     <?php if ($wa) : ?>
-                        <a class="ghost-btn" href="https://wa.me/<?= $wa ?>?text=<?= rawurlencode('BLACK BUNNY order #'.$o['id'].' status '.$o['status'].($o['issued_key'] ? ' key '.$o['issued_key'] : '')) ?>" target="_blank" rel="noopener">PING BUYER</a>
+                        <a class="ghost-btn" href="https://wa.me/<?= $wa ?>?text=<?= rawurlencode('BLACK BUNNY order #'.$o['id'].' status '.$o['status'].($issued ? ' key '.$issued : '')) ?>" target="_blank" rel="noopener">PING BUYER</a>
                     <?php endif; ?>
                 </div>
                 <?php if ($o['status'] === 'pending') : ?>
@@ -214,10 +278,73 @@ $storeOn = !empty($cfg['page_on']) && $cfg['page_on'] === '1';
         </div>
     </section>
 </div>
+<div id="shopLightbox" class="shop-lightbox" hidden>
+    <button type="button" class="shop-lightbox-x" id="lbClose">CLOSE</button>
+    <div id="lbBody"></div>
+</div>
 <?= $this->endSection() ?>
 <?= $this->section('js') ?>
 <?php $waPing = session()->getFlashdata('shop_wa_ping'); ?>
 <?php if ($waPing) : ?>
 <script>window.open(<?= json_encode($waPing) ?>, '_blank', 'noopener');</script>
 <?php endif; ?>
+<script>
+(function(){
+  function clip(v, toast){
+    v = String(v || '');
+    if (!v) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(v);
+    else {
+      var t = document.createElement('textarea');
+      t.value = v; document.body.appendChild(t); t.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      t.remove();
+    }
+    if (window.bbToast) window.bbToast(toast || 'COPIED', 'ok');
+  }
+  document.querySelectorAll('.key-chip').forEach(function(el){
+    el.addEventListener('click', function(){
+      clip(String(el.getAttribute('data-key') || '').trim() + '\nThanks for purchase.', 'KEY COPIED');
+    });
+  });
+  document.querySelectorAll('.copy-details').forEach(function(el){
+    el.addEventListener('click', function(){
+      var key = String(el.getAttribute('data-key') || '').trim();
+      var duration = el.getAttribute('data-duration') || '-';
+      clip('BLACK BUNNY KEY\nKeys: 1\nDuration: ' + duration + '\n' + key + '\nThanks for purchase.', 'DETAILS COPIED');
+    });
+  });
+  var wrap = document.querySelector('[data-filter-wrap]');
+  if (wrap) {
+    wrap.addEventListener('click', function(e){
+      var btn = e.target.closest('[data-filter]');
+      if (!btn) return;
+      var f = btn.getAttribute('data-filter');
+      wrap.querySelectorAll('[data-filter]').forEach(function(b){ b.classList.toggle('is-on', b === btn); });
+      document.querySelectorAll('.order-row').forEach(function(row){
+        row.hidden = (f !== 'all' && row.getAttribute('data-status') !== f);
+      });
+    });
+  }
+  var box = document.getElementById('shopLightbox');
+  var body = document.getElementById('lbBody');
+  var close = document.getElementById('lbClose');
+  document.querySelectorAll('.media-preview').forEach(function(tile){
+    tile.addEventListener('click', function(){
+      if (!box || !body) return;
+      var kind = tile.getAttribute('data-kind');
+      var src = tile.getAttribute('data-src') || '';
+      body.innerHTML = '';
+      if (kind === 'video') {
+        var v = document.createElement('video'); v.controls = true; v.autoplay = true; v.src = src; body.appendChild(v);
+      } else {
+        var img = document.createElement('img'); img.src = src; img.alt = tile.getAttribute('data-cap') || ''; body.appendChild(img);
+      }
+      box.hidden = false;
+    });
+  });
+  if (close) close.addEventListener('click', function(){ box.hidden = true; body.innerHTML = ''; });
+  if (box) box.addEventListener('click', function(e){ if (e.target === box) { box.hidden = true; body.innerHTML = ''; } });
+})();
+</script>
 <?= $this->endSection() ?>

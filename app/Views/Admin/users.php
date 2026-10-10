@@ -34,6 +34,7 @@ return "#FF0000";
                     <thead>
                         <tr class="border-b-2 border-gray-200">
                             <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">ID</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Pic</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Username</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Fullname</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Level</th>
@@ -48,6 +49,10 @@ return "#FF0000";
                         <?php foreach ($user_list as $u) : ?>
                         <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                             <td class="px-4 py-3 text-sm text-gray-700"><?= $u->id_users ?></td>
+                            <td class="px-4 py-3">
+                                <?php $pic = function_exists('userAvatarUrl') ? userAvatarUrl($u) : ''; ?>
+                                <span class="top-avatar"><?php if ($pic) : ?><img src="<?= esc($pic) ?>" alt=""><?php else : ?><?= esc(strtoupper(substr((string) ($u->fullname ?: $u->username), 0, 1))) ?><?php endif; ?></span>
+                            </td>
                             <td class="px-4 py-3">
                                 <span class="font-semibold text-gray-800"><?= $u->username ?></span>
                             </td>

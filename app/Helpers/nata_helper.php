@@ -387,6 +387,84 @@ function ensureTgUserColumns()
     }
 }
 
+function ensureAvatarColumn()
+{
+    try {
+        $db = \Config\Database::connect();
+        if (!$db->fieldExists('avatar', 'users')) {
+            $db->query('ALTER TABLE users ADD COLUMN avatar VARCHAR(255) NULL');
+        }
+    } catch (\Throwable $e) {
+    }
+}
+
+function ensureKeysKeyColumn()
+{
+    try {
+        $db = \Config\Database::connect();
+        $fields = $db->getFieldData('keys_code');
+        foreach ($fields as $f) {
+            if (($f->name ?? '') !== 'user_key') {
+                continue;
+            }
+            $max = (int) ($f->max_length ?? 0);
+            if ($max > 0 && $max < 64) {
+                $db->query('ALTER TABLE keys_code MODIFY user_key VARCHAR(64) NULL');
+            }
+            return;
+        }
+    } catch (\Throwable $e) {
+    }
+}
+
+function sanitizeLicenseKey($raw)
+{
+    $key = trim((string) $raw);
+    $key = strtr($key, [
+        "\xE2\x80\x90" => '-',
+        "\xE2\x80\x91" => '-',
+        "\xE2\x80\x92" => '-',
+        "\xE2\x80\x93" => '-',
+        "\xE2\x80\x94" => '-',
+        "\xE2\x80\x95" => '-',
+        "\xEF\xBC\x8D" => '-',
+    ]);
+    $key = preg_replace('/\s+/', '', $key);
+    return $key;
+}
+
+function licenseKeyOk($raw)
+{
+    $key = (string) $raw;
+    $len = strlen($key);
+    if ($len < 4 || $len > 64) {
+        return false;
+    }
+    if (!preg_match('/^[\x21-\x7E]+$/', $key)) {
+        return false;
+    }
+    return !preg_match('/[\'"\\\\<>`]/', $key);
+}
+
+function userAvatarUrl($user)
+{
+    if (!$user) {
+        return '';
+    }
+    $path = isset($user->avatar) ? trim((string) $user->avatar) : '';
+    if ($path === '' || strpos($path, '..') !== false) {
+        return '';
+    }
+    if (!preg_match('#^uploads/avatars/[A-Za-z0-9._-]+$#', $path)) {
+        return '';
+    }
+    $abs = FCPATH . $path;
+    if (!is_file($abs)) {
+        return '';
+    }
+    return base_url($path) . '?v=' . filemtime($abs);
+}
+
 function tgShop($key = null)
 {
     try {

@@ -24,6 +24,9 @@ class User extends BaseController
     {
         $this->userid = session()->userid;
         $this->model = new UserModel();
+        if (function_exists('ensureAvatarColumn')) {
+            ensureAvatarColumn();
+        }
         $this->user = $this->model->getUser($this->userid);
         $this->time = new \CodeIgniter\I18n\Time;
         if (!$this->user && session()->has('userid')) {
@@ -385,6 +388,16 @@ class User extends BaseController
         $user = $this->user;
         $this->ensureOtpColumn();
         ensureTgUserColumns();
+        ensureAvatarColumn();
+
+        if ($this->request->getPost('avatar_form')) {
+            return $this->avatar_act();
+        }
+        if ($this->request->getPost('avatar_remove')) {
+            $this->model->update($user->id_users, ['avatar' => '']);
+            writeAudit('avatar_clear', 'profile pic', $user->username);
+            return redirect()->to('settings')->with('msgSuccess', 'Profile pic cleared.');
+        }
 
         if ($this->request->getPost('otp_enable') && (int) $user->level == 1) {
             $secret = totpSecretMake();
@@ -841,6 +854,42 @@ class User extends BaseController
         }
     }
     
+    private function avatar_act()
+    {
+        $user = $this->user;
+        if (!$user) {
+            return redirect()->to('login')->with('msgWarning', 'Please login first');
+        }
+        ensureAvatarColumn();
+        $file = $this->request->getFile('avatar');
+        if (!$file || !$file->isValid() || $file->hasMoved()) {
+            return redirect()->to('settings')->with('msgDanger', 'Upload a JPG, PNG, WEBP or GIF.');
+        }
+        if ($file->getSize() > 2 * 1024 * 1024) {
+            return redirect()->to('settings')->with('msgDanger', 'Max 2 MB.');
+        }
+        $ext = strtolower((string) $file->getExtension());
+        if ($ext === 'jpeg') {
+            $ext = 'jpg';
+        }
+        if (!in_array($ext, ['jpg', 'png', 'webp', 'gif'], true)) {
+            return redirect()->to('settings')->with('msgDanger', 'JPG, PNG, WEBP or GIF only.');
+        }
+        $mime = strtolower((string) $file->getMimeType());
+        if (!in_array($mime, ['image/jpeg', 'image/png', 'image/webp', 'image/gif'], true)) {
+            return redirect()->to('settings')->with('msgDanger', 'Invalid image.');
+        }
+        $dest = FCPATH . 'uploads/avatars/';
+        if (!is_dir($dest)) {
+            mkdir($dest, 0755, true);
+        }
+        $name = 'u' . (int) $user->id_users . '.' . $ext;
+        $file->move($dest, $name, true);
+        $this->model->update($user->id_users, ['avatar' => 'uploads/avatars/' . $name]);
+        writeAudit('avatar', 'profile pic', $user->username);
+        return redirect()->to('settings')->with('msgSuccess', 'Profile pic locked.');
+    }
+
     private function fullname_act()
     {
         $user = $this->user;

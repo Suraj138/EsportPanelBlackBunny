@@ -54,8 +54,8 @@
                         
                         <!-- User Key -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">User Key</label>
-                            <input type="text" name="user_key" value="<?= old('user_key') ?: $key->user_key ?>" class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all font-mono" placeholder="Key">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">User Key <span class="text-gray-500 text-xs">(letters · numbers · symbols · 4–64 · no spaces)</span></label>
+                            <input type="text" name="user_key" maxlength="64" value="<?= old('user_key') ?: $key->user_key ?>" class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all font-mono" placeholder="e.g. OWNER-5H-AB12_@X#1">
                             <?php if ($validation->hasError('user_key')) : ?>
                                 <small class="text-red-500 text-xs mt-1"><?= $validation->getError('user_key') ?></small>
                             <?php endif; ?>

@@ -16,6 +16,9 @@ class Keys extends BaseController
         $this->userModel = new UserModel();
         $this->user = $this->userModel->getUser();
         $this->model = new KeysModel();
+        if (function_exists('ensureKeysKeyColumn')) {
+            ensureKeysKeyColumn();
+        }
         if (!$this->user && session()->has('userid')) {
             session()->remove(['userid', 'unames', 'time_login', 'time_since']);
         }
@@ -343,6 +346,10 @@ class Keys extends BaseController
             $msgDanger = "The user key no longer exists~";
         } else {
             if ($user->level == 1 or $dKey->registrator == $user->username) {
+                $postedKey = sanitizeLicenseKey($this->request->getPost('user_key'));
+                $postBag = $this->request->getPost() ?: [];
+                $postBag['user_key'] = $postedKey;
+                $this->request->setGlobal('post', $postBag);
                 $form_reseller = [
                     'status' => [
                         'label' => 'status',
@@ -353,7 +360,7 @@ class Keys extends BaseController
                         ]
                     ]
                 ];
-                $form_admin = [
+                $form_key_patch = [
                     'id_keys' => [
                         'label' => 'keys',
                         'rules' => 'required|is_not_unique[keys_code.id_keys]|numeric',
@@ -370,9 +377,10 @@ class Keys extends BaseController
                     ],
                     'user_key' => [
                         'label' => 'User keys',
-                        'rules' => "required|is_unique[keys_code.user_key,user_key,$dKey->user_key]|alpha_numeric",
+                        'rules' => 'required|min_length[4]|max_length[64]',
                         'errors' => [
-                            'is_unique' => '{field} has been taken.'
+                            'min_length' => '{field} min 4 chars.',
+                            'max_length' => '{field} max 64 chars.'
                         ],
                     ],
                     'duration' => [
@@ -391,6 +399,8 @@ class Keys extends BaseController
                             'numeric' => 'Invalid max of {field}.'
                         ]
                     ],
+                ];
+                $form_owner = [
                     'registrator' => [
                         'label' => 'registrator',
                         'rules' => 'permit_empty|alpha_numeric_space|min_length[4]'
@@ -408,20 +418,43 @@ class Keys extends BaseController
                     ]
                 ];
 
-                if ($user->level == 1) {
-                    $form_rules = array_merge($form_reseller, $form_admin);
+                $level = (int) $user->level;
+                $canPatchKey = ($level === 1 || $level === 2);
+                if ($canPatchKey) {
+                    if ($postedKey === '' || !licenseKeyOk($postedKey)) {
+                        return redirect()->back()->withInput()->with('msgDanger', 'Key 4–64 chars. Letters, numbers, symbols OK. No space / quotes / < >.');
+                    }
+                    if ($postedKey !== (string) $dKey->user_key) {
+                        $taken = $this->model->where('user_key', $postedKey)->where('id_keys !=', (int) $dKey->id_keys)->first();
+                        if ($taken) {
+                            return redirect()->back()->withInput()->with('msgDanger', 'User key already taken.');
+                        }
+                    }
+                }
+                if ($level == 1) {
+                    $form_rules = array_merge($form_reseller, $form_key_patch, $form_owner);
                     $devices = $this->request->getPost('devices');
                     $max_devices = $this->request->getPost('max_devices');
+                    $exp = trim((string) $this->request->getPost('expired_date'));
 
                     $data_saves = [
                         'game' => $this->request->getPost('game'),
-                        'user_key' => $this->request->getPost('user_key'),
+                        'user_key' => $postedKey,
                         'duration' => $this->request->getPost('duration'),
                         'max_devices' => $max_devices,
                         'status' => $this->request->getPost('status'),
                         'registrator' => $this->request->getPost('registrator'),
-                        'expired_date' => $this->request->getPost('expired_date') ?: NULL,
+                        'expired_date' => $exp !== '' ? $exp : NULL,
                         'devices' => setDevice($devices, $max_devices),
+                    ];
+                } elseif ($canPatchKey) {
+                    $form_rules = array_merge($form_reseller, $form_key_patch);
+                    $data_saves = [
+                        'game' => $this->request->getPost('game'),
+                        'user_key' => $postedKey,
+                        'duration' => $this->request->getPost('duration'),
+                        'max_devices' => $this->request->getPost('max_devices'),
+                        'status' => $this->request->getPost('status'),
                     ];
                 } else {
                     $form_rules = $form_reseller;
