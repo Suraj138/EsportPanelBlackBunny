@@ -62,6 +62,7 @@ foreach ($plans as $p) {
     </div>
 
     <?= form_open_multipart('public-control', ['class' => 'ctrl-page-form']) ?>
+        <input type="hidden" name="MAX_FILE_SIZE" value="83886080">
         <input type="hidden" name="save_page" value="1">
 
         <section class="ctrl-card" id="ctrl-store">
@@ -89,12 +90,20 @@ foreach ($plans as $p) {
 
         <section class="ctrl-card" id="ctrl-loader">
             <header><span>02 · LOADER / APK</span><em>public deck</em></header>
+            <?php
+                $apkLive = shopApkHref($cfg);
+                $apkLocal = is_file(FCPATH . 'uploads/shop/blackbunny-loader.apk');
+            ?>
+            <p class="ctrl-hint">Public GET LOADER: <?= $apkLive ? 'LIVE' : 'NO FILE / URL' ?><?= $apkLocal ? ' · uploaded blackbunny-loader.apk' : '' ?></p>
+            <?php if ($apkLive) : ?>
+            <p class="ctrl-hint"><a class="ghost-btn" href="<?= esc($apkLive) ?>" target="_blank" rel="noopener">TEST DOWNLOAD</a></p>
+            <?php endif; ?>
             <div class="ctrl-fields">
                 <div class="field"><label>LOADER NAME</label><input name="loader_name" value="<?= esc($cfg['loader_name'] ?? 'BLACK BUNNY') ?>" placeholder="BLACK BUNNY"></div>
                 <div class="field"><label>LOADER SIZE</label><input name="loader_size" value="<?= esc($cfg['loader_size'] ?? '10 MB') ?>" placeholder="10 MB"></div>
                 <div class="field span-2"><label>GAME</label><input name="loader_game" value="<?= esc($cfg['loader_game'] ?? 'BGMI / PUBG Mobile') ?>" placeholder="BGMI / PUBG Mobile"></div>
                 <div class="field span-2"><label>APK DOWNLOAD URL</label><input name="apk_url" value="<?= esc($cfg['apk_url'] ?? '') ?>" placeholder="https://... or upload below"></div>
-                <div class="field span-2"><label>APK FILE (UPLOAD)</label><input type="file" name="apk_file" accept=".apk"></div>
+                <div class="field span-2"><label>APK FILE (UPLOAD · max 80 MB · .apk)</label><input type="file" name="apk_file" accept=".apk,application/vnd.android.package-archive"></div>
             </div>
             <div class="ctrl-actions"><button class="submit ctrl-save" type="submit">SAVE LOADER / APK</button></div>
         </section>
@@ -246,6 +255,7 @@ foreach ($plans as $p) {
                 $hours = $plan ? (int) $plan['hours'] : 0;
                 $duration = $hours ? hoursToDays($hours) : '-';
                 $issued = trim((string) ($o['issued_key'] ?? ''));
+                $planDev = $plan ? (int) $plan['devices'] : 1;
             ?>
             <div class="order-row" data-status="<?= esc($o['status']) ?>">
                 <div class="order-meta">
@@ -255,8 +265,8 @@ foreach ($plans as $p) {
                     <span class="order-status <?= esc($o['status']) ?>"><?= esc(strtoupper($o['status'])) ?></span>
                     <?php if ($issued) : ?>
                         <div class="order-key-row">
-                            <button type="button" class="key-chip" data-key="<?= esc($issued, 'attr') ?>"><?= esc($issued) ?></button>
-                            <button type="button" class="ghost-btn copy-details" data-key="<?= esc($issued, 'attr') ?>" data-duration="<?= esc($duration, 'attr') ?>">COPY</button>
+                            <code class="key-mono" data-key="<?= esc($issued, 'attr') ?>"><?= esc($issued) ?></code>
+                            <button type="button" class="ghost-btn copy-details" data-key="<?= esc($issued, 'attr') ?>" data-duration="<?= esc($duration, 'attr') ?>" data-devices="<?= (int) $planDev ?>">COPY</button>
                         </div>
                     <?php endif; ?>
                     <?php $wa = waDigits($o['customer_phone']); ?>
@@ -302,16 +312,13 @@ foreach ($plans as $p) {
     }
     if (window.bbToast) window.bbToast(toast || 'COPIED', 'ok');
   }
-  document.querySelectorAll('.key-chip').forEach(function(el){
-    el.addEventListener('click', function(){
-      clip(String(el.getAttribute('data-key') || '').trim() + '\nThanks for purchase.', 'KEY COPIED');
-    });
-  });
   document.querySelectorAll('.copy-details').forEach(function(el){
     el.addEventListener('click', function(){
       var key = String(el.getAttribute('data-key') || '').trim();
       var duration = el.getAttribute('data-duration') || '-';
-      clip('BLACK BUNNY KEY\nKeys: 1\nDuration: ' + duration + '\n' + key + '\nThanks for purchase.', 'DETAILS COPIED');
+      var devices = el.getAttribute('data-devices') || '';
+      if (window.bbCopyKeyPack) window.bbCopyKeyPack({ key: key, count: 1, duration: duration, devices: devices });
+      else clip(key, 'KEY COPIED');
     });
   });
   var wrap = document.querySelector('[data-filter-wrap]');

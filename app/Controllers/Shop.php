@@ -42,6 +42,30 @@ class Shop extends BaseController
         ]);
     }
 
+    public function loader()
+    {
+        $cfg = $this->cfg();
+        if (!$this->pageOn()) {
+            return view('Shop/offline', ['cfg' => $cfg]);
+        }
+        $url = trim((string) ($cfg['apk_url'] ?? ''));
+        if ($url !== '' && preg_match('#^https?://#i', $url)) {
+            return redirect()->to($url);
+        }
+        $file = FCPATH . 'uploads/shop/blackbunny-loader.apk';
+        if ($url !== '' && !preg_match('#^https?://#i', $url)) {
+            $path = ltrim(str_replace('\\', '/', $url), '/');
+            $try = FCPATH . $path;
+            if (is_file($try)) {
+                $file = $try;
+            }
+        }
+        if (!is_file($file)) {
+            return redirect()->to('shop#loader')->with('msgDanger', 'Loader APK not uploaded yet.');
+        }
+        return $this->response->download($file, null);
+    }
+
     public function legal($page = 'privacy')
     {
         $cfg = $this->cfg();
@@ -219,18 +243,32 @@ class Shop extends BaseController
                 $pairs[$f] = (string) $this->request->getPost($f);
             }
             $pairs['page_on'] = $this->request->getPost('page_on') ? '1' : '0';
+            $apkUrl = trim((string) ($pairs['apk_url'] ?? ''));
             $apk = $this->request->getFile('apk_file');
-            if ($apk && $apk->isValid() && !$apk->hasMoved()) {
-                $ext = strtolower($apk->getExtension());
-                if ($ext === 'apk') {
-                    $dest = FCPATH . 'uploads/shop/';
-                    if (!is_dir($dest)) {
-                        mkdir($dest, 0755, true);
-                    }
-                    $name = 'blackbunny-loader.' . $ext;
-                    $apk->move($dest, $name, true);
-                    $pairs['apk_url'] = 'uploads/shop/' . $name;
+            $apkErr = $apk ? (int) $apk->getError() : UPLOAD_ERR_NO_FILE;
+            if ($apk && $apkErr !== UPLOAD_ERR_NO_FILE) {
+                if ($apkErr !== UPLOAD_ERR_OK || !$apk->isValid()) {
+                    $hint = $apkErr === UPLOAD_ERR_INI_SIZE || $apkErr === UPLOAD_ERR_FORM_SIZE
+                        ? 'APK too large. Max 80 MB.'
+                        : 'APK upload failed.';
+                    return redirect()->to('public-control#ctrl-loader')->with('msgDanger', $hint);
                 }
+                $ext = strtolower((string) $apk->getClientExtension());
+                if ($ext === '') {
+                    $ext = strtolower((string) pathinfo((string) $apk->getName(), PATHINFO_EXTENSION));
+                }
+                if ($ext !== 'apk') {
+                    return redirect()->to('public-control#ctrl-loader')->with('msgDanger', 'Upload a .apk file only.');
+                }
+                $dest = FCPATH . 'uploads/shop/';
+                if (!is_dir($dest)) {
+                    mkdir($dest, 0755, true);
+                }
+                $name = 'blackbunny-loader.apk';
+                $apk->move($dest, $name, true);
+                $pairs['apk_url'] = 'uploads/shop/' . $name;
+            } elseif ($apkUrl !== '' && !preg_match('#^https?://#i', $apkUrl) && strpos($apkUrl, 'uploads/shop/') !== 0) {
+                return redirect()->to('public-control#ctrl-loader')->with('msgDanger', 'APK URL must start with http(s):// or be an uploaded file.');
             }
             $hero = $this->request->getFile('hero_media');
             if ($hero && $hero->isValid() && !$hero->hasMoved()) {

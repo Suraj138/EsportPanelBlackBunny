@@ -42,6 +42,17 @@ class KeysModel extends Model
 
         $builder->select('CONCAT(keys_code.id_keys) as id, game, user_key, duration, CONCAT(keys_code.expired_date) as expired, max_devices, devices, devices as devices_raw, status, registrator, last_ping');
 
+        $filter = strtolower(trim((string) service('request')->getGet('filter')));
+        if ($filter === 'used') {
+            $builder->where('devices IS NOT NULL', null, false)->where('devices !=', '');
+        } elseif ($filter === 'unused') {
+            $builder->groupStart()->where('devices', null)->orWhere('devices', '')->groupEnd();
+        } elseif ($filter === 'expired') {
+            $builder->where('expired_date IS NOT NULL', null, false)->where('expired_date <', date('Y-m-d H:i:s'));
+        } elseif ($filter === 'live') {
+            $builder->where('last_ping >=', date('Y-m-d H:i:s', time() - 180));
+        }
+
         return DataTable::of($builder)
             ->setSearchableColumns(['id_keys', 'game', 'user_key', 'duration', 'expired_date', 'max_devices', 'devices', 'registrator', 'last_ping'])
             ->format('status', function ($value) {

@@ -160,8 +160,82 @@
     if (bad) toast(bad.textContent.trim().slice(0, 48) || 'FAILED', 'bad');
   }
 
+  function hoursLabel(h) {
+    var s = String(h == null ? '' : h).trim();
+    if (/day|hour/i.test(s)) return s;
+    var n = parseInt(s, 10);
+    if (!n && n !== 0) return s || '-';
+    if (n <= 1) return n + ' Hour';
+    if (n < 24) return n + ' Hours';
+    var d = n / 24;
+    if (d === 1) return '1 Day';
+    if (Math.abs(d - Math.round(d)) < 0.001) return Math.round(d) + ' Days';
+    return n + ' Hours';
+  }
+
+  function clip(v, msg) {
+    v = String(v || '');
+    if (!v) return false;
+    function fallback() {
+      var t = document.createElement('textarea');
+      t.value = v;
+      t.setAttribute('readonly', 'readonly');
+      t.style.cssText = 'position:fixed;top:8px;left:8px;width:240px;height:48px;opacity:0.01;z-index:99999';
+      document.body.appendChild(t);
+      t.focus();
+      t.select();
+      t.setSelectionRange(0, v.length);
+      try { document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(t);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(v).then(function () {
+        toast(msg || 'COPIED', 'ok');
+      }).catch(function () {
+        fallback();
+        toast(msg || 'COPIED', 'ok');
+      });
+      return true;
+    }
+    fallback();
+    toast(msg || 'COPIED', 'ok');
+    return true;
+  }
+
+  function copyRawKey(key) {
+    clip(String(key || '').replace(/\s+/g, '').trim(), 'KEY COPIED');
+  }
+
+  function copyKeyPack(opts) {
+    opts = opts || {};
+    var keys = opts.keys || [];
+    if (typeof keys === 'string') keys = keys.split(/\s+/).filter(Boolean);
+    if (!keys.length && opts.key) keys = [String(opts.key).trim()];
+    keys = keys.map(function (k) { return String(k || '').replace(/\s+/g, '').trim(); }).filter(Boolean);
+    var n = opts.count || keys.length || 1;
+    var devices = opts.devices != null && opts.devices !== '' ? opts.devices : '-';
+    var dur = hoursLabel(opts.durationLabel || opts.duration);
+    var lines = [
+      'Number of Keys: ' + n,
+      'Maximum Devices: ' + devices,
+      'Duration: ' + dur,
+      ''
+    ];
+    keys.forEach(function (k) {
+      lines.push('Key: `' + k + '`');
+    });
+    lines.push('');
+    lines.push('Thanks for purchase.');
+    lines.push('Trust Black Bunny.');
+    clip(lines.join('\n'), opts.toast || 'DETAILS COPIED');
+  }
+
   window.bbToast = toast;
   window.bbBurst = burst;
+  window.bbClip = clip;
+  window.bbHoursLabel = hoursLabel;
+  window.bbCopyRawKey = copyRawKey;
+  window.bbCopyKeyPack = copyKeyPack;
 
   function boot() {
     document.body.classList.add('bb-ready');
@@ -169,6 +243,12 @@
     observeLayers();
     particles();
     hudActions();
+    document.addEventListener('click', function (e) {
+      var el = e.target.closest('.key-mono, .key-chip');
+      if (!el) return;
+      var k = (el.getAttribute('data-key') || el.textContent || '').replace(/\s+/g, '').trim();
+      if (k) copyRawKey(k);
+    });
     onScroll();
     window.addEventListener('scroll', loop, { passive: true });
     window.addEventListener('pointermove', onPointer, { passive: true });

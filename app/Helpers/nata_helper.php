@@ -16,6 +16,29 @@ function create_password($password, $enc = true)
     return ($enc ? $pass : $hash);
 }
 
+function shopApkHref($cfg)
+{
+    $url = trim((string) ($cfg['apk_url'] ?? ''));
+    if ($url === '') {
+        $local = FCPATH . 'uploads/shop/blackbunny-loader.apk';
+        if (is_file($local)) {
+            return site_url('shop/loader');
+        }
+        return '';
+    }
+    if (preg_match('#^https?://#i', $url)) {
+        return $url;
+    }
+    $path = ltrim(str_replace('\\', '/', $url), '/');
+    if (strpos($path, 'uploads/shop/') === 0) {
+        $abs = FCPATH . $path;
+        if (is_file($abs)) {
+            return site_url('shop/loader');
+        }
+    }
+    return base_url($path);
+}
+
 function getName($user)
 {
     if ($user->fullname) {
@@ -499,7 +522,7 @@ function tgApi($method, $payload = [])
     return is_array($json) ? $json : false;
 }
 
-function tgSend($chatId, $text, $markup = null)
+function tgSend($chatId, $text, $markup = null, $parseMode = '')
 {
     $chatId = (string) $chatId;
     $text = substr((string) $text, 0, 3900);
@@ -511,10 +534,34 @@ function tgSend($chatId, $text, $markup = null)
         'text' => $text,
         'disable_web_page_preview' => true,
     ];
+    if ($parseMode !== '') {
+        $payload['parse_mode'] = $parseMode;
+    }
     if (is_array($markup)) {
         $payload['reply_markup'] = $markup;
     }
     return tgApi('sendMessage', $payload);
+}
+
+function tgKeyPackHtml($keys, $devices = 1, $hours = 0)
+{
+    $list = is_array($keys) ? $keys : [$keys];
+    $clean = [];
+    foreach ($list as $k) {
+        $k = trim((string) $k);
+        if ($k !== '') {
+            $clean[] = $k;
+        }
+    }
+    $n = count($clean);
+    $msg = "Number of Keys: {$n}\n";
+    $msg .= 'Maximum Devices: ' . (int) $devices . "\n";
+    $msg .= 'Duration: ' . hoursToDays((int) $hours) . "\n\n";
+    foreach ($clean as $k) {
+        $msg .= 'Key: <code>' . htmlspecialchars($k, ENT_QUOTES, 'UTF-8') . "</code>\n";
+    }
+    $msg .= "\nThanks for purchase.\nTrust Black Bunny.";
+    return $msg;
 }
 
 function tgAnswer($callbackId, $text = '')

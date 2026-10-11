@@ -378,11 +378,8 @@ class Telegram extends BaseController
             tgSend($chatId, $out['msg'] ?? 'Generate fail', tgMenuMarkup());
             return;
         }
-        $lines = "[ DROP OK ] " . count($out['keys']) . " · {$out['hours']}h · {$out['devices']} dev · -Rs {$out['fees']}\nSALDO Rs {$out['saldo']}\n";
-        foreach ($out['keys'] as $k) {
-            $lines .= "\n" . $k;
-        }
-        tgSend($chatId, $lines, tgMenuMarkup());
+        $head = '[ DROP OK ] -Rs ' . $out['fees'] . ' · SALDO Rs ' . $out['saldo'] . "\n\n";
+        tgSend($chatId, $head . tgKeyPackHtml($out['keys'], $out['devices'], $out['hours']), tgMenuMarkup(), 'HTML');
     }
 
     private function sendList($user, $chatId, $page, $mode = 'all')
@@ -465,7 +462,7 @@ class Telegram extends BaseController
             return;
         }
         if ($act === 'c') {
-            tgSend($chatId, $row->user_key, $this->keyMarkup($row, (int) $row->status));
+            tgSend($chatId, tgKeyPackHtml($row->user_key, $row->max_devices, $row->duration), $this->keyMarkup($row, (int) $row->status), 'HTML');
             return;
         }
         $dev = $row->devices ? str_replace(',', "\n ", (string) $row->devices) : '-';

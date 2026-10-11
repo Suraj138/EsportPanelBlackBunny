@@ -49,6 +49,7 @@ $routes->match(['get', 'post'], 'recover/reset/(:segment)', 'Auth::recoverReset'
 $routes->match(['get', 'post'], 'search', 'User::search');
 $routes->get('audit', 'User::audit');
 $routes->get('shop', 'Shop::index');
+$routes->get('shop/loader', 'Shop::loader');
 $routes->get('shop/legal/(:segment)', 'Shop::legal/$1');
 $routes->get('shop/buy/(:num)', 'Shop::buy/$1');
 $routes->post('shop/order', 'Shop::order');
@@ -81,6 +82,8 @@ $routes->group('keys', function ($routes) {
 	$routes->post('edit', 'Keys::edit_key');
 	$routes->match(['get', 'post'], 'api', 'Keys::api_get_keys');
 	$routes->match(['get', 'post'], 'resetAll', 'Keys::resetAllKeys');
+	$routes->match(['get', 'post'], 'resetHwids', 'Keys::resetAllHwids');
+	$routes->get('copyUnused', 'Keys::copyUnused');
 	$routes->get('download', 'Keys::download_all_Keys');
 	$routes->get('download/unused', 'Keys::download_new_Keys');
 });

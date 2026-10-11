@@ -44,14 +44,9 @@
         <p><?= esc($cfg['hero_sub'] ?? '') ?></p>
         <div class="shop-cta">
             <a href="<?= site_url('login') ?>" class="submit shop-btn"><?= shopLang('LOGIN', 'LOGIN') ?></a>
-            <?php
-                $apkHref = trim((string) ($cfg['apk_url'] ?? ''));
-                if ($apkHref !== '' && strpos($apkHref, 'http') !== 0) {
-                    $apkHref = base_url($apkHref);
-                }
-            ?>
+            <?php $apkHref = shopApkHref($cfg); ?>
             <?php if ($apkHref) : ?>
-                <a class="ghost-btn" href="<?= esc($apkHref) ?>" download>DOWNLOAD APK</a>
+                <a class="ghost-btn" href="<?= esc($apkHref) ?>">GET LOADER</a>
             <?php else : ?>
                 <a class="ghost-btn" href="#loader">GET LOADER</a>
             <?php endif; ?>
@@ -116,9 +111,9 @@
             <div class="shop-cta">
                 <a href="<?= site_url('login') ?>" class="submit shop-btn">LOGIN PORTAL</a>
                 <?php if ($apkHref) : ?>
-                    <a class="ghost-btn" href="<?= esc($apkHref) ?>" download>DOWNLOAD <?= esc($loaderSize) ?> APK</a>
+                    <a class="ghost-btn" href="<?= esc($apkHref) ?>">GET LOADER · <?= esc($loaderSize) ?></a>
                 <?php else : ?>
-                    <a class="ghost-btn" href="#plans">GET KEY FIRST</a>
+                    <a class="ghost-btn" href="<?= site_url('shop/loader') ?>">GET LOADER</a>
                 <?php endif; ?>
             </div>
         </article>

@@ -1094,8 +1094,150 @@ table tbody tr:hover { background: rgba(0,255,208,.06) !important; }
 .otp-qr { display: block; width: 180px; height: 180px; margin: 12px 0; border: 1px solid rgba(0,255,208,.3); background: #fff; padding: 8px; }
 .glass-card { background: linear-gradient(160deg, rgba(6,16,32,.94), rgba(4,10,20,.92)) !important; color: #e8f6ff !important; border: 1px solid rgba(0,255,208,.22); }
 .glass-card h2, .glass-card .text-gray-800, .glass-card .text-gray-700, .glass-card .text-gray-600 { color: #e8f6ff !important; }
-#actions-menu { background: #071422 !important; border: 1px solid rgba(0,255,208,.28) !important; }
-#actions-menu a span, #actions-menu .font-medium { color: #e8f6ff !important; }
+#actions-menu {
+  background: #071422 !important;
+  border: 1px solid rgba(0,255,208,.28) !important;
+  z-index: 80 !important;
+  overflow: hidden;
+}
+#actions-menu a {
+  color: #e8f6ff !important;
+  background: transparent !important;
+}
+#actions-menu a span,
+#actions-menu .font-medium {
+  color: #e8f6ff !important;
+}
+#actions-menu a svg {
+  color: #00ffd0 !important;
+  stroke: #00ffd0 !important;
+  flex-shrink: 0;
+}
+#actions-menu a:hover,
+#actions-menu a:focus {
+  background: rgba(0,255,208,.16) !important;
+  color: #00ffd0 !important;
+}
+#actions-menu a:hover span,
+#actions-menu a:hover .font-medium,
+#actions-menu a:focus span {
+  color: #00ffd0 !important;
+}
+#actions-menu a.action-warn svg,
+#actions-menu a.action-warn { color: #b6ff3b !important; stroke: #b6ff3b !important; }
+#actions-menu a.action-danger svg,
+#actions-menu a.action-danger { color: #ff6b9d !important; stroke: #ff6b9d !important; }
+#actions-menu a.action-warn:hover,
+#actions-menu a.action-warn:focus {
+  background: rgba(182,255,59,.14) !important;
+  color: #b6ff3b !important;
+}
+#actions-menu a.action-danger:hover,
+#actions-menu a.action-danger:focus {
+  background: rgba(255,45,106,.18) !important;
+  color: #ff6b9d !important;
+}
+#actions-menu a.action-warn:hover span,
+#actions-menu a.action-danger:hover span {
+  color: inherit !important;
+}
+#actions-menu .border-t { border-color: rgba(0,255,208,.18) !important; }
+.key-mono,
+code.key-mono {
+  display: inline-block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace !important;
+  font-size: 14px;
+  letter-spacing: .04em;
+  color: #00ffd0 !important;
+  background: rgba(0,0,0,.45);
+  border: 1px solid rgba(0,255,208,.35);
+  padding: 8px 12px;
+  cursor: pointer;
+  user-select: all;
+  -webkit-user-select: all;
+  word-break: break-all;
+}
+.key-mono-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 8px 0 12px;
+}
+#datatable .key-mono,
+#datatable .key-chip {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
+  user-select: all;
+  -webkit-user-select: all;
+  cursor: pointer;
+}
+.key-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+.key-filter-bar .hud-chip {
+  cursor: pointer;
+  border: 1px solid rgba(0,255,208,.22);
+  background: transparent;
+  color: #8aa3c2;
+}
+.key-filter-bar .hud-chip.is-on,
+.key-filter-bar .hud-chip:hover {
+  color: #031018;
+  background: #00ffd0;
+  border-color: #00ffd0;
+}
+.keys-table-wrap table.dataTable,
+#datatable {
+  color: #e8f6ff !important;
+  background: transparent !important;
+}
+#datatable thead th,
+table.dataTable thead th {
+  color: #00ffd0 !important;
+  border-bottom: 1px solid rgba(0,255,208,.22) !important;
+  background: transparent !important;
+  font-family: Orbitron, sans-serif;
+  letter-spacing: .08em;
+  font-size: 11px;
+}
+#datatable tbody td,
+table.dataTable tbody td {
+  color: #e8f6ff !important;
+  border-color: rgba(0,255,208,.1) !important;
+  background: transparent !important;
+}
+.dataTables_wrapper .dataTables_filter input,
+.dataTables_wrapper .dataTables_length select {
+  background: rgba(4,12,24,.9) !important;
+  color: #e8f6ff !important;
+  border: 1px solid rgba(0,255,208,.28) !important;
+}
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_paginate,
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter,
+.dataTables_wrapper .dataTables_filter label,
+.dataTables_wrapper .dataTables_length label {
+  color: #8aa3c2 !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+  color: #00ffd0 !important;
+  background: transparent !important;
+  border: 1px solid rgba(0,255,208,.22) !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+  color: #031018 !important;
+  background: #00ffd0 !important;
+  border-color: #00ffd0 !important;
+}
+.dataTables_wrapper .dataTables_processing {
+  background: rgba(4,12,24,.92) !important;
+  color: #00ffd0 !important;
+  border: 1px solid rgba(0,255,208,.28) !important;
+}
 .hud-search {
   display: grid;
   grid-template-columns: 1fr 180px;

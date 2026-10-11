@@ -46,18 +46,18 @@
                         $dropGame = (string) session()->getFlashdata('game');
                     ?>
                     <div class="mt-6">
-                        <p class="muted mb-2">License Key<?= $dropCount > 1 ? 's ('.$dropCount.')' : '' ?></p>
-                        <textarea id="mytext" class="w-full font-mono" rows="<?= min(8, max(1, $dropCount)) ?>" readonly style="color:#00ffd0;background:rgba(0,0,0,.35);border:1px solid rgba(0,255,208,.28);padding:12px"><?= esc(implode("\n", $dropKeys)) ?></textarea>
-                        <div class="shop-cta" style="display:flex;gap:10px;flex-wrap:wrap;margin:12px 0">
-                            <button type="button" class="submit" onclick="copyDetails()">COPY</button>
-                            <button type="button" class="ghost-btn" onclick="shareText()">SHARE</button>
-                        </div>
-                        <div id="keyChips" class="mt-3" style="display:flex;flex-wrap:wrap;gap:8px">
+                        <p class="muted mb-2">License Key<?= $dropCount > 1 ? 's ('.$dropCount.')' : '' ?> · tap mono = raw key</p>
+                        <div class="key-mono-list">
                             <?php foreach ($dropKeys as $k) : ?>
-                                <button type="button" class="hud-chip key-chip" data-key="<?= esc($k, 'attr') ?>"><?= esc($k) ?></button>
+                                <code class="key-mono" data-key="<?= esc($k, 'attr') ?>"><?= esc($k) ?></code>
                             <?php endforeach; ?>
                         </div>
-                        <p class="muted mt-2">Copy = details. Tap a key = that key only.</p>
+                        <textarea id="mytext" hidden readonly><?= esc(implode("\n", $dropKeys)) ?></textarea>
+                        <div class="shop-cta" style="display:flex;gap:10px;flex-wrap:wrap;margin:12px 0">
+                            <button type="button" class="submit" onclick="copyOnlyKey()">COPY KEY</button>
+                            <button type="button" class="ghost-btn" onclick="copyDetails()">COPY DETAILS</button>
+                            <button type="button" class="ghost-btn" onclick="shareText()">SHARE</button>
+                        </div>
                     </div>
                     <script>
                     window.bbDrop = {
@@ -129,7 +129,7 @@
                 <!-- Custom Key Input -->
                 <div id="custom-key-section" style="display: none;">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Input Your Key</label>
-                    <input type="text" name="cuslicense" id="custom" minlength="4" maxlength="16" class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all" placeholder="Enter custom key">
+                    <input type="text" name="cuslicense" id="custom" minlength="4" maxlength="64" class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all" placeholder="4-64 chars, letters / numbers / symbols">
                 </div>
                 
                 <!-- Bulk Keys -->
@@ -216,40 +216,35 @@
         }
     }
     
-    function bbCopy(v, toast) {
-        v = String(v || '');
-        if (!v) return;
-        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(v);
-        else {
-            var t = document.createElement('textarea');
-            t.value = v; document.body.appendChild(t); t.select();
-            try { document.execCommand('copy'); } catch (e) {}
-            t.remove();
-        }
-        if (window.bbToast) window.bbToast(toast || 'COPIED', 'ok');
-        if (window.bbBurst) window.bbBurst('COPIED');
+    function dropKeys() {
+        var d = window.bbDrop || {};
+        return d.keys && d.keys.length ? d.keys : String((document.getElementById('mytext') || {}).value || '').split(/\s+/).filter(Boolean);
+    }
+    function copyOnlyKey() {
+        var keys = dropKeys();
+        if (window.bbCopyRawKey) window.bbCopyRawKey(keys.join('\n'));
+        if (window.bbBurst) window.bbBurst('KEY COPIED');
     }
     function copyDetails() {
         var d = window.bbDrop || {};
-        var keys = d.keys && d.keys.length ? d.keys.join('\n') : (document.getElementById('mytext') || {}).value || '';
-        var n = d.count || (keys ? keys.split(/\s+/).filter(Boolean).length : 0);
-        var text = 'BLACK BUNNY KEY\nKeys: ' + n + '\nDuration: ' + (d.duration || '-') + ' Hours\nDevices: ' + (d.devices || '-') + '\n' + keys + '\nThanks for purchase.';
-        bbCopy(text, 'DETAILS COPIED');
-    }
-    function copyOneKey(key) {
-        bbCopy(String(key || '').trim() + '\nThanks for purchase.', 'KEY COPIED');
+        var keys = dropKeys();
+        if (window.bbCopyKeyPack) {
+            window.bbCopyKeyPack({ keys: keys, count: d.count || keys.length, duration: d.duration, devices: d.devices });
+            if (window.bbBurst) window.bbBurst('COPIED');
+        }
     }
     function copyText() { copyDetails(); }
     function shareText() {
         var d = window.bbDrop || {};
-        var keys = d.keys && d.keys.length ? d.keys.join('\n') : (document.getElementById('mytext') || {}).value || '';
-        var text = 'BLACK BUNNY KEY\nKeys: ' + (d.count || 1) + '\nDuration: ' + (d.duration || '-') + ' Hours\n' + keys + '\nThanks for purchase.';
-        if (navigator.share) navigator.share({ title: 'BLACK BUNNY KEY', text: text });
-        else copyDetails();
+        var keys = d.keys && d.keys.length ? d.keys : String((document.getElementById('mytext') || {}).value || '').split(/\s+/).filter(Boolean);
+        var pack = window.bbCopyKeyPack;
+        if (navigator.share) {
+            var dur = window.bbHoursLabel ? window.bbHoursLabel(d.duration) : (d.duration || '-');
+            var lines = ['Number of Keys: ' + (d.count || keys.length), 'Maximum Devices: ' + (d.devices || '-'), 'Duration: ' + dur, ''];
+            keys.forEach(function(k){ lines.push('Key: `' + k + '`'); });
+            lines.push('', 'Thanks for purchase.', 'Trust Black Bunny.');
+            navigator.share({ title: 'BLACK BUNNY KEY', text: lines.join('\n') });
+        } else if (pack) pack({ keys: keys, count: d.count || keys.length, duration: d.duration, devices: d.devices });
     }
-    document.addEventListener('click', function(e) {
-        var chip = e.target.closest('.key-chip');
-        if (chip) copyOneKey(chip.getAttribute('data-key'));
-    });
 </script>
 <?= $this->endSection() ?>

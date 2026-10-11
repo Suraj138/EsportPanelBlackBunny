@@ -38,39 +38,47 @@
                     <span>Actions</span>
                 </button>
                 
-                <div id="actions-menu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 z-10">
+                <div id="actions-menu" class="hidden absolute right-0 mt-2 w-64 rounded-xl shadow-2xl z-50">
                     <div class="py-2">
-                        <a href="<?= site_url('keys/download') ?>" class="flex items-center space-x-3 px-4 py-3 hover:bg-gradient-to-r hover:from-cyan-50 hover:to-emerald-50 transition-all">
-                            <span class="text-gray-700 font-medium">Download All Keys .txt</span>
+                        <a href="<?= site_url('keys/download') ?>" class="flex items-center space-x-3 px-4 py-3">
+                            <span class="font-medium">Download All Keys .txt</span>
                         </a>
-                        <a href="<?= site_url('keys/download/unused') ?>" class="flex items-center space-x-3 px-4 py-3 hover:bg-gradient-to-r hover:from-cyan-50 hover:to-emerald-50 transition-all">
-                            <span class="text-gray-700 font-medium">Download Unused .txt</span>
+                        <a href="<?= site_url('keys/download/unused') ?>" class="flex items-center space-x-3 px-4 py-3">
+                            <span class="font-medium">Download Unused .txt</span>
                         </a>
-                        <a href="<?= site_url('keys/generate') ?>" class="flex items-center space-x-3 px-4 py-3 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 transition-all">
-                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <a href="javascript:void(0)" onclick="copyUnusedKeys()" class="flex items-center space-x-3 px-4 py-3">
+                            <span class="font-medium">Copy Unused Keys</span>
+                        </a>
+                        <a href="<?= site_url('keys/generate') ?>" class="flex items-center space-x-3 px-4 py-3">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
-                            <span class="text-gray-700 font-medium">Generate Key</span>
+                            <span class="font-medium">Generate Key</span>
+                        </a>
+                        <a href="javascript:void(0)" onclick="confirmResetAllKeys()" class="flex items-center space-x-3 px-4 py-3 action-warn">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            <span class="font-medium">Reset All Keys</span>
                         </a>
                         
-                        <div class="border-t border-gray-100 my-2"></div>
+                        <div class="border-t my-2"></div>
                         
-                        <a href="<?= site_url('keys/deleteExp') ?>" class="flex items-center space-x-3 px-4 py-3 hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 transition-all">
-                            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <a href="<?= site_url('keys/deleteExp') ?>" class="flex items-center space-x-3 px-4 py-3 action-danger">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                             </svg>
-                            <span class="text-gray-700 font-medium">Delete Expired Keys</span>
+                            <span class="font-medium">Delete Expired Keys</span>
                         </a>
                         
-                        <a href="<?= site_url('keys/deleteUnused') ?>" class="flex items-center space-x-3 px-4 py-3 hover:bg-gradient-to-r hover:from-orange-50 hover:to-yellow-50 transition-all">
-                            <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <a href="<?= site_url('keys/deleteUnused') ?>" class="flex items-center space-x-3 px-4 py-3 action-warn">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
                             </svg>
-                            <span class="text-gray-700 font-medium">Delete Unused Keys</span>
+                            <span class="font-medium">Delete Unused Keys</span>
                         </a>
 
-                        <!-- New: Delete All Keys Option -->
-                        <a href="javascript:void(0)" onclick="confirmDeleteAllKeys()" class="flex items-center space-x-3 px-4 py-3 hover:bg-gradient-to-r hover:from-red-100 hover:to-red-50 text-red-600 transition-all">
+                        <a href="javascript:void(0)" onclick="confirmDeleteAllKeys()" class="flex items-center space-x-3 px-4 py-3 action-danger">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16M10 11v6m4-6v6"></path>
                             </svg>
@@ -81,9 +89,16 @@
             </div>
         </div>
         
+        <div class="key-filter-bar" id="key-filter-bar">
+            <button type="button" class="hud-chip is-on" data-filter="">ALL</button>
+            <button type="button" class="hud-chip" data-filter="used">USED</button>
+            <button type="button" class="hud-chip" data-filter="unused">UNUSED</button>
+            <button type="button" class="hud-chip" data-filter="live">LIVE</button>
+            <button type="button" class="hud-chip" data-filter="expired">EXPIRED</button>
+        </div>
         <!-- DataTable -->
         <?php if ($keylist) : ?>
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto keys-table-wrap">
                 <table id="datatable" class="w-full">
                     <thead>
                         <tr class="border-b-2 border-gray-200">
@@ -140,11 +155,15 @@
     }
     
     $(document).ready(function() {
+        var keyFilter = '';
         var table = $('#datatable').DataTable({
             processing: true,
             serverSide: true,
             order: [[0, "desc"]],
-            ajax: "<?= site_url('keys/api') ?>",
+            ajax: {
+                url: "<?= site_url('keys/api') ?>",
+                data: function(d) { d.filter = keyFilter; }
+            },
             columns: [
                 { data: 'id', name: 'id_keys' },
                 { data: 'game' },
@@ -152,7 +171,7 @@
                     data: 'user_key',
                     render: function(data, type, row, meta) {
                         var is_valid = (row.status == 'Active') ? "text-success" : "text-danger";
-                        return `<span class="${is_valid} keyBlur key-sensi key-chip" data-key="${row.user_key || ''}" style="cursor:pointer">${(row.user_key ? row.user_key : '&mdash;')}</span> `;
+                        return `<code class="${is_valid} keyBlur key-sensi key-mono" data-key="${row.user_key || ''}">${(row.user_key ? row.user_key : '&mdash;')}</code>`;
                     }
                 },
                 {
@@ -192,7 +211,7 @@
                         var btnReset = `<button class="btn btn-outline-danger btn-sm" onclick="resetUserKey('${row.user_key}')" title="Reset HWID">HWID</button>`;
                         var btnalterOne = `<button class="btn btn-outline-warning btn-sm" onclick="resetUserKey1('${row.user_key}')" title="Delete key">DEL</button>`;
                         var btnEdits = `<a href="${window.location.origin}/keys/${row.id}" class="btn btn-outline-info btn-sm" title="Edit">EDIT</a>`;
-                        var btnCopy = `<button class="btn btn-outline-success btn-sm" onclick="copyKeyDetails('${row.user_key}','${row.game}','${row.duration}')" title="Copy">COPY</button>`;
+                        var btnCopy = `<button class="btn btn-outline-success btn-sm" onclick="copyKey('${row.user_key}')" title="Copy key only">KEY</button> <button class="btn btn-outline-info btn-sm" onclick="copyKeyDetails('${row.user_key}','${row.game}','${row.duration}','${row.max_devices}')" title="Copy">PACK</button>`;
                         var btnShare = `<button class="btn btn-outline-primary btn-sm" onclick="shareKey('${row.user_key}','${row.game}','${row.duration}')" title="Share">SHARE</button>`;
                         return `<div class="d-flex flex-wrap gap-1">${btnReset} ${btnalterOne} ${btnEdits} ${btnCopy} ${btnShare}</div>`;
                     }
@@ -200,6 +219,12 @@
             ]
         });
 
+        $('#key-filter-bar').on('click', 'button[data-filter]', function() {
+            keyFilter = $(this).data('filter') || '';
+            $('#key-filter-bar button').removeClass('is-on');
+            $(this).addClass('is-on');
+            table.ajax.reload();
+        });
         $("#blur-out").click(function() {
             if ($(".keyBlur").hasClass("key-sensi")) {
                 $(".keyBlur").removeClass("key-sensi");
@@ -211,7 +236,34 @@
         });
     });
 
-    // New: Delete All Keys Confirmation Function
+    function copyUnusedKeys() {
+        if (window.bbToast) window.bbToast('LOADING UNUSED', 'ok');
+        fetch("<?= site_url('keys/copyUnused') ?>", { headers: { 'Accept': 'application/json' } })
+            .then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(d) {
+                if (!d || !d.ok) { Swal.fire('Failed', 'Could not load unused keys.', 'error'); return; }
+                if (!d.count) { Swal.fire('Empty', 'No unused keys to copy.', 'info'); return; }
+                if (window.bbCopyKeyPack) window.bbCopyKeyPack({ keys: d.keys, count: d.count, duration: d.duration, devices: d.devices, toast: 'UNUSED COPIED · ' + d.count });
+            })
+            .catch(function() { Swal.fire('Failed', 'Copy unused request failed.', 'error'); });
+    }
+
+    function confirmResetAllKeys() {
+        Swal.fire({
+            title: 'Reset ALL Keys?',
+            text: 'This clears HWID / devices on every key you can access. Keys stay. You cannot undo this.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#b6ff3b',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, Reset All'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = "<?= site_url('keys/resetHwids') ?>";
+            }
+        });
+    }
+
     function confirmDeleteAllKeys() {
         Swal.fire({
             title: 'Delete ALL Keys?',
@@ -261,34 +313,14 @@
         });
     }
 
-    function bbClip(v, toast) {
-        v = String(v || '');
-        if (navigator.clipboard) navigator.clipboard.writeText(v);
-        else {
-            var t = document.createElement('textarea');
-            t.value = v; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove();
-        }
-        if (window.bbToast) window.bbToast(toast || 'COPIED', 'ok');
-        else Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: toast || 'Copied', showConfirmButton: false, timer: 1400 });
-    }
     function copyKey(key) {
-        bbClip(String(key || '').trim() + '\nThanks for purchase.', 'KEY COPIED');
+        if (window.bbCopyRawKey) window.bbCopyRawKey(key);
     }
-    function copyKeyDetails(key, game, duration) {
-        var text = 'BLACK BUNNY KEY\nKeys: 1\nDuration: ' + duration + '\n' + String(key || '').trim() + '\nThanks for purchase.';
-        bbClip(text, 'DETAILS COPIED');
+    function copyKeyDetails(key, game, duration, devices) {
+        if (window.bbCopyKeyPack) window.bbCopyKeyPack({ key: key, count: 1, duration: duration, devices: devices });
     }
-    $(document).on('click', '.key-chip', function() {
-        var k = $(this).data('key') || $(this).attr('data-key');
-        if (k) copyKey(k);
-    });
     function shareKey(key, game, duration) {
-        var text = 'BLACK BUNNY KEY\nKeys: 1\nDuration: ' + duration + '\n' + key + '\nThanks for purchase.';
-        if (navigator.share) navigator.share({ title: 'BLACK BUNNY KEY', text: text });
-        else {
-            if (navigator.clipboard) navigator.clipboard.writeText(text);
-            if (window.bbToast) window.bbToast('DETAILS COPIED', 'ok');
-        }
+        if (window.bbCopyKeyPack) window.bbCopyKeyPack({ key: key, count: 1, duration: duration });
     }
     function resetUserKey(keys) {
         Swal.fire({

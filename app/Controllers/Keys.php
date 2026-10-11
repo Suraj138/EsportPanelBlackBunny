@@ -157,6 +157,56 @@ class Keys extends BaseController
         return $this->deleteAll();
     }
 
+    public function resetAllHwids()
+    {
+        $user = $this->user;
+        if (!$user) {
+            return redirect()->to('login')->with('msgWarning', 'Please login first');
+        }
+        $builder = $this->model->builder();
+        if ((int) $user->level != 1) {
+            $builder->where('registrator', $user->username);
+        }
+        $builder->update(['devices' => null]);
+        writeAudit('key_reset_all', 'hwid', $user->username);
+        return redirect()->back()->with('msgSuccess', 'All key devices reset.');
+    }
+
+    public function copyUnused()
+    {
+        $user = $this->user;
+        if (!$user) {
+            return $this->response->setStatusCode(401)->setJSON(['ok' => false]);
+        }
+        $q = $this->model->select('user_key, duration, max_devices');
+        if ((int) $user->level != 1) {
+            $q->where('registrator', $user->username);
+        }
+        $q->groupStart()->where('devices', null)->orWhere('devices', '')->groupEnd();
+        $rows = $q->orderBy('id_keys', 'DESC')->findAll(500);
+        $keys = [];
+        $hours = 0;
+        $devs = null;
+        foreach ($rows as $row) {
+            $k = trim((string) ($row['user_key'] ?? ''));
+            if ($k === '') {
+                continue;
+            }
+            $keys[] = $k;
+            $hours = (int) ($row['duration'] ?? $hours);
+            $md = (int) ($row['max_devices'] ?? 0);
+            $devs = $devs === null ? $md : ($devs === $md ? $devs : '-');
+        }
+        writeAudit('keys_copy_unused', 'count=' . count($keys), $user->username);
+        return $this->response->setJSON([
+            'ok' => true,
+            'count' => count($keys),
+            'duration' => $hours,
+            'devices' => $devs === null ? '-' : $devs,
+            'keys' => $keys,
+        ]);
+    }
+
     public function resetAllKeys()
     {
         if (!session()->has('userid') || !$this->user) {
@@ -298,7 +348,7 @@ class Keys extends BaseController
         if (!$dKey || ($user->level != 1 && $dKey->registrator != $user->username)) {
             return redirect()->to('keys')->with('msgDanger', 'Key not found.');
         }
-        $text = "BLACK BUNNY KEY\nGame: {$dKey->game}\nKey: {$dKey->user_key}\nDuration: {$dKey->duration}h\nDevices: {$dKey->max_devices}";
+        $text = tgKeyPackHtml($dKey->user_key, $dKey->max_devices, $dKey->duration);
         return $this->response->setJSON([
             'status' => true,
             'user_key' => $dKey->user_key,
@@ -579,16 +629,15 @@ class Keys extends BaseController
                     $tag = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', (string) $user->username), 0, 6) ?: 'BB');
                     $license = uniqueLicenseKey($model, $drtn, $tag);
                     if ($twst == "custom") {
-                        $cuslicense = strtoupper(trim((string) $cuslicense));
-                        if (strlen($cuslicense) > 3 && strlen($cuslicense) < 32) {
-                            $findKey = $model->getKeysGame(['user_key' => $cuslicense]);
-                            if ($findKey) {
-                                return redirect()->back()->with('msgDanger', 'Key already exists!!');
-                            }
-                            $license = $cuslicense;
-                        } else {
-                            return redirect()->back()->with('msgDanger', 'Custom Key is too Short/Long');
+                        $cuslicense = sanitizeLicenseKey($cuslicense);
+                        if (!licenseKeyOk($cuslicense)) {
+                            return redirect()->back()->with('msgDanger', 'Custom key must be 4-64 chars, no spaces or quotes.');
                         }
+                        $findKey = $model->getKeysGame(['user_key' => $cuslicense]);
+                        if ($findKey) {
+                            return redirect()->back()->with('msgDanger', 'Key already exists!!');
+                        }
+                        $license = $cuslicense;
                     }
 
                     $data_response = [
