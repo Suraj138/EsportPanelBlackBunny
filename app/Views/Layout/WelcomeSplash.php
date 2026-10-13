@@ -1,116 +1,208 @@
 <style>
-html.bb-splash-on,html.bb-splash-on body{overflow:hidden!important;perspective:none!important;transform:none!important}
-#bbWelcome{position:fixed!important;top:0!important;left:0!important;right:0!important;bottom:0!important;width:100vw!important;height:100vh!important;z-index:2147483647!important;display:flex!important;align-items:center!important;justify-content:center!important;background:#02040a!important;color:#e8f6ff!important;text-align:center!important;transform:none!important;opacity:1!important;visibility:visible!important;pointer-events:auto!important;font-family:Orbitron,Arial,sans-serif!important;overflow:hidden}
-#bbWelcome.out{opacity:0!important;transform:scale(1.06)!important;filter:blur(8px);transition:opacity .55s ease,transform .55s ease,filter .55s ease;pointer-events:none!important}
-.bb-sp-bg{position:absolute;inset:0;pointer-events:none}
-.bb-sp-grid{position:absolute;inset:-20%;opacity:.18;background-image:linear-gradient(rgba(0,255,208,.18) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,208,.1) 1px,transparent 1px);background-size:44px 44px;transform:perspective(700px) rotateX(62deg) scale(1.6) translateY(12%);animation:bbSpGrid 8s linear infinite}
-.bb-sp-aurora{position:absolute;inset:0;background:radial-gradient(520px 320px at 50% 42%,rgba(0,255,208,.18),transparent 62%),radial-gradient(420px 280px at 22% 18%,rgba(255,45,106,.16),transparent 58%),radial-gradient(380px 240px at 78% 22%,rgba(182,255,59,.1),transparent 55%);animation:bbSpPulse 3.2s ease-in-out infinite}
-.bb-sp-scan{position:absolute;left:0;right:0;height:90px;background:linear-gradient(180deg,transparent,rgba(0,255,208,.12),transparent);animation:bbSpScan 2.8s linear infinite}
-.bb-sp-core{position:relative;z-index:2;padding:20px}
-.bb-bunny{width:min(210px,58vw);height:auto;margin:0 auto 8px;filter:drop-shadow(0 0 18px rgba(0,255,208,.45));animation:bbBunnyIn .9s cubic-bezier(.16,1,.3,1) both,bbBunnyFloat 3.4s ease-in-out 1s infinite}
-.bb-bunny .ear-l{transform-origin:70px 78px;animation:bbEarL 2.4s ease-in-out infinite}
-.bb-bunny .ear-r{transform-origin:118px 74px;animation:bbEarR 2.6s ease-in-out infinite}
-.bb-bunny .eye{animation:bbBlink 4.2s ease-in-out infinite}
-.bb-bunny .glow{animation:bbEyeGlow 1.8s ease-in-out infinite}
-.bb-bunny .ring{transform-origin:100px 118px;animation:bbRing 3s linear infinite}
-.bb-bunny .stroke{stroke-dasharray:900;stroke-dashoffset:900;animation:bbDraw 1.6s ease forwards}
-.bb-sp-kicker{margin-top:6px;letter-spacing:.42em;font-size:11px;color:#b6ff3b;opacity:0;animation:bbFadeUp .6s ease .4s forwards}
-.bb-sp-title{margin:14px 0 8px;font-size:clamp(26px,6.4vw,54px);font-weight:800;letter-spacing:.12em;line-height:1.12;color:#e8f6ff;text-shadow:0 0 28px rgba(0,255,208,.5)}
-.bb-sp-title span{display:inline-block;opacity:0;transform:translateY(18px);animation:bbLetter .55s cubic-bezier(.16,1,.3,1) forwards}
-.bb-sp-sub{color:#8aa3c2;letter-spacing:.28em;font-size:11px;text-transform:uppercase;opacity:0;animation:bbFadeUp .6s ease 1.5s forwards}
-.bb-sp-bar{width:240px;height:3px;margin:22px auto 0;background:rgba(0,255,208,.14);overflow:hidden;opacity:0;animation:bbFadeUp .5s ease 1.7s forwards}
-.bb-sp-bar i{display:block;height:100%;width:38%;background:linear-gradient(90deg,#00ffd0,#b6ff3b,#ff2d6a);animation:bbBar 1.15s linear infinite}
-.bb-sp-skip{margin-top:20px;color:#00ffd0;letter-spacing:.38em;font-size:10px;cursor:pointer;opacity:0;animation:bbFadeUp .5s ease 2s forwards,bbHudBlink 1.4s ease 2.4s infinite}
-@keyframes bbSpGrid{to{background-position:0 44px,44px 0}}
-@keyframes bbSpPulse{50%{opacity:.7;transform:scale(1.04)}}
-@keyframes bbSpScan{0%{top:-90px}100%{top:110%}}
-@keyframes bbBunnyIn{from{opacity:0;transform:translateY(28px) scale(.86)}to{opacity:1;transform:none}}
-@keyframes bbBunnyFloat{50%{transform:translateY(-8px)}}
-@keyframes bbEarL{0%,100%{transform:rotate(0)}40%{transform:rotate(-9deg)}60%{transform:rotate(4deg)}}
-@keyframes bbEarR{0%,100%{transform:rotate(0)}35%{transform:rotate(8deg)}55%{transform:rotate(-5deg)}}
-@keyframes bbBlink{0%,8%,100%{transform:scaleY(1)}4%{transform:scaleY(.12)}}
-@keyframes bbEyeGlow{50%{opacity:.35}}
-@keyframes bbRing{to{transform:rotate(360deg)}}
-@keyframes bbDraw{to{stroke-dashoffset:0}}
-@keyframes bbLetter{to{opacity:1;transform:none}}
-@keyframes bbFadeUp{to{opacity:1}}
-@keyframes bbBar{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}
-@keyframes bbHudBlink{50%{opacity:.35}}
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Share+Tech+Mono&display=swap');
+html.bb-splash-on,html.bb-splash-on body{overflow:hidden!important}
+#bbWelcome{position:fixed;inset:0;z-index:2147483647;background:radial-gradient(ellipse at 50% 45%,#04120e 0%,#010403 70%);display:flex;align-items:center;justify-content:center;overflow:hidden;font-family:'Share Tech Mono',Orbitron,monospace;color:#d9fff6}
+#bbWelcome .half{position:absolute;left:0;width:100%;height:50.5%;background:#010403;transition:transform .9s cubic-bezier(.8,0,.2,1)}
+#bbWelcome .half.top{top:0;box-shadow:0 2px 0 rgba(0,255,208,.35)}
+#bbWelcome .half.bot{bottom:0;box-shadow:0 -2px 0 rgba(0,255,208,.35)}
+#bbWelcome.exit .half.top{transform:translateY(-101%)}
+#bbWelcome.exit .half.bot{transform:translateY(101%)}
+#bbWelcome .s-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;text-align:center;transition:opacity .4s,transform .4s}
+#bbWelcome.exit .s-inner{opacity:0;transform:scale(.92)}
+#bbWelcome .s-hex{position:relative;width:130px;height:130px;margin-bottom:26px}
+#bbWelcome .s-hex svg{position:absolute;inset:0;width:100%;height:100%;animation:hexSpin 14s linear infinite}
+@keyframes hexSpin{to{transform:rotate(360deg)}}
+#bbWelcome .s-hex .draw{stroke-dasharray:100;stroke-dashoffset:100;animation:sDraw 1s .1s cubic-bezier(.6,0,.3,1) forwards}
+@keyframes sDraw{to{stroke-dashoffset:0}}
+#bbWelcome .s-bb{position:absolute;inset:0;display:grid;place-items:center;font-family:Orbitron,sans-serif;font-weight:900;font-size:44px;color:#00ffd0;text-shadow:0 0 18px rgba(0,255,208,.9),0 0 60px rgba(0,255,208,.4);transform:scale(0);animation:bbpop .55s .75s cubic-bezier(.2,1.6,.4,1) forwards}
+@keyframes bbpop{to{transform:scale(1)}}
+#bbWelcome .s-title{font-family:Orbitron,sans-serif;font-weight:900;font-size:clamp(26px,5vw,54px);letter-spacing:.14em;color:#fff;text-shadow:0 0 14px rgba(0,255,208,.8),0 0 50px rgba(0,255,208,.3);min-height:1.2em}
+#bbWelcome .s-title span{display:inline-block;opacity:0;transform:translateY(26px) rotateX(60deg);animation:lin .5s cubic-bezier(.2,.9,.3,1.2) forwards;animation-delay:calc(.9s + var(--i)*.055s)}
+@keyframes lin{to{opacity:1;transform:none}}
+#bbWelcome .s-sub{margin-top:10px;font-size:12px;letter-spacing:.6em;color:#b6ff3b;text-shadow:0 0 12px rgba(182,255,59,.6);min-height:16px}
+#bbWelcome .s-sub::after{content:"|";animation:cur 1s steps(2) infinite;margin-left:2px}
+@keyframes cur{50%{opacity:0}}
+#bbWelcome .s-bar{margin-top:30px;width:min(340px,70vw);height:3px;background:rgba(0,255,208,.12);position:relative;overflow:hidden}
+#bbWelcome .s-bar i{position:absolute;inset:0;width:0%;background:linear-gradient(90deg,#00ffd0,#b6ff3b);box-shadow:0 0 16px #00ffd0;transition:width .12s linear}
+#bbWelcome .s-meta{margin-top:12px;display:flex;gap:26px;font-size:11px;letter-spacing:.3em;color:rgba(0,255,208,.75)}
+#bbWelcome #sPct{color:#b6ff3b}
+#bbWelcome #sStatus{color:#00ffd0;text-shadow:0 0 10px rgba(0,255,208,.6)}
+#bbWelcome .s-skip{margin-top:30px;font-size:10px;letter-spacing:.4em;color:rgba(160,255,235,.4);cursor:pointer}
+#bbWelcome .s-skip:hover{color:#00ffd0}
+#bbWelcome .s-snd{margin-top:8px;font-size:10px;letter-spacing:.35em;color:rgba(182,255,59,.5)}
+#bbWelcome .s-log{position:absolute;left:24px;bottom:20px;font-size:10px;line-height:1.9;color:rgba(0,255,208,.4);z-index:2;text-align:left}
+#bbWelcome .s-log div::before{content:"> ";color:#b6ff3b}
+#bbFlash{position:fixed;inset:0;z-index:2147483646;background:radial-gradient(circle at 50% 50%,#b8fff0,rgba(0,255,208,.5) 40%,transparent 75%);opacity:0;pointer-events:none;transition:opacity .35s}
+#bbFlash.on{opacity:1}
 </style>
 <script>
 (function(){
   var skip=false;
   try{ skip=!!sessionStorage.getItem('bb_splash_seen'); }catch(e){}
   window.__bbSplashSkip=skip;
-  if(skip) document.write('<style>#bbWelcome{display:none!important;visibility:hidden!important}</style>');
+  if(skip) document.write('<style>#bbWelcome,#bbFlash{display:none!important}</style>');
   else document.documentElement.className+=' bb-splash-on';
 })();
 </script>
 <div id="bbWelcome">
-  <div class="bb-sp-bg">
-    <div class="bb-sp-grid"></div>
-    <div class="bb-sp-aurora"></div>
-    <div class="bb-sp-scan"></div>
-  </div>
-  <div class="bb-sp-core">
-    <svg class="bb-bunny" viewBox="0 0 200 230" fill="none" aria-hidden="true">
-      <circle class="ring" cx="100" cy="118" r="92" stroke="rgba(0,255,208,.22)" stroke-width="1" stroke-dasharray="6 10"/>
-      <circle cx="100" cy="118" r="78" stroke="rgba(255,45,106,.18)" stroke-width="1"/>
-      <ellipse class="glow" cx="100" cy="128" rx="54" ry="18" fill="rgba(0,255,208,.16)"/>
-      <path class="ear-l" d="M62 86 C48 18 78 8 86 78 C80 70 68 74 62 86Z" fill="#050914" stroke="#00ffd0" stroke-width="2"/>
-      <path class="ear-l" d="M70 80 C62 34 78 28 82 76" stroke="#ff2d6a" stroke-width="1.4" fill="none"/>
-      <path class="ear-r" d="M128 84 C150 12 176 28 142 86 C136 74 132 74 128 84Z" fill="#050914" stroke="#00ffd0" stroke-width="2"/>
-      <path class="ear-r" d="M136 78 C152 32 164 42 140 82" stroke="#ff2d6a" stroke-width="1.4" fill="none"/>
-      <path class="stroke" d="M70 92 C62 108 62 128 78 146 C90 160 110 162 126 148 C144 130 146 108 136 92 C128 80 110 74 100 74 C88 74 76 82 70 92Z" fill="#070b14" stroke="#00ffd0" stroke-width="2.2"/>
-      <path d="M78 146 C86 176 114 180 124 148 C116 160 92 160 78 146Z" fill="#050914" stroke="#00ffd0" stroke-width="1.8"/>
-      <ellipse cx="132" cy="150" rx="10" ry="7" fill="#050914" stroke="#b6ff3b" stroke-width="1.2"/>
-      <circle class="eye" cx="84" cy="108" r="5.2" fill="#00ffd0"/>
-      <circle class="eye" cx="116" cy="106" r="5.6" fill="#00ffd0"/>
-      <circle cx="85.4" cy="106.6" r="1.6" fill="#031018"/>
-      <circle cx="117.4" cy="104.6" r="1.7" fill="#031018"/>
-      <path d="M96 118 C100 124 106 124 110 118" stroke="#ff2d6a" stroke-width="1.6" fill="none"/>
-      <path d="M100 74 L100 54" stroke="#b6ff3b" stroke-width="1" opacity=".7"/>
-      <circle cx="100" cy="50" r="3" fill="#b6ff3b"/>
-    </svg>
-    <div class="bb-sp-kicker">SECURE CHANNEL</div>
-    <h1 class="bb-sp-title" id="bbSpTitle"></h1>
-    <div class="bb-sp-sub">Tactical HUD · BGMI Loader · Key Arena</div>
-    <div class="bb-sp-bar"><i></i></div>
-    <div class="bb-sp-skip">TAP TO ENTER</div>
+  <div class="half top"></div><div class="half bot"></div>
+  <div class="s-log" id="sLog"></div>
+  <div class="s-inner">
+    <div class="s-hex">
+      <svg viewBox="0 0 100 100">
+        <defs><linearGradient id="hg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#ff2d6a"/><stop offset="1" stop-color="#00ffd0"/>
+        </linearGradient></defs>
+        <polygon class="draw" points="50,4 92,27 92,73 50,96 8,73 8,27" fill="none" stroke="url(#hg)" stroke-width="2.5" pathLength="100"/>
+        <polygon points="50,14 83,32 83,68 50,86 17,68 17,32" fill="none" stroke="rgba(0,255,208,.25)" stroke-width="1"/>
+      </svg>
+      <div class="s-bb">BB</div>
+    </div>
+    <div class="s-title" id="sTitle"></div>
+    <div class="s-sub" id="sSub"></div>
+    <div class="s-bar"><i id="sFill"></i></div>
+    <div class="s-meta"><span id="sPct">0%</span><span id="sStatus">INITIALIZING...</span></div>
+    <div class="s-skip" id="sSkip">TAP ANYWHERE TO SKIP</div>
+    <div class="s-snd" id="sSnd">TAP TO ENABLE SOUND</div>
   </div>
 </div>
+<div id="bbFlash"></div>
 <script>
 (function(){
-  var el=document.getElementById('bbWelcome');
-  if(!el) return;
+  var splash=document.getElementById('bbWelcome');
+  var flash=document.getElementById('bbFlash');
+  if(!splash) return;
   if(window.__bbSplashSkip){
-    if(el.parentNode) el.parentNode.removeChild(el);
+    if(splash.parentNode) splash.parentNode.removeChild(splash);
+    if(flash&&flash.parentNode) flash.parentNode.removeChild(flash);
     document.documentElement.className=document.documentElement.className.replace(' bb-splash-on','');
     return;
   }
-  try{ document.documentElement.appendChild(el); }catch(e){}
-  var title=document.getElementById('bbSpTitle');
+  try{ document.documentElement.appendChild(splash); if(flash) document.documentElement.appendChild(flash); }catch(e){}
+
+  var Sound={
+    ctx:null, master:null, on:false,
+    init:function(){
+      if(this.ctx) return;
+      try{
+        this.ctx=new (window.AudioContext||window.webkitAudioContext)();
+        this.master=this.ctx.createGain();
+        this.master.gain.value=0.5;
+        this.master.connect(this.ctx.destination);
+      }catch(e){ this.on=false; }
+    },
+    resume:function(){ if(this.ctx&&this.ctx.state==='suspended') this.ctx.resume(); },
+    ready:function(){ return this.on&&this.ctx&&this.ctx.state==='running'; },
+    tone:function(freq,dur,type,vol,slideTo){
+      if(!this.ready()) return;
+      var t=this.ctx.currentTime;
+      var o=this.ctx.createOscillator(), g=this.ctx.createGain();
+      o.type=type||'sine'; o.frequency.setValueAtTime(freq,t);
+      if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo,t+dur);
+      g.gain.setValueAtTime(vol,t);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+      o.connect(g); g.connect(this.master);
+      o.start(t); o.stop(t+dur+0.02);
+    },
+    beep:function(){ this.tone(880,0.08,'square',0.14); },
+    success:function(){ this.tone(660,0.1,'sine',0.18); var s=this; setTimeout(function(){ s.tone(990,0.16,'sine',0.18); },100); },
+    whoosh:function(){
+      if(!this.ready()) return;
+      var t=this.ctx.currentTime, dur=0.75;
+      var buf=this.ctx.createBuffer(1,this.ctx.sampleRate*dur,this.ctx.sampleRate);
+      var d=buf.getChannelData(0);
+      for(var i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*(1-i/d.length);
+      var src=this.ctx.createBufferSource(); src.buffer=buf;
+      var f=this.ctx.createBiquadFilter(); f.type='bandpass';
+      f.frequency.setValueAtTime(300,t);
+      f.frequency.exponentialRampToValueAtTime(2600,t+dur*0.6);
+      var g=this.ctx.createGain();
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(0.45,t+0.08);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+      src.connect(f); f.connect(g); g.connect(this.master);
+      src.start(t);
+    }
+  };
+
+  var title=document.getElementById('sTitle');
   if(title){
-    var lines=['WELCOME TO','BLACK BUNNY PORTAL'];
-    lines.forEach(function(line,li){
-      if(li) title.appendChild(document.createElement('br'));
-      line.split('').forEach(function(ch,i){
-        var s=document.createElement('span');
-        s.textContent=ch=== ' ' ? '\u00a0' : ch;
-        s.style.animationDelay=(0.55+li*0.45+i*0.04)+'s';
-        title.appendChild(s);
-      });
+    'BLACK BUNNY'.split('').forEach(function(ch,i){
+      var s=document.createElement('span');
+      s.textContent=ch===' '?'\u00A0':ch;
+      s.style.setProperty('--i',i);
+      title.appendChild(s);
     });
   }
+  var SUB='P U B L I C   S T O R E';
+  var si=0;
+  setTimeout(function type(){
+    var el=document.getElementById('sSub');
+    if(!el) return;
+    if(si<=SUB.length){ el.textContent=SUB.slice(0,si++); setTimeout(type,55); }
+  },1400);
+
+  var LOGS=['BOOT v2.4.1','MEMCHECK OK','UPLINK: NODE-07','MASCOT: AWAKE','CHANNEL: SECURE'];
+  var logEl=document.getElementById('sLog');
+  var li=0;
+  var logIv=setInterval(function(){
+    if(!logEl||li>=LOGS.length){ clearInterval(logIv); return; }
+    var d=document.createElement('div'); d.textContent=LOGS[li++];
+    logEl.appendChild(d);
+    while(logEl.children.length>4) logEl.removeChild(logEl.firstChild);
+  },520);
+
+  var sFill=document.getElementById('sFill');
+  var sPct=document.getElementById('sPct');
+  var sStatus=document.getElementById('sStatus');
+  var MSGS=[[0,'INITIALIZING...'],[30,'LOADING ASSETS...'],[60,'DECRYPTING CHANNEL...'],[90,'ACCESS GRANTED']];
+  var MILE={25:'beep',50:'beep',75:'beep',100:'success'};
+  var sp=0;
+  var SPLASH_MS=3500;
+  var pIv=setInterval(function(){
+    sp=Math.min(100,sp+Math.random()*3.2+1.2);
+    if(sFill) sFill.style.width=sp+'%';
+    if(sPct) sPct.textContent=Math.floor(sp)+'%';
+    for(var k=0;k<MSGS.length;k++){ if(sp>=MSGS[k][0]&&sStatus) sStatus.textContent=MSGS[k][1]; }
+    for(var th in MILE){ if(sp>=+th){ if(Sound[MILE[th]]) Sound[MILE[th]](); delete MILE[th]; } }
+    if(sp>=100) clearInterval(pIv);
+  }, SPLASH_MS/48);
+
+  var exited=false;
   function hide(){
-    if(!el||el.getAttribute('data-done')) return;
-    el.setAttribute('data-done','1');
+    if(exited) return; exited=true;
+    clearInterval(pIv); clearInterval(logIv);
+    if(sFill) sFill.style.width='100%';
+    if(sPct) sPct.textContent='100%';
+    if(sStatus) sStatus.textContent='ACCESS GRANTED';
     try{ sessionStorage.setItem('bb_splash_seen','1'); }catch(e){}
-    el.className='out';
-    document.documentElement.className=document.documentElement.className.replace(' bb-splash-on','');
-    setTimeout(function(){ if(el&&el.parentNode) el.parentNode.removeChild(el); }, 560);
+    Sound.whoosh();
+    if(flash) flash.className='on';
+    setTimeout(function(){
+      splash.className='exit';
+      document.documentElement.className=document.documentElement.className.replace(' bb-splash-on','');
+      setTimeout(function(){ if(flash) flash.className=''; },350);
+      setTimeout(function(){
+        if(splash&&splash.parentNode) splash.parentNode.removeChild(splash);
+        if(flash&&flash.parentNode) flash.parentNode.removeChild(flash);
+      },1000);
+    },280);
   }
-  el.onclick=hide;
-  setTimeout(hide, 6200);
+
+  var sndEl=document.getElementById('sSnd');
+  function unlockAudio(){
+    Sound.init(); Sound.resume();
+    if(!Sound.on){
+      Sound.on=true;
+      if(sndEl) sndEl.textContent='SOUND ON';
+      Sound.beep();
+    }
+  }
+  splash.addEventListener('click',function(e){
+    if(e.target&&e.target.id==='sSnd'){ unlockAudio(); return; }
+    hide();
+  });
+  if(sndEl) sndEl.addEventListener('click',function(e){ e.stopPropagation(); unlockAudio(); });
+  setTimeout(hide, SPLASH_MS);
 })();
 </script>
