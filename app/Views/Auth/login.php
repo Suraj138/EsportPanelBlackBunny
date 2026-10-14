@@ -4,54 +4,60 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title><?= BASE_NAME ?> - Login</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="<?= base_url('assets/css/blackbunny.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/blackbunny.css') ?: time() ?>">
 </head>
-<body>
+<body class="bba">
 <?= view('Layout/WelcomeSplash') ?>
-<div class="bb-stage">
-    <div class="bb-aurora"></div>
-    <div class="bb-grid"></div>
-    <div class="bb-orb a"></div>
-    <div class="bb-orb b"></div>
-    <div class="bb-vignette"></div>
-    <div class="bb-film"></div>
-</div>
+<?= view('Layout/AuthBackdrop') ?>
+
 <div class="auth-scene">
-    <div class="auth-wrap">
-        <?= view('Layout/RadarStage', ['brandSub' => 'Esport Key HUD']) ?>
-        <section class="login-card">
-            <div class="status"><?= $this->include('Layout/msgStatus') ?></div>
-            <div class="card-kicker">SECURE CHANNEL</div>
-            <h1>PORTAL ACCESS</h1>
+    <div class="auth-brand">
+        <div class="hex">BB</div>
+        <div>
+            <h1>BLACK BUNNY</h1>
+            <small>PREMIUM APK STORE</small>
+        </div>
+    </div>
+    <div class="auth-ticks">
+        <span><i></i> NODE ONLINE</span>
+        <span><i></i> ENCRYPTION ACTIVE</span>
+        <span><i></i> LOBBY LINKED</span>
+    </div>
+
+    <section class="auth-card">
+        <div class="a-head">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            BB-PANEL v2.0 &mdash; SECURE LOGIN
+            <span class="a-live">&bull; LIVE</span>
+        </div>
+        <div class="a-body">
+            <div class="a-kicker">// SECURE CHANNEL</div>
+            <h2>PORTAL ACCESS</h2>
             <p>Authorize operator identity. Drop in. Own the lobby.</p>
-            <?= form_open('', ['class'=>'login-form']) ?>
-            <div class="field">
+
+            <?= $this->include('Layout/msgStatus') ?>
+
+            <?= form_open('', ['class'=>'login-form', 'autocomplete'=>'on']) ?>
+            <div class="a-field">
                 <label>OPERATOR ID / USERNAME</label>
-                <input type="text" name="username" id="username" required placeholder="Enter identity alias">
-                <?php if ($validation->hasError('username')) : ?>
-                    <small class="text-red-400"><?= $validation->getError('username') ?></small>
-                <?php endif; ?>
+                <input type="text" name="username" id="username" required autocomplete="username" placeholder="Enter identity alias" value="<?= old('username') ?>">
+                <?php if ($validation->hasError('username')) : ?><small><?= esc($validation->getError('username')) ?></small><?php endif; ?>
             </div>
-            <div class="field">
+            <div class="a-field">
                 <label>CRYPTOGRAPHIC KEY</label>
-                <input type="password" name="password" id="password" required minlength="6" placeholder="Enter cryptographic key">
-                <?php if ($validation->hasError('password')) : ?>
-                    <small class="text-red-400"><?= $validation->getError('password') ?></small>
-                <?php endif; ?>
+                <input type="password" name="password" id="password" required minlength="6" autocomplete="current-password" placeholder="Enter cryptographic key">
+                <?php if ($validation->hasError('password')) : ?><small><?= esc($validation->getError('password')) ?></small><?php endif; ?>
             </div>
             <input type="hidden" name="ip" value="portal" id="ip">
-            <div class="rowx">
-                <label><input type="checkbox" name="stay_log" id="stay_log" value="1"> 24H Session Active</label>
+            <div class="a-rowx">
+                <label><input class="a-check" type="checkbox" name="stay_log" id="stay_log" value="1"> 24H Session Active</label>
                 <a href="<?= site_url('recover') ?>">Recover Key?</a>
             </div>
-            <button type="submit" class="submit">AUTHENTICATE &amp; ENTER</button>
+            <button type="submit" class="a-btn">AUTHENTICATE &amp; ENTER</button>
             <?= form_close() ?>
-            <div class="secure">Unregistered node? <a href="<?= site_url('register') ?>">Register Identity</a></div>
-            <div class="secure">Owner · Admin · User</div>
-        </section>
-    </div>
+            <div class="a-foot">Unregistered node? <a href="<?= site_url('register') ?>">Register Identity</a></div>
+            <div class="a-alt">OWNER &middot; ADMIN &middot; USER</div>
+        </div>
+    </section>
 </div>
-<script src="<?= base_url('assets/js/blackbunny.js') ?>?v=<?= @filemtime(FCPATH . 'assets/js/blackbunny.js') ?: time() ?>"></script>
 </body>
 </html>
