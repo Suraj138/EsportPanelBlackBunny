@@ -13,7 +13,7 @@
         <p>Maintenance, features, and live loader status.</p>
     </section>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <?php if($user->level != 2) : ?>
+        <?php if(($user->level == 1) || ($user->level == 2)) : ?>
         <div class="glass-card rounded-2xl p-6 sm:p-8 animate-fade-in-up">
             <div class="flex items-center mb-6">
                 <div class="gradient-bg w-12 h-12 rounded-xl flex items-center justify-center mr-4">

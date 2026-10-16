@@ -93,6 +93,7 @@ $routes->group('admin', ['filter' => 'admin'], function ($routes) {
 	$routes->match(['get', 'post'], 'create-referral', 'User::ref_index');
 	$routes->match(['get', 'post'], 'manage-users', 'User::manage_users');
 	$routes->match(['get', 'post'], 'user/(:num)', 'User::user_edit/$1');
+	$routes->post('user/(:num)/delete', 'User::user_delete/$1');
 	
 	/* --------------------------- Admin API Grouping -------------------------- */
 	$routes->group('api', function ($routes) {

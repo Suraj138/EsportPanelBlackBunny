@@ -122,13 +122,17 @@ class User extends BaseController
 
         $mCode = new CodeModel();
         $validation = Services::validation();
+        $accLevel = $this->accLevel;
+        if ((int) $user->level !== 1) {
+            unset($accLevel[1]);
+        }
         $data = [
             'title' => 'Referral',
             'user' => $user,
             'time' => $this->time,
             'code' => $mCode->getCode(),
             'accExpire' => $this->accExpire,
-            'accLevel' => $this->accLevel,
+            'accLevel' => $accLevel,
             'total_code' => $mCode->countAllResults(),
             'validation' => $validation
         ];
@@ -173,6 +177,9 @@ class User extends BaseController
             return redirect()->back()->withInput()->with('msgDanger', 'Failed, check the form');
         } else {
             $actor = $this->user;
+            if ((int) $accLevel1 === 1 && (int) $actor->level !== 1) {
+                return redirect()->back()->withInput()->with('msgDanger', 'Only the Owner can mint Owner-level referrals.');
+            }
             if ((int) $actor->level != 1) {
                 $quota = isset($actor->ref_accounts) ? (int) $actor->ref_accounts : 0;
                 $used = (new CodeModel())->countCreatedBy($actor->username);
@@ -264,7 +271,36 @@ class User extends BaseController
 
     public function user_delete($userid = false)
     {
-        return redirect()->to('dashboard')->with('msgDanger', 'Disabled.');
+        $actor = $this->user;
+        if (!$actor || (int) $actor->level !== 1) {
+            return redirect()->to('dashboard')->with('msgWarning', 'Access Denied!');
+        }
+        if (strtolower($this->request->getMethod()) !== 'post') {
+            return redirect()->to('admin/manage-users')->with('msgWarning', 'Deletion must be confirmed.');
+        }
+
+        $model = $this->model;
+        $target = $model->getUser($userid);
+        if (!$target) {
+            return redirect()->to('admin/manage-users')->with('msgDanger', 'User no longer exists.');
+        }
+        if ((int) $target->id_users === (int) $actor->id_users) {
+            return redirect()->to('admin/manage-users')->with('msgDanger', 'You cannot delete your own account.');
+        }
+        if ((int) $target->level === 1 && $model->where('level', 1)->countAllResults() <= 1) {
+            return redirect()->to('admin/manage-users')->with('msgDanger', 'Cannot delete the only Owner account.');
+        }
+        if ((string) $this->request->getPost('confirm') !== 'DELETE') {
+            return redirect()->to('admin/manage-users')->with('msgWarning', 'Type DELETE to confirm removal.');
+        }
+
+        $model->delete($userid);
+        try {
+            \Config\Database::connect()->table('sessions')->where('userid', $userid)->delete();
+        } catch (\Throwable $e) {
+        }
+        writeAudit('user_delete', "target={$target->username}", $actor->username);
+        return redirect()->to('admin/manage-users')->with('msgSuccess', "Deleted {$target->username}.");
     }
     
     public function user_edit($userid = false)
@@ -293,7 +329,8 @@ class User extends BaseController
     private function user_edit_action()
     {
         $model = $this->model;
-        $userid = $this->request->getPost('user_id');
+        $actor = $this->user;
+        $userid = (int) $this->request->getPost('user_id');
 
         $target = $model->getUser($userid);
         if (!$target) {
@@ -302,6 +339,8 @@ class User extends BaseController
         }
 
         $username = $this->request->getPost('username');
+        $email = trim((string) $this->request->getPost('email'));
+        $newPass = (string) $this->request->getPost('new_password');
 
         $form_rules = [
             'username' => [
@@ -309,6 +348,14 @@ class User extends BaseController
                 'rules' => "required|alpha_numeric|min_length[4]|max_length[25]|is_unique[users.username,username,$target->username]",
                 'errors' => [
                     'is_unique' => 'The {field} has taken by other.'
+                ]
+            ],
+            'email' => [
+                'label' => 'email',
+                'rules' => 'permit_empty|valid_email|is_unique[users.email,email,' . $target->email . ']',
+                'errors' => [
+                    'is_unique' => 'The {field} is already registered.',
+                    'valid_email' => 'The {field} is not a valid address.'
                 ]
             ],
             'fullname' => [
@@ -341,39 +388,87 @@ class User extends BaseController
             ],
             'uplink' => [
                 'label' => 'uplink',
-                'rules' => 'required|alpha_numeric|is_not_unique[users.username,username,]',
+                'rules' => 'permit_empty|alpha_numeric|is_not_unique[users.username,username,]',
                 'errors' => [
                     'is_not_unique' => 'Uplink not registered anymore.'
                 ]
             ],
         ];
 
+        if ($newPass !== '') {
+            $form_rules['new_password'] = [
+                'label' => 'password',
+                'rules' => 'min_length[6]|max_length[64]',
+                'errors' => [
+                    'min_length' => 'The {field} must be at least 6 characters.'
+                ]
+            ];
+        }
+
         if (!$this->validate($form_rules)) {
             return redirect()->back()->withInput()->with('msgDanger', 'Something wrong! Please check the form');
-        } else {
-            $fullname = $this->request->getPost('fullname');
-            $level = $this->request->getPost('level');
-            $status = $this->request->getPost('status');
-            $saldo = $this->request->getPost('saldo');
-            $uplink = $this->request->getPost('uplink');
-            $expiration = $this->request->getPost('expiration');
-            $data_update = [
-                'username' => $username,
-                'fullname' => esc($fullname),
-                'level' => $level,
-                'status' => $status,
-                'saldo' => (($saldo < 1) ? 0 : $saldo),
-                'uplink' => $uplink,
-                'expiration_date' => $expiration
-            ];
-            if ($this->request->getPost('reset_bound')) {
-                $data_update['bound_logins'] = '';
-            }
+        }
 
-            $update = $model->update($userid, $data_update);
-            if ($update) {
-                return redirect()->back()->with('msgSuccess', "Successfuly update $target->username.");
+        $fullname = $this->request->getPost('fullname');
+        $level = (int) $this->request->getPost('level');
+        $status = (int) $this->request->getPost('status');
+        $saldo = $this->request->getPost('saldo');
+        $uplink = trim((string) $this->request->getPost('uplink'));
+        $expiration = trim((string) $this->request->getPost('expiration'));
+
+        if ($expiration !== '' && strtotime($expiration) === false) {
+            return redirect()->back()->withInput()->with('msgDanger', 'Use expiration format YYYY-MM-DD HH:MM:SS.');
+        }
+
+        if ((int) $target->level === 1 && $level !== 1 && $model->where('level', 1)->countAllResults() <= 1) {
+            return redirect()->back()->with('msgDanger', 'Cannot demote the only Owner account.');
+        }
+
+        $data_update = [
+            'username' => $username,
+            'fullname' => esc($fullname),
+            'email' => $email,
+            'level' => $level,
+            'status' => $status,
+            'saldo' => (($saldo < 1) ? 0 : $saldo),
+            'uplink' => $uplink,
+            'expiration_date' => ($expiration === '' ? null : $expiration)
+        ];
+        if ($this->request->getPost('reset_bound')) {
+            $data_update['bound_logins'] = '';
+        }
+        if ($newPass !== '') {
+            $data_update['password'] = create_password($newPass);
+        }
+
+        $file = $this->request->getFile('avatar');
+        if ($file && $file->isValid() && !$file->hasMoved()) {
+            ensureAvatarColumn();
+            if ($file->getSize() > 2 * 1024 * 1024) {
+                return redirect()->back()->with('msgDanger', 'Avatar max 2 MB.');
             }
+            $ext = strtolower((string) $file->getExtension());
+            if ($ext === 'jpeg') {
+                $ext = 'jpg';
+            }
+            $mime = strtolower((string) $file->getMimeType());
+            if (!in_array($ext, ['jpg', 'png', 'webp', 'gif'], true)
+                || !in_array($mime, ['image/jpeg', 'image/png', 'image/webp', 'image/gif'], true)) {
+                return redirect()->back()->with('msgDanger', 'Avatar must be JPG, PNG, WEBP or GIF.');
+            }
+            $dest = FCPATH . 'uploads/avatars/';
+            if (!is_dir($dest)) {
+                mkdir($dest, 0755, true);
+            }
+            $name = 'u' . (int) $target->id_users . '.' . $ext;
+            $file->move($dest, $name, true);
+            $data_update['avatar'] = 'uploads/avatars/' . $name;
+        }
+
+        $update = $model->update($userid, $data_update);
+        if ($update) {
+            writeAudit('user_edit', "target={$target->username} level=$level saldo=" . (int) $saldo, $actor ? $actor->username : 'system');
+            return redirect()->back()->with('msgSuccess', "Successfuly update $target->username.");
         }
     }
 

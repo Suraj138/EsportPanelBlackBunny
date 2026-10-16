@@ -38,9 +38,31 @@
                 </a>
             </div>
             
-            <?= form_open('', ['class' => 'space-y-6']) ?>
+            <?= form_open('', ['class' => 'space-y-6', 'enctype' => 'multipart/form-data']) ?>
                 <input type="hidden" name="user_id" value="<?= $target->id_users ?>">
-                
+
+                <!-- Avatar + Email -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Profile Pic</label>
+                        <div class="flex items-center gap-4">
+                            <?php $curPic = function_exists('userAvatarUrl') ? userAvatarUrl($target) : ''; ?>
+                            <span class="top-avatar">
+                                <?php if ($curPic) : ?><img src="<?= esc($curPic) ?>" alt=""><?php else : ?><?= esc(strtoupper(substr((string) ($target->fullname ?: $target->username), 0, 1))) ?><?php endif; ?>
+                            </span>
+                            <input type="file" name="avatar" accept="image/png,image/jpeg,image/webp,image/gif" class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all">
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">JPG, PNG, WEBP or GIF, max 2 MB. Leave empty to keep current.</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" name="email" value="<?= old('email') ?: $target->email ?>" class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all" placeholder="name@example.com">
+                        <?php if ($validation->hasError('email')) : ?>
+                            <small class="text-red-500 text-xs mt-1"><?= $validation->getError('email') ?></small>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Username -->
                     <div>
@@ -57,6 +79,16 @@
                         <input type="text" name="fullname" value="<?= old('fullname') ?: $target->fullname ?>" class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all" placeholder="Full name">
                         <?php if ($validation->hasError('fullname')) : ?>
                             <small class="text-red-500 text-xs mt-1"><?= $validation->getError('fullname') ?></small>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- New Password -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                        <input type="text" name="new_password" value="" autocomplete="new-password" class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all" placeholder="Leave empty to keep current">
+                        <p class="text-xs text-gray-500 mt-1">Min 6 characters. Owner can reset any account password.</p>
+                        <?php if ($validation->hasError('new_password')) : ?>
+                            <small class="text-red-500 text-xs mt-1"><?= $validation->getError('new_password') ?></small>
                         <?php endif; ?>
                     </div>
                     
@@ -115,6 +147,22 @@
                     LOCK ACCOUNT PATCH
                 </button>
             <?= form_close() ?>
+
+            <?php if ((int) $target->id_users !== (int) $user->id_users) : ?>
+            <div class="mt-8 pt-6 border-t border-red-200">
+                <h3 class="text-red-600 font-bold mb-2">DANGER ZONE</h3>
+                <p class="text-sm text-gray-600 mb-4">Permanently remove <b><?= esc($target->username) ?></b>. This cannot be undone.</p>
+                <form method="post" action="<?= site_url('admin/user/' . $target->id_users . '/delete') ?>" onsubmit="return confirm('Delete <?= esc($target->username) ?> permanently?');">
+                    <?= csrf_field() ?>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <input type="text" name="confirm" placeholder="Type DELETE to confirm" class="flex-1 px-4 py-3 bg-white/50 border border-red-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 transition-all">
+                        <button type="submit" class="px-6 py-3 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl hover:from-red-500 hover:to-rose-500 transition-all">
+                            DELETE ACCOUNT
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>

@@ -35,7 +35,9 @@ body.dk-hover #dkRing{width:54px;height:54px;border-color:var(--dk-lime)}
 @keyframes dkSweep{0%{left:-30%}55%,100%{left:130%}}
 .dk-hero .dk-scangrid{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(180deg,transparent 0 12px,rgba(0,255,208,.035) 13px);animation:gridDrift 9s linear infinite}
 .dk-kick{font-family:Orbitron,sans-serif;letter-spacing:.28em;font-size:11px;color:var(--dk-lime);margin-bottom:10px}
+.dk-hero-title{display:flex;align-items:center;gap:16px;margin-bottom:8px}
 .dk-hero h1{margin:0 0 10px;font-family:Orbitron,sans-serif;font-size:clamp(1.9rem,4.2vw,3.3rem);letter-spacing:.09em;line-height:1.04;color:var(--dk-ink)}
+.dk-hero-title h1{margin:0}
 .dk-hero h1 span{background:linear-gradient(90deg,var(--dk-cyan),var(--dk-lime));-webkit-background-clip:text;background-clip:text;color:transparent;background-size:200%;animation:dkGrad 4s linear infinite}
 @keyframes dkGrad{to{background-position:200%}}
 .dk-type{max-width:560px;color:var(--dk-dim);min-height:26px;font-size:16px;margin:0 0 6px}
@@ -84,11 +86,15 @@ body.dk-hover #dkRing{width:54px;height:54px;border-color:var(--dk-lime)}
 /* grid + panels */
 .dk-grid{display:grid;grid-template-columns:1.35fr .65fr;gap:14px}
 .dk-panel{position:relative;overflow:hidden;padding:18px;border:1px solid rgba(0,255,208,.22);background:linear-gradient(160deg,rgba(6,16,32,.96),rgba(4,10,20,.94));transition:.3s}
-.dk-panel:before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--dk-cyan),transparent);opacity:.6}
+.dk-panel:before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--dk-cyan),transparent);background-size:40% 100%;background-repeat:no-repeat;opacity:.75;animation:dkBeam 5s linear infinite}
+@keyframes dkBeam{0%{background-position:-40% 0}100%{background-position:140% 0}}
+.dk-panel:after{content:'';position:absolute;top:0;left:-45%;width:45%;height:100%;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(0,255,208,.055),transparent);animation:dkSweep 6.5s linear infinite}
+@keyframes dkSweep{to{left:120%}}
 .dk-panel:hover{box-shadow:0 20px 60px rgba(0,255,208,.1)}
 .dk-panel h2{margin:0;font-family:Orbitron,sans-serif;letter-spacing:.14em;font-size:12px;color:var(--dk-cyan)}
-.dk-panel header{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 14px}
+.dk-panel header{display:flex;justify-content:space-between;align-items:center;margin:0 0 14px}
 .dk-panel header em{color:var(--dk-dim);font-style:normal;font-size:10px;font-family:Orbitron,sans-serif;letter-spacing:.1em}
+.dk-h{display:flex;align-items:center;gap:10px}
 
 /* flow */
 .dk-flow-row{display:grid;grid-template-columns:74px 1fr 46px;gap:11px;align-items:center;margin:0 0 11px;font-size:11px;letter-spacing:.12em;font-family:Orbitron,sans-serif;color:var(--dk-dim)}
@@ -188,8 +194,13 @@ body.dk-hover #dkRing{width:54px;height:54px;border-color:var(--dk-lime)}
     <section class="dk-hero dk-reveal d1" id="dkHero">
         <div class="dk-scangrid"></div>
         <div>
-            <div class="dk-kick">OPERATOR DECK &middot; <?= esc($roleLabel) ?></div>
-            <h1>NODE <span><?= esc(strtoupper(getName($user))) ?></span></h1>
+            <div class="dk-hero-title">
+                <?= view('Layout/HexBadge', ['hbSize' => 58]) ?>
+                <div>
+                    <div class="dk-kick">OPERATOR DECK &middot; <?= esc($roleLabel) ?></div>
+                    <h1>NODE <span><?= esc(strtoupper(getName($user))) ?></span></h1>
+                </div>
+            </div>
             <p class="dk-type"><span id="dkTyped"></span><span class="caret">&nbsp;</span></p>
             <?php if (keyExpirySoon($expiration_date, 7)) : ?>
                 <div class="hud-alert warn" data-stamp="HOLD">Account window closing &middot; <?= esc($expiration_date) ?></div>
@@ -230,7 +241,7 @@ body.dk-hover #dkRing{width:54px;height:54px;border-color:var(--dk-lime)}
     <div class="dk-grid">
         <!-- license flow -->
         <section class="dk-panel dk-reveal d1" data-tilt>
-            <header><h2>LICENSE FLOW</h2><em id="flowMeta"><?= (int) $stats['used'] ?> bound &middot; <?= (int) $stats['unused'] ?> idle</em></header>
+            <header><span class="dk-h"><?= view('Layout/HexBadge', ['hbSize' => 26]) ?><h2>LICENSE FLOW</h2></span><em id="flowMeta"><?= (int) $stats['used'] ?> bound &middot; <?= (int) $stats['unused'] ?> idle</em></header>
             <?php
             $maxBar = max(1, (int) $stats['total']);
             $rows = [
@@ -259,7 +270,7 @@ body.dk-hover #dkRing{width:54px;height:54px;border-color:var(--dk-lime)}
 
         <!-- operator -->
         <section class="dk-panel dk-reveal d2" data-tilt>
-            <header><h2>OPERATOR</h2><em><?= esc($user->username) ?></em></header>
+            <header><span class="dk-h"><?= view('Layout/HexBadge', ['hbSize' => 26]) ?><h2>OPERATOR</h2></span><em><?= esc($user->username) ?></em></header>
             <ul class="dk-op">
                 <li><span>Role</span><b><?= esc($roleLabel) ?></b></li>
                 <li><span>Balance</span><b>Rs <?= (int) $user->saldo ?></b></li>
@@ -277,14 +288,14 @@ body.dk-hover #dkRing{width:54px;height:54px;border-color:var(--dk-lime)}
 
         <!-- console -->
         <section class="dk-panel dk-reveal d3" data-tilt>
-            <header><h2>LIVE CONSOLE</h2><em>realtime feed</em></header>
+            <header><span class="dk-h"><?= view('Layout/HexBadge', ['hbSize' => 26]) ?><h2>LIVE CONSOLE</h2></span><em>realtime feed</em></header>
             <div class="dk-console-head"><span class="d dr"></span><span class="d dy"></span><span class="d dg"></span> BB-DECK &mdash; SESSION LOG<span class="live">&bull; LIVE</span></div>
             <div class="dk-console" id="dkConsole"></div>
         </section>
 
         <!-- recent drops -->
         <section class="dk-panel dk-reveal" data-tilt>
-            <header><h2>RECENT DROPS</h2><em>history feed</em></header>
+            <header><span class="dk-h"><?= view('Layout/HexBadge', ['hbSize' => 26]) ?><h2>RECENT DROPS</h2></span><em>history feed</em></header>
             <div class="dk-feed">
                 <?php if ($history) : ?>
                     <?php foreach ($history as $h) : $in = explode('|', $h->info); ?>
@@ -304,7 +315,7 @@ body.dk-hover #dkRing{width:54px;height:54px;border-color:var(--dk-lime)}
 
         <!-- quick lanes -->
         <section class="dk-panel dk-reveal d1 dk-span2" data-tilt>
-            <header><h2>QUICK LANES</h2><em>jump</em></header>
+            <header><span class="dk-h"><?= view('Layout/HexBadge', ['hbSize' => 26]) ?><h2>QUICK LANES</h2></span><em>jump</em></header>
             <div class="dk-lanes">
                 <?php $n = 1; ?>
                 <a href="<?= site_url('keys/generate') ?>"><b><?= sprintf('%02d', $n++) ?></b> Generate Key</a>
