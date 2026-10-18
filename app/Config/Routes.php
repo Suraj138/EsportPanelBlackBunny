@@ -60,6 +60,7 @@ $routes->get('shop/lang/(:segment)', 'Shop::lang/$1');
 $routes->match(['get', 'post'], 'public-control', 'Shop::control');
 $routes->get('keys/share/(:segment)', 'Keys::share/$1');
 $routes->match(['get', 'post'], 'telegram', 'Telegram::index');
+$routes->post('telegram/request', 'Telegram::requestAccess');
 $routes->post('telegram/hook', 'Telegram::hook');
 $routes->match(['get', 'post'], 'telegram/setup', 'Telegram::setup');
 $routes->match(['get', 'post'], 'telegram/link', 'Telegram::link');

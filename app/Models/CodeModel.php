@@ -32,6 +32,15 @@ class CodeModel extends Model
     {
         return $this->where('created_by', $username)->countAllResults();
     }
+
+    public function getCodeBy($username, $limit = 10, $order_by = 'DESC')
+    {
+        return $this->where('created_by', $username)
+            ->orderBy($this->primaryKey, $order_by)
+            ->limit($limit)
+            ->get()
+            ->getResultObject();
+    }
     /*
      * Made by @DARKESPYT
      * checkCode

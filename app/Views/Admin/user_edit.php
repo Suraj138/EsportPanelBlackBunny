@@ -130,12 +130,37 @@
                             <small class="text-red-500 text-xs mt-1"><?= $validation->getError('uplink') ?></small>
                         <?php endif; ?>
                     </div>
+
+                    <!-- Panel login devices -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Panel Login Devices</label>
+                        <input type="number" name="login_devices" value="<?= old('login_devices') ?: (int) ($target->login_devices ?? 1) ?>" min="1" max="99" class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all">
+                        <p class="text-xs text-gray-500 mt-1">1 = sirf ek device login. Dusre device ke liye owner reset karega.</p>
+                    </div>
+
+                    <!-- Referral quota -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Referral Quota</label>
+                        <input type="number" name="ref_accounts" value="<?= old('ref_accounts') ?: (int) ($target->ref_accounts ?? 0) ?>" min="0" max="999" class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all">
+                        <p class="text-xs text-gray-500 mt-1">Kitne referral codes ye account mint kar sakta hai. 0 = none.</p>
+                    </div>
+
+                    <!-- Telegram access -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Telegram Bot Access</label>
+                        <label class="toggle-row"><input type="checkbox" name="tg_access" value="1" <?= !empty($target->tg_access) ? 'checked' : '' ?>> Allow this account to open the Telegram bot deck</label>
+                        <p class="text-xs text-gray-500 mt-1">Admin request bhejega, Owner yahan se grant karega.</p>
+                    </div>
                     
                     <!-- Expiration -->
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Expiration Date</label>
                         <input type="text" name="expiration" value="<?= old('expiration') ?: $target->expiration_date ?>" class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all" placeholder="YYYY-MM-DD HH:MM:SS">
-                        <label class="toggle-row" style="margin-top:12px"><input type="checkbox" name="reset_bound" value="1"> Reset bound panel logins</label>
+                        <p class="text-xs text-gray-500 mt-2">Bound devices: <b><?= (int) ($bound_count ?? 0) ?></b> / <?= (int) ($target->login_devices ?? 1) ?></p>
+                        <?php if (!empty($bound_reset_wait)) : ?>
+                            <p class="text-xs text-orange-600 mt-1">Device reset locked: <?= (int) floor($bound_reset_wait / 3600) ?>h <?= (int) floor(($bound_reset_wait % 3600) / 60) ?>m left (24h cooldown).</p>
+                        <?php endif; ?>
+                        <label class="toggle-row" style="margin-top:12px"><input type="checkbox" name="reset_bound" value="1" <?= !empty($bound_reset_wait) ? 'disabled' : '' ?>> Reset bound panel logins</label>
                         <?php if ($validation->hasError('expiration')) : ?>
                             <small class="text-red-500 text-xs mt-1"><?= $validation->getError('expiration') ?></small>
                         <?php endif; ?>

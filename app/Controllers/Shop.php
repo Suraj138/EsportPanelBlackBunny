@@ -221,7 +221,7 @@ class Shop extends BaseController
         if (!$user) {
             return redirect()->to('login')->with('msgWarning', 'Please login first');
         }
-        if ((int) $user->level > 2) {
+        if ((int) $user->level !== 1) {
             return redirect()->to('dashboard')->with('msgWarning', 'Access Denied!');
         }
         $cfgModel = new ShopConfig();

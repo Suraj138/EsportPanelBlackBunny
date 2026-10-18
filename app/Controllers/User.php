@@ -126,14 +126,21 @@ class User extends BaseController
         if ((int) $user->level !== 1) {
             unset($accLevel[1]);
         }
+        $isOwner = (int) $user->level === 1;
+        $refQuota = $isOwner ? 0 : max(0, (int) ($user->ref_accounts ?? 0));
+        $refUsed = $isOwner ? (int) $mCode->countAllResults() : (int) $mCode->countCreatedBy($user->username);
         $data = [
             'title' => 'Referral',
             'user' => $user,
             'time' => $this->time,
-            'code' => $mCode->getCode(),
+            'code' => $isOwner ? $mCode->getCode() : $mCode->getCodeBy($user->username),
             'accExpire' => $this->accExpire,
             'accLevel' => $accLevel,
-            'total_code' => $mCode->countAllResults(),
+            'is_owner' => $isOwner,
+            'ref_quota' => $refQuota,
+            'ref_used' => $refUsed,
+            'ref_left' => $isOwner ? null : max(0, $refQuota - $refUsed),
+            'total_code' => $isOwner ? (int) $mCode->countAllResults() : $refUsed,
             'validation' => $validation
         ];
         return view('Admin/referral', $data);
@@ -296,7 +303,10 @@ class User extends BaseController
 
         $model->delete($userid);
         try {
-            \Config\Database::connect()->table('sessions')->where('userid', $userid)->delete();
+            $db = \Config\Database::connect();
+            if ($db->tableExists('sessions')) {
+                $db->table('sessions')->where('userid', $userid)->delete();
+            }
         } catch (\Throwable $e) {
         }
         writeAudit('user_delete', "target={$target->username}", $actor->username);
@@ -314,14 +324,26 @@ class User extends BaseController
 
         $model = $this->model;
         $validation = Services::validation();
+        ensureBoundResetColumn();
+        ensureTgUserColumns();
+        $target = $model->getUser($userid);
+        $boundCount = 0;
+        if ($target && !empty($target->bound_logins)) {
+            $boundList = json_decode((string) $target->bound_logins, true);
+            if (is_array($boundList)) {
+                $boundCount = count($boundList);
+            }
+        }
 
         $data = [
             'title' => 'Settings',
             'user' => $user,
-            'target' => $model->getUser($userid),
+            'target' => $target,
             'user_list' => $model->getUserList(),
             'time' => $this->time,
             'validation' => $validation,
+            'bound_reset_wait' => $target ? boundResetRemaining($target) : 0,
+            'bound_count' => $boundCount,
         ];
         return view('Admin/user_edit', $data);
     }
@@ -420,8 +442,32 @@ class User extends BaseController
             return redirect()->back()->withInput()->with('msgDanger', 'Use expiration format YYYY-MM-DD HH:MM:SS.');
         }
 
+        $loginDevices = (int) $this->request->getPost('login_devices');
+        if ($loginDevices < 1) {
+            $loginDevices = 1;
+        }
+        if ($loginDevices > 99) {
+            $loginDevices = 99;
+        }
+        $tgAccess = $this->request->getPost('tg_access') ? 1 : 0;
+        $refAccounts = (int) $this->request->getPost('ref_accounts');
+        if ($refAccounts < 0) {
+            $refAccounts = 0;
+        }
+        if ($refAccounts > 999) {
+            $refAccounts = 999;
+        }
+        ensureTgUserColumns();
+        ensureBoundResetColumn();
+
         if ((int) $target->level === 1 && $level !== 1 && $model->where('level', 1)->countAllResults() <= 1) {
             return redirect()->back()->with('msgDanger', 'Cannot demote the only Owner account.');
+        }
+
+        $boundTrim = null;
+        $boundList = !empty($target->bound_logins) ? json_decode((string) $target->bound_logins, true) : null;
+        if (is_array($boundList) && count($boundList) > $loginDevices) {
+            $boundTrim = array_slice(array_values($boundList), 0, $loginDevices);
         }
 
         $data_update = [
@@ -432,10 +478,21 @@ class User extends BaseController
             'status' => $status,
             'saldo' => (($saldo < 1) ? 0 : $saldo),
             'uplink' => $uplink,
+            'login_devices' => $loginDevices,
+            'ref_accounts' => $refAccounts,
+            'tg_access' => $tgAccess,
             'expiration_date' => ($expiration === '' ? null : $expiration)
         ];
         if ($this->request->getPost('reset_bound')) {
+            ensureBoundResetColumn();
+            $wait = boundResetRemaining($target);
+            if ($wait > 0) {
+                return redirect()->back()->with('msgDanger', 'Device reset locked. Try again in ' . ceil($wait / 3600) . 'h (24h cooldown).');
+            }
             $data_update['bound_logins'] = '';
+            $data_update['bound_reset_at'] = date('Y-m-d H:i:s');
+        } elseif ($boundTrim !== null) {
+            $data_update['bound_logins'] = json_encode(array_values($boundTrim));
         }
         if ($newPass !== '') {
             $data_update['password'] = create_password($newPass);
@@ -578,7 +635,7 @@ class User extends BaseController
     public function lib()
     {
         $user = $this->user;
-        if (!(($user->level == 1) || ($user->level == 2))) {
+        if (!((int) $user->level === 1)) {
             return redirect()->to('dashboard')->with('msgWarning', 'Access Denied!');
         }
         $libModel = new LibModel();
@@ -709,32 +766,26 @@ class User extends BaseController
         if (!$user) {
             return redirect()->to('login')->with('msgWarning', 'Please login first');
         }
-        if (($user->level == 1) || ($user->level == 2)) 
-        {
-        
+        if ((int) $user->level !== 1) {
+            return redirect()->to('dashboard')->with('msgWarning', 'Access Denied!');
+        }
         if ($this->request->getPost('modname_form'))
-            
             return $this->modname_act();
-            
+
         if ($this->request->getPost('status_form'))
             return $this->status_act();
-        }
-        if ($user->level == 1)
-        {
+
         if ($this->request->getPost('feature_form'))
             return $this->feature_act();
         if ($this->request->getPost('password_form'))
             return $this->passwd_act();
-        }
-        if (($user->level == 1) || ($user->level == 2)) 
-        {
+
         if ($this->request->getPost('_ftext_form'))
             return $this->_ftext_act();
 
         if ($this->request->getPost('fullname_form'))
             return $this->fullname_act();
 
-        }
         $user = $this->user;
         
         $validation = Services::validation();

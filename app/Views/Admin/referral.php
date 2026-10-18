@@ -12,6 +12,15 @@
         <h1>CREATE REFERRAL</h1>
         <p>Mint operator codes with saldo, role and device limits.</p>
     </section>
+    <?php if (empty($is_owner)) : ?>
+    <div class="glass-card rounded-2xl p-6 mb-6" style="display:flex;flex-wrap:wrap;gap:14px;align-items:center">
+        <span class="hud-chip">REFERRALS LEFT: <?= (int) $ref_left ?> / <?= (int) $ref_quota ?></span>
+        <span class="hud-chip">USED: <?= (int) $ref_used ?></span>
+        <?php if ((int) $ref_left < 1) : ?>
+            <span class="hud-chip" style="background:rgba(255,45,106,.18);color:#ff2d6a">QUOTA COMPLETE · ASK OWNER FOR MORE</span>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="glass-card rounded-2xl p-6 sm:p-8 animate-fade-in-up">
             <div class="flex items-center mb-6">
@@ -77,9 +86,15 @@
                 </div>
                 
                 <!-- Submit Button -->
+                <?php if (empty($is_owner) && (int) $ref_left < 1) : ?>
+                <button type="button" class="w-full py-3 px-6 submit" disabled style="opacity:.45;cursor:not-allowed">
+                    QUOTA COMPLETE
+                </button>
+                <?php else : ?>
                 <button type="submit" class="w-full py-3 px-6 submit">
                     MINT REFERRAL
                 </button>
+                <?php endif; ?>
             <?= form_close() ?>
         </div>
         

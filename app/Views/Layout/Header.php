@@ -24,16 +24,18 @@ $avatarUrl = (session()->has('userid') && isset($user) && function_exists('userA
             <a href="<?= site_url('keys/generate') ?>" class="side-item <?= strpos($uri, 'keys/generate') === 0 ? 'active' : '' ?>"><i></i><span>Generate Key</span></a>
             <a href="<?= site_url('search') ?>" class="side-item <?= strpos($uri, 'search') === 0 ? 'active' : '' ?>"><i></i><span>SCAN</span></a>
             <a href="<?= site_url('settings') ?>" class="side-item <?= strpos($uri, 'settings') === 0 ? 'active' : '' ?>"><i></i><span>Settings</span></a>
+            <?php if ((int) $user->level <= 2) : ?>
             <a href="<?= site_url('telegram') ?>" class="side-item <?= $uri === 'telegram' ? 'active' : '' ?>"><i></i><span>Telegram Bot</span></a>
-            <a href="<?= site_url('wallet') ?>" class="side-item <?= strpos($uri, 'wallet') === 0 ? 'active' : '' ?>"><i></i><span>Wallet</span></a>
-            <?php if (($user->level == 1) || ($user->level == 2)) : ?>
-                <a href="<?= site_url('Server') ?>" class="side-item <?= strpos($uri, 'Server') === 0 ? 'active' : '' ?>"><i></i><span>Online System</span></a>
-                <a href="<?= site_url('admin/create-referral') ?>" class="side-item <?= strpos($uri, 'admin/create-referral') === 0 ? 'active' : '' ?>"><i></i><span>Create Referral</span></a>
-                <a href="<?= site_url('public-control') ?>" class="side-item <?= strpos($uri, 'public-control') === 0 ? 'active' : '' ?>"><i></i><span>Public Control</span></a>
-                <a href="<?= site_url('shop') ?>" class="side-item <?= $uri === 'shop' ? 'active' : '' ?>"><i></i><span>Public Shop</span></a>
-                <a href="<?= site_url('store') ?>" class="side-item <?= $uri === 'store' || $uri === 'lib' ? 'active' : '' ?>"><i></i><span>Loader Packages</span></a>
             <?php endif; ?>
-            <?php if (isset($user->level) && $user->level == 1) : ?>
+            <a href="<?= site_url('wallet') ?>" class="side-item <?= strpos($uri, 'wallet') === 0 ? 'active' : '' ?>"><i></i><span>Wallet</span></a>
+            <?php if ((int) $user->level <= 2) : ?>
+                <a href="<?= site_url('admin/create-referral') ?>" class="side-item <?= strpos($uri, 'admin/create-referral') === 0 ? 'active' : '' ?>"><i></i><span>Create Referral</span></a>
+                <a href="<?= site_url('shop') ?>" class="side-item <?= $uri === 'shop' ? 'active' : '' ?>"><i></i><span>Public Shop</span></a>
+            <?php endif; ?>
+            <?php if (isset($user->level) && (int) $user->level === 1) : ?>
+                <a href="<?= site_url('Server') ?>" class="side-item <?= strpos($uri, 'Server') === 0 ? 'active' : '' ?>"><i></i><span>Online System</span></a>
+                <a href="<?= site_url('public-control') ?>" class="side-item <?= strpos($uri, 'public-control') === 0 ? 'active' : '' ?>"><i></i><span>Public Control</span></a>
+                <a href="<?= site_url('store') ?>" class="side-item <?= $uri === 'store' || $uri === 'lib' ? 'active' : '' ?>"><i></i><span>Loader Packages</span></a>
                 <a href="<?= site_url('admin/manage-users') ?>" class="side-item <?= strpos($uri, 'admin/manage-users') === 0 ? 'active' : '' ?>"><i></i><span>Manage Users</span></a>
                 <a href="<?= site_url('audit') ?>" class="side-item <?= $uri === 'audit' ? 'active' : '' ?>"><i></i><span>Audit Log</span></a>
             <?php endif; ?>

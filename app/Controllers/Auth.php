@@ -104,6 +104,7 @@ class Auth extends BaseController
         }
 
         $this->ensureBoundColumn();
+        ensureBoundResetColumn();
         $print = hudDevicePrint();
         $limit = isset($cekUser->login_devices) ? max(1, (int) $cekUser->login_devices) : 99;
         $bound = [];
@@ -116,7 +117,11 @@ class Auth extends BaseController
         if (!in_array($print, $bound, true)) {
             if (count($bound) >= $limit) {
                 writeAudit('login_denied', 'device limit ' . $limit, $cekUser->username);
-                return redirect()->route('login')->withInput()->with('msgDanger', 'Device limit reached. Owner must reset bound logins.');
+                $wait = boundResetRemaining($cekUser);
+                $hint = $wait > 0
+                    ? 'Device reset available in ' . ceil($wait / 3600) . 'h.'
+                    : 'Owner can reset the bound device now.';
+                return redirect()->route('login')->withInput()->with('msgDanger', 'Device limit reached. ' . $hint);
             }
             $bound[] = $print;
             $this->userModel->update($cekUser->id_users, ['bound_logins' => json_encode(array_values($bound))]);

@@ -406,6 +406,9 @@ function ensureTgUserColumns()
         if (!$db->fieldExists('tg_link_exp', 'users')) {
             $db->query('ALTER TABLE users ADD COLUMN tg_link_exp DATETIME NULL');
         }
+        if (!$db->fieldExists('tg_access', 'users')) {
+            $db->query('ALTER TABLE users ADD COLUMN tg_access TINYINT(1) NOT NULL DEFAULT 0');
+        }
     } catch (\Throwable $e) {
     }
 }
@@ -419,6 +422,30 @@ function ensureAvatarColumn()
         }
     } catch (\Throwable $e) {
     }
+}
+
+function ensureBoundResetColumn()
+{
+    try {
+        $db = \Config\Database::connect();
+        if (!$db->fieldExists('bound_reset_at', 'users')) {
+            $db->query('ALTER TABLE users ADD COLUMN bound_reset_at DATETIME NULL');
+        }
+    } catch (\Throwable $e) {
+    }
+}
+
+function boundResetRemaining($user)
+{
+    $last = isset($user->bound_reset_at) ? trim((string) $user->bound_reset_at) : '';
+    if ($last === '' || $last === '0000-00-00 00:00:00') {
+        return 0;
+    }
+    $ts = strtotime($last);
+    if ($ts === false) {
+        return 0;
+    }
+    return max(0, ($ts + 86400) - time());
 }
 
 function ensureKeysKeyColumn()

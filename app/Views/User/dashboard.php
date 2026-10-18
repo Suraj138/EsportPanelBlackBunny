@@ -213,7 +213,7 @@ body.dk-hover #dkRing{width:54px;height:54px;border-color:var(--dk-lime)}
             <div class="dk-hero-cta">
                 <a class="dk-btn fill" href="<?= site_url('keys/generate') ?>">GENERATE KEY</a>
                 <a class="dk-btn" href="<?= site_url('keys') ?>">LICENSE VAULT</a>
-                <?php if ((int) $user->level <= 2) : ?>
+                <?php if ((int) $user->level === 1) : ?>
                 <a class="dk-btn" href="<?= site_url('public-control') ?>">PUBLIC CONTROL</a>
                 <?php endif; ?>
             </div>
@@ -323,16 +323,20 @@ body.dk-hover #dkRing{width:54px;height:54px;border-color:var(--dk-lime)}
                 <a href="<?= site_url('search') ?>"><b><?= sprintf('%02d', $n++) ?></b> SCAN</a>
                 <a href="<?= site_url('settings') ?>"><b><?= sprintf('%02d', $n++) ?></b> Settings</a>
                 <a href="<?= site_url('wallet') ?>"><b><?= sprintf('%02d', $n++) ?></b> Wallet</a>
-                <a href="<?= site_url('telegram') ?>"><b><?= sprintf('%02d', $n++) ?></b> Telegram Bot</a>
                 <?php if ((int) $user->level <= 2) : ?>
+                <a href="<?= site_url('telegram') ?>"><b><?= sprintf('%02d', $n++) ?></b> Telegram Bot</a>
+                <?php endif; ?>
+                <?php if ((int) $user->level === 1) : ?>
                 <a href="<?= site_url('Server') ?>"><b><?= sprintf('%02d', $n++) ?></b> Online System</a>
+                <?php endif; ?>
+                <?php if ((int) $user->level <= 2) : ?>
                 <a href="<?= site_url('shop') ?>" target="_blank" rel="noopener"><b><?= sprintf('%02d', $n++) ?></b> Public Shop</a>
-                <a href="<?= site_url('public-control') ?>"><b><?= sprintf('%02d', $n++) ?></b> Public Control</a>
-                <a href="<?= site_url('store') ?>"><b><?= sprintf('%02d', $n++) ?></b> Loader Packages</a>
+                <a href="<?= site_url('admin/create-referral') ?>"><b><?= sprintf('%02d', $n++) ?></b> Create Referral</a>
                 <?php endif; ?>
                 <?php if ((int) $user->level == 1) : ?>
+                <a href="<?= site_url('public-control') ?>"><b><?= sprintf('%02d', $n++) ?></b> Public Control</a>
+                <a href="<?= site_url('store') ?>"><b><?= sprintf('%02d', $n++) ?></b> Loader Packages</a>
                 <a href="<?= site_url('admin/manage-users') ?>"><b><?= sprintf('%02d', $n++) ?></b> Manage Users</a>
-                <a href="<?= site_url('admin/create-referral') ?>"><b><?= sprintf('%02d', $n++) ?></b> Create Referral</a>
                 <a href="<?= site_url('audit') ?>"><b><?= sprintf('%02d', $n++) ?></b> Audit Log</a>
                 <?php endif; ?>
                 <a href="<?= site_url('logout') ?>"><b><?= sprintf('%02d', $n++) ?></b> Logout</a>

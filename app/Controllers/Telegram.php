@@ -575,7 +575,20 @@ class Telegram extends BaseController
         if (!$user) {
             return redirect()->to('login')->with('msgWarning', 'Please login first');
         }
+        $level = (int) $user->level;
+        if ($level > 2) {
+            return redirect()->to('dashboard')->with('msgWarning', 'Access Denied!');
+        }
         $this->ensureTgColumns();
+        $hasAccess = $level === 1 || (int) ($user->tg_access ?? 0) === 1;
+        if (!$hasAccess) {
+            return view('User/telegram_request', [
+                'title' => 'Telegram Access',
+                'user' => $user,
+                'time' => new \CodeIgniter\I18n\Time,
+                'request_wait' => $this->requestWait($user),
+            ]);
+        }
         $cfg = new ShopConfig();
         $bag = $cfg->bag();
         $tgToken = trim((string) ($bag['tg_bot_token'] ?? ''));
@@ -667,6 +680,41 @@ class Telegram extends BaseController
             return redirect()->to('telegram')->with('msgSuccess', 'Telegram unlinked.');
         }
         return redirect()->to('telegram');
+    }
+
+    private function requestWait($user)
+    {
+        $last = (int) session()->get('tg_req_at_' . (int) $user->id_users);
+        if ($last < 1) {
+            return 0;
+        }
+        return max(0, ($last + 3600) - time());
+    }
+
+    public function requestAccess()
+    {
+        $user = (new UserModel())->getUser();
+        if (!$user) {
+            return redirect()->to('login');
+        }
+        if ((int) $user->level !== 2) {
+            return redirect()->to('dashboard')->with('msgWarning', 'Access Denied!');
+        }
+        $wait = $this->requestWait($user);
+        if ($wait > 0) {
+            return redirect()->to('telegram')->with('msgWarning', 'Request already sent. Wait ' . ceil($wait / 60) . ' min.');
+        }
+        $text = "TELEGRAM ACCESS REQUEST\n"
+            . getName($user) . ' @' . $user->username . "\n"
+            . getLevel((int) $user->level)
+            . "\nGrant from Manage Users > Telegram Access.";
+        $sent = function_exists('tgNotifyStaff') ? tgNotifyStaff($text, null, [1]) : 0;
+        session()->set('tg_req_at_' . (int) $user->id_users, time());
+        writeAudit('tg_access_request', 'admin requested bot access', $user->username);
+        if ($sent < 1) {
+            return redirect()->to('telegram')->with('msgWarning', 'Request logged. Owner has no Telegram chat linked yet.');
+        }
+        return redirect()->to('telegram')->with('msgSuccess', 'Request sent to Owner on Telegram.');
     }
 
     private function ensureTgColumns()
