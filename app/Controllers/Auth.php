@@ -97,7 +97,7 @@ class Auth extends BaseController
 
         if ($expired || $inactive) {
             if ($expired) {
-                $this->userModel->update($cekUser->id_users, ['status' => 0]);
+                $this->userModel->update($cekUser->id_users, ['status' => 3]);
             }
             writeAudit('login_denied', $expired ? 'expired' : 'inactive', $cekUser->username);
             return redirect()->route('login')->withInput()->with('msgDanger', '<strong>Expired</strong> Please Renew Your Account to Login.');

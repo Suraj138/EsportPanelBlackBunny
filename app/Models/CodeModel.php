@@ -33,6 +33,31 @@ class CodeModel extends Model
         return $this->where('created_by', $username)->countAllResults();
     }
 
+    public function countCreatedByMap($usernames)
+    {
+        $out = [];
+        $names = [];
+        foreach ((array) $usernames as $name) {
+            $name = trim((string) $name);
+            if ($name !== '') {
+                $names[$name] = true;
+                $out[$name] = 0;
+            }
+        }
+        if (!$names) {
+            return $out;
+        }
+        $rows = $this->select('created_by, COUNT(*) AS total')
+            ->whereIn('created_by', array_keys($names))
+            ->groupBy('created_by')
+            ->get()
+            ->getResult();
+        foreach ($rows as $row) {
+            $out[(string) $row->created_by] = (int) $row->total;
+        }
+        return $out;
+    }
+
     public function getCodeBy($username, $limit = 10, $order_by = 'DESC')
     {
         return $this->where('created_by', $username)

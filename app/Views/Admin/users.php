@@ -41,6 +41,7 @@ return "#FF0000";
                             <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Saldo</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Uplink</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Referrals</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Expiration</th>
                             <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Action</th>
                         </tr>
@@ -97,6 +98,20 @@ return "#FF0000";
                                 <?php endif; ?>
                             </td>
                             <td class="px-4 py-3 text-sm text-gray-700"><?= $u->uplink ?></td>
+                            <td class="px-4 py-3 text-sm text-gray-700">
+                                <?php
+                                    $quota = (int) ($u->ref_accounts ?? 0);
+                                    $used = (int) (($ref_used_map[$u->username] ?? 0));
+                                    $left = max(0, $quota - $used);
+                                ?>
+                                <?php if ((int) $u->level === 1) : ?>
+                                    <span class="text-gray-400">Owner</span>
+                                <?php else : ?>
+                                    <span class="px-2 py-1 bg-cyan-100 text-cyan-800 rounded-lg text-xs font-semibold">USED <?= $used ?></span>
+                                    <span class="px-2 py-1 bg-lime-100 text-lime-800 rounded-lg text-xs font-semibold">LEFT <?= $left ?></span>
+                                    <span class="block text-xs text-gray-500 mt-1">quota <?= $quota ?></span>
+                                <?php endif; ?>
+                            </td>
                             <td class="px-4 py-3 text-sm text-gray-700"><?= $u->expiration_date ?></td>
                             <td class="px-4 py-3">
                                 <a href="<?= site_url('admin/user/' . $u->id_users) ?>" class="px-3 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-500 hover:to-pink-500 transition-all inline-flex items-center space-x-1">

@@ -261,11 +261,20 @@ class User extends BaseController
             ->get()
             ->getResultObject();
         $pages = max(1, (int) ceil($total / $perPage));
+        $refUsedMap = [];
+        $names = [];
+        foreach ($user_list as $u) {
+            $names[] = $u->username;
+        }
+        if ($names) {
+            $refUsedMap = (new CodeModel())->countCreatedByMap($names);
+        }
         $validation = Services::validation();
         $data = [
             'title' => 'Users',
             'user' => $user,
             'user_list' => $user_list,
+            'ref_used_map' => $refUsedMap,
             'q' => $q,
             'page' => $page,
             'pages' => $pages,
@@ -335,6 +344,8 @@ class User extends BaseController
             }
         }
 
+        $refQuota = $target ? (int) ($target->ref_accounts ?? 0) : 0;
+        $refUsed = $target ? (int) (new CodeModel())->countCreatedBy($target->username) : 0;
         $data = [
             'title' => 'Settings',
             'user' => $user,
@@ -344,6 +355,9 @@ class User extends BaseController
             'validation' => $validation,
             'bound_reset_wait' => $target ? boundResetRemaining($target) : 0,
             'bound_count' => $boundCount,
+            'ref_used' => $refUsed,
+            'ref_quota' => $refQuota,
+            'ref_left' => max(0, $refQuota - $refUsed),
         ];
         return view('Admin/user_edit', $data);
     }
@@ -374,7 +388,9 @@ class User extends BaseController
             ],
             'email' => [
                 'label' => 'email',
-                'rules' => 'permit_empty|valid_email|is_unique[users.email,email,' . $target->email . ']',
+                'rules' => $email === ''
+                    ? 'permit_empty'
+                    : 'permit_empty|valid_email|is_unique[users.email,email,' . str_replace(',', '', (string) $target->email) . ']',
                 'errors' => [
                     'is_unique' => 'The {field} is already registered.',
                     'valid_email' => 'The {field} is not a valid address.'
@@ -396,7 +412,7 @@ class User extends BaseController
             ],
             'status' => [
                 'label' => 'status',
-                'rules' => 'required|numeric|in_list[1,2,3]',
+                'rules' => 'required|numeric|in_list[0,1,2,3]',
                 'errors' => [
                     'in_list' => 'Invalid {field} account.'
                 ]
@@ -434,6 +450,9 @@ class User extends BaseController
         $fullname = $this->request->getPost('fullname');
         $level = (int) $this->request->getPost('level');
         $status = (int) $this->request->getPost('status');
+        if ($status === 0) {
+            $status = 3;
+        }
         $saldo = $this->request->getPost('saldo');
         $uplink = trim((string) $this->request->getPost('uplink'));
         $expiration = trim((string) $this->request->getPost('expiration'));
@@ -473,7 +492,6 @@ class User extends BaseController
         $data_update = [
             'username' => $username,
             'fullname' => esc($fullname),
-            'email' => $email,
             'level' => $level,
             'status' => $status,
             'saldo' => (($saldo < 1) ? 0 : $saldo),
@@ -483,6 +501,9 @@ class User extends BaseController
             'tg_access' => $tgAccess,
             'expiration_date' => ($expiration === '' ? null : $expiration)
         ];
+        if ($email !== '') {
+            $data_update['email'] = $email;
+        }
         if ($this->request->getPost('reset_bound')) {
             ensureBoundResetColumn();
             $wait = boundResetRemaining($target);
@@ -494,10 +515,6 @@ class User extends BaseController
         } elseif ($boundTrim !== null) {
             $data_update['bound_logins'] = json_encode(array_values($boundTrim));
         }
-        if ($newPass !== '') {
-            $data_update['password'] = create_password($newPass);
-        }
-
         $file = $this->request->getFile('avatar');
         if ($file && $file->isValid() && !$file->hasMoved()) {
             ensureAvatarColumn();
@@ -522,11 +539,30 @@ class User extends BaseController
             $data_update['avatar'] = 'uploads/avatars/' . $name;
         }
 
-        $update = $model->update($userid, $data_update);
-        if ($update) {
-            writeAudit('user_edit', "target={$target->username} level=$level saldo=" . (int) $saldo, $actor ? $actor->username : 'system');
-            return redirect()->back()->with('msgSuccess', "Successfuly update $target->username.");
+        $db = \Config\Database::connect();
+        $ok = $db->table('users')->where('id_users', $userid)->update($data_update);
+        $passOk = true;
+        if ($newPass !== '') {
+            $hash = create_password($newPass);
+            $passOk = $db->table('users')->where('id_users', $userid)->update(['password' => $hash]) !== false;
+            if ($passOk) {
+                $check = $db->table('users')->select('password')->where('id_users', $userid)->get()->getRow();
+                $passOk = $check && hash_equals((string) $check->password, $hash);
+            }
         }
+        if ($ok !== false && $passOk) {
+            $note = $newPass !== '' ? ' password reset' : '';
+            writeAudit('user_edit', "target={$target->username} level=$level saldo=" . (int) $saldo . $note, $actor ? $actor->username : 'system');
+            $msg = "Successfuly update $target->username.";
+            if ($newPass !== '') {
+                $msg .= ' Password changed.';
+            }
+            return redirect()->back()->with('msgSuccess', $msg);
+        }
+        if ($ok !== false && !$passOk) {
+            return redirect()->back()->withInput()->with('msgDanger', 'Account saved but password reset failed. Try again.');
+        }
+        return redirect()->back()->withInput()->with('msgDanger', 'Update failed. Try again.');
     }
 
     public function settings()

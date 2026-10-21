@@ -102,8 +102,14 @@
                     <!-- Status -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                        <?php $sel_status = ['' => '— Select Status —', '2' => 'Banned/Block', '1' => 'Active', '3' => 'Expired',]; ?>
-                        <?= form_dropdown(['class' => 'w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all', 'name' => 'status', 'id' => 'status'], $sel_status, $target->status) ?>
+                        <?php
+                            $sel_status = ['' => '— Select Status —', '2' => 'Banned/Block', '1' => 'Active', '3' => 'Expired'];
+                            $curStatus = (int) $target->status;
+                            if ($curStatus === 0) {
+                                $curStatus = 3;
+                            }
+                        ?>
+                        <?= form_dropdown(['class' => 'w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all', 'name' => 'status', 'id' => 'status'], $sel_status, $curStatus) ?>
                     </div>
                     
                     <!-- Saldo -->
@@ -142,7 +148,12 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Referral Quota</label>
                         <input type="number" name="ref_accounts" value="<?= old('ref_accounts') ?: (int) ($target->ref_accounts ?? 0) ?>" min="0" max="999" class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all">
-                        <p class="text-xs text-gray-500 mt-1">Kitne referral codes ye account mint kar sakta hai. 0 = none.</p>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <span class="hud-chip">USED <?= (int) ($ref_used ?? 0) ?></span>
+                            <span class="hud-chip">LEFT <?= (int) ($ref_left ?? 0) ?></span>
+                            <span class="hud-chip">QUOTA <?= (int) ($ref_quota ?? 0) ?></span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Is account ne kitne referral mint kiye, kitne bache hain. Quota badhao/ghatao yahan se.</p>
                     </div>
 
                     <!-- Telegram access -->
