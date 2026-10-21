@@ -370,30 +370,44 @@
 }
 .ctrl-split {
   display: grid;
-  grid-template-columns: 1.2fr .8fr;
+  grid-template-columns: 1fr;
   gap: 16px;
   align-items: start;
+}
+@media (min-width: 1500px) {
+  .ctrl-split { grid-template-columns: 1.2fr .8fr; }
 }
 .ctrl-split > .ctrl-card { margin: 0; }
 .plan-add { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .plan-admin { display: grid; gap: 10px; margin-top: 16px; }
 .plan-row {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px;
-  align-items: center;
-  padding: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px 12px;
+  align-items: end;
+  padding: 14px;
   border: 1px solid rgba(0,255,208,.14);
+  background: rgba(4,10,20,.45);
+  min-width: 0;
+  overflow: hidden;
 }
 .plan-edit {
   display: grid;
-  grid-template-columns: 1.5fr 80px 90px 90px 100px 70px auto auto;
-  gap: 8px;
-  align-items: end;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  min-width: 0;
+  width: 100%;
+}
+.plan-title { min-width: 0; }
+.plan-fields {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px 10px;
   min-width: 0;
 }
 .plan-cell {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 4px;
   min-width: 0;
   margin: 0;
@@ -404,24 +418,47 @@
   text-transform: uppercase;
   color: rgba(138,163,194,.7);
   font-family: Orbitron, sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .plan-cell input::placeholder { color: rgba(138,163,194,.45); }
-.plan-edit input { height: 40px; font-size: 12px; width: 100%; min-width: 0; }
-.plan-on { display: flex; align-items: center; gap: 6px; color: #b6ff3b; font-size: 11px; white-space: nowrap; height: 40px; }
+.plan-edit input { height: 42px; font-size: 13px; width: 100%; min-width: 0; box-sizing: border-box; }
+.plan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.plan-on {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  color: #b6ff3b;
+  font-size: 11px;
+  white-space: nowrap;
+  height: 42px;
+  padding: 0 10px;
+  border: 1px solid rgba(182,255,59,.28);
+}
 .plan-edit button,
 .plan-save {
-  height: 40px;
+  height: 42px;
+  flex: 0 0 auto;
+  min-width: 88px;
   background: #00ffd0;
   border: 0;
   font-size: 11px;
   font-family: Orbitron, sans-serif;
   letter-spacing: .08em;
   color: #031018;
-  padding: 0 12px;
+  padding: 0 16px;
   clip-path: none;
   white-space: nowrap;
 }
-.plan-del .ghost-btn { height: 40px; min-height: 40px; padding: 0 12px; font-size: 10px; }
+.plan-del { display: flex; align-items: flex-end; }
+.plan-del .ghost-btn { height: 42px; min-height: 42px; min-width: 88px; padding: 0 14px; font-size: 10px; }
 .order-row {
   display: flex;
   justify-content: space-between;
@@ -548,14 +585,25 @@
 @media (max-width: 1100px) {
   .ctrl-split, .ctrl-fields, .plan-add { grid-template-columns: 1fr; }
   .ctrl-fields .span-2 { grid-column: 1; }
-  .plan-row, .plan-edit { grid-template-columns: 1fr 1fr; }
   .ctrl-strip { grid-template-columns: 1fr 1fr; }
+  .plan-row { grid-template-columns: 1fr; }
+  .plan-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .plan-del { justify-content: stretch; }
+  .plan-del .ghost-btn { width: 100%; }
 }
 @media (max-width: 720px) {
   .control-deck { padding: 12px 14px 48px; }
   .ctrl-hero { padding: 16px; }
-  .plan-edit, .plan-row { grid-template-columns: 1fr; }
+  .plan-fields { grid-template-columns: 1fr 1fr; }
+  .plan-edit input { height: 44px; font-size: 16px; }
+  .plan-on { flex: 1 1 auto; justify-content: flex-start; }
+  .plan-edit .plan-save { flex: 1 1 auto; width: 100%; }
+  .plan-actions { width: 100%; }
+  .plan-del .ghost-btn { width: 100%; height: 44px; }
   .order-row { flex-direction: column; align-items: stretch; }
+}
+@media (max-width: 480px) {
+  .plan-fields { grid-template-columns: 1fr; }
 }
 .shop-menu { display: none; }
 .media-mini-row { display: flex; justify-content: space-between; gap: 8px; align-items: center; margin: 8px 0; }
@@ -584,7 +632,6 @@
     padding: 14px 16px; gap: 12px; z-index: 20;
   }
   .shop-menu { display: inline-grid; }
-  .plan-edit { grid-template-columns: 1fr; }
   .control-grid { gap: 12px !important; }
   .feat-list { grid-template-columns: 1fr; }
 }

@@ -182,14 +182,18 @@ foreach ($plans as $p) {
                         <?= csrf_field() ?>
                         <input type="hidden" name="save_plan" value="1">
                         <input type="hidden" name="plan_id" value="<?= (int) $p['id'] ?>">
-                        <label class="plan-cell"><span>Title</span><input name="title" value="<?= esc($p['title']) ?>" placeholder="e.g. 5 Hour Drop"></label>
-                        <label class="plan-cell"><span>Hours</span><input name="hours" type="number" value="<?= (int) $p['hours'] ?>" placeholder="e.g. 5"></label>
-                        <label class="plan-cell"><span>Price Rs</span><input name="price" type="number" value="<?= (int) $p['price'] ?>" placeholder="e.g. 20"></label>
-                        <label class="plan-cell"><span>Devices</span><input name="devices" type="number" value="<?= (int) $p['devices'] ?>" placeholder="e.g. 1"></label>
-                        <label class="plan-cell"><span>Badge</span><input name="badge" value="<?= esc($p['badge']) ?>" placeholder="e.g. BLITZ"></label>
-                        <label class="plan-cell"><span>Sort</span><input name="sort_order" type="number" value="<?= (int) $p['sort_order'] ?>" placeholder="e.g. 1"></label>
-                        <label class="plan-on"><input type="checkbox" name="visible" value="1" <?= $p['visible'] ? 'checked' : '' ?>> ON</label>
-                        <button type="submit" class="plan-save">SAVE</button>
+                        <label class="plan-cell plan-title"><span>Title</span><input name="title" value="<?= esc($p['title']) ?>" placeholder="e.g. 5 Hour Drop"></label>
+                        <div class="plan-fields">
+                            <label class="plan-cell"><span>Hours</span><input name="hours" type="number" value="<?= (int) $p['hours'] ?>" placeholder="e.g. 5"></label>
+                            <label class="plan-cell"><span>Price Rs</span><input name="price" type="number" value="<?= (int) $p['price'] ?>" placeholder="e.g. 20"></label>
+                            <label class="plan-cell"><span>Devices</span><input name="devices" type="number" value="<?= (int) $p['devices'] ?>" placeholder="e.g. 1"></label>
+                            <label class="plan-cell"><span>Badge</span><input name="badge" value="<?= esc($p['badge']) ?>" placeholder="e.g. BLITZ"></label>
+                            <label class="plan-cell"><span>Sort</span><input name="sort_order" type="number" value="<?= (int) $p['sort_order'] ?>" placeholder="e.g. 1"></label>
+                        </div>
+                        <div class="plan-actions">
+                            <label class="plan-on"><input type="checkbox" name="visible" value="1" <?= $p['visible'] ? 'checked' : '' ?>> ON</label>
+                            <button type="submit" class="plan-save">SAVE</button>
+                        </div>
                     </form>
                     <form method="post" action="<?= site_url('public-control') ?>" class="plan-del" onsubmit="return confirm('Delete this plan?')">
                         <?= csrf_field() ?>
