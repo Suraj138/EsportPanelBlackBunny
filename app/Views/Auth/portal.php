@@ -20,26 +20,12 @@ $err = function ($field) use ($validation) {
 <link rel="stylesheet" href="<?= base_url('assets/css/bb-portal.css') ?>">
 </head>
 <body class="bb-portal" data-bb-flash="<?= esc($flash) ?>" data-bb-flash-kind="<?= esc($flashKind) ?>">
+<?= view('Layout/WelcomeSplash') ?>
 
 <div id="bbWebgl"></div>
 <div class="bb-scan" aria-hidden="true"></div>
 <div class="bb-cur-dot" aria-hidden="true"></div>
 <div class="bb-cur-ring" aria-hidden="true"></div>
-
-<div id="bbBoot" role="status" aria-label="System booting">
-  <?= view('Layout/HexBadge', ['hbSize' => 86]) ?>
-  <div class="bb-boot-title bb-glitch" data-text="BLACK BUNNY">BLACK BUNNY</div>
-  <div class="bb-boot-lines" id="bbBootLines">
-    <div class="bb-bline">&gt; BOOTING BLACK BUNNY OS <b>v3.0</b> ...</div>
-    <div class="bb-bline">&gt; NODE LINK ............ <b>[ OK ]</b></div>
-    <div class="bb-bline">&gt; FIREWALL SHIELD ...... <b>[ ACTIVE ]</b></div>
-    <div class="bb-bline">&gt; DATABASE SYNC ........ <b>[ SYNCED ]</b></div>
-    <div class="bb-bline">&gt; ENCRYPTION AES-256 ... <b>[ LOCKED ]</b></div>
-    <div class="bb-bline">&gt; PORTAL READY. <b>WELCOME OPERATOR.</b></div>
-  </div>
-  <div class="bb-boot-bar"><i id="bbBootBar"></i></div>
-  <div class="bb-boot-skip" id="bbBootSkip">[ CLICK TO SKIP ]</div>
-</div>
 
 <header class="bb-hud">
   <div>BLACK BUNNY // SECURE PORTAL</div>

@@ -1,7 +1,6 @@
 (function () {
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
-  var sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
   var REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
   var MIN_MS = 1400;
 
@@ -163,24 +162,19 @@
     })();
   }
 
-  (async function boot() {
-    var lines = $$('.bb-bline'), bar = $('#bbBootBar'), bootEl = $('#bbBoot');
+  (function boot() {
     var done = function () {
-      if (bootEl) bootEl.classList.add('done');
       document.body.classList.add('bb-ready');
       typeSub();
     };
-    if (!bootEl || REDUCED) { done(); return; }
-    var skip = $('#bbBootSkip');
-    if (skip) skip.onclick = done;
-    var steps = [9, 24, 43, 66, 86, 100];
-    for (var i = 0; i < lines.length; i++) {
-      await sleep(300);
-      lines[i].classList.add('on');
-      if (bar) bar.style.width = steps[i] + '%';
-    }
-    await sleep(420);
-    done();
+    var splash = document.getElementById('bbWelcome');
+    if (REDUCED || window.__bbSplashSkip || !splash) { done(); return; }
+    var iv = setInterval(function () {
+      if (!document.getElementById('bbWelcome') || splash.classList.contains('exit')) {
+        clearInterval(iv);
+        setTimeout(done, 180);
+      }
+    }, 80);
   })();
 
   $$('.bb-eye').forEach(function (b) {
