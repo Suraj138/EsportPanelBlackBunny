@@ -36,8 +36,9 @@ class Auth extends BaseController
         $data = [
             'title' => 'Login',
             'validation' => Services::validation(),
+            'portalTab' => 'login',
         ];
-        return view('Auth/login', $data);
+        return view('Auth/portal', $data);
     }
 
     public function register()
@@ -51,8 +52,9 @@ class Auth extends BaseController
             'title' => 'Register',
             'validation' => Services::validation(),
             'user_ip' => $this->getUserIP(),
+            'portalTab' => 'register',
         ];
-        return view('Auth/register', $data);
+        return view('Auth/portal', $data);
     }
 
     private function login_action()
