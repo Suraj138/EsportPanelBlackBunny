@@ -75,6 +75,7 @@ $routes->match(['get', 'post'], 'New', 'Connect::gone');
 $routes->group('keys', function ($routes) {
 	$routes->match(['get', 'post'], '/', 'Keys::index');
 	$routes->match(['get', 'post'], 'generate', 'Keys::generate');
+	$routes->match(['get', 'post'], 'extend', 'Keys::extend');
 	$routes->match(['get', 'post'], 'deleteUnused', 'Keys::deleteUnused');
 	$routes->match(['get', 'post'], 'deleteExp', 'Keys::deleteExpired');
 	$routes->match(['get', 'post'], 'deleteAll', 'Keys::deleteAll'); // <-- Added Delete All Route

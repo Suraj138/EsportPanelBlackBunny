@@ -183,6 +183,10 @@ body.dk-down #dkRing{width:22px;height:22px;border-color:var(--dk-rose)}
 #key-filter-bar .hud-chip.is-on{background:linear-gradient(90deg,var(--dk-cyan),var(--dk-lime));color:#03110c;border-color:transparent;font-weight:700;box-shadow:0 4px 0 rgba(11,94,74,.6),0 8px 22px rgba(0,255,208,.28);text-shadow:none}
 #key-filter-bar .hud-chip.is-on:hover{transform:translateY(-2px)}
 #key-filter-bar .hud-chip.is-on:after{content:'';position:absolute;top:0;left:-80%;width:55%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-20deg);animation:dkLaser 2.2s ease-in-out infinite;pointer-events:none}
+#key-filter-bar .extend-chip{margin-left:auto;color:var(--dk-rose);border-color:rgba(255,45,106,.45);background:linear-gradient(90deg,rgba(255,45,106,.14),rgba(3,10,20,.9));text-decoration:none}
+#key-filter-bar .extend-chip:hover{color:#12030a;background:linear-gradient(90deg,var(--dk-rose),var(--dk-gold));border-color:transparent;text-shadow:none}
+#key-filter-bar .extend-chip:hover:before{opacity:0}
+@media (max-width:640px){#key-filter-bar .extend-chip{margin-left:0;width:100%;justify-content:center}}
 
 #kvPanel header{position:relative;z-index:70}
 
@@ -234,6 +238,7 @@ table.dataTable.no-footer{border-bottom:1px solid rgba(0,255,208,.2)!important}
 /* row action buttons - cyber override */
 .keys-table-wrap .row-actions{display:grid;grid-template-columns:repeat(3,minmax(46px,1fr));gap:4px;min-width:168px;align-items:stretch}
 .keys-table-wrap .row-actions .btn-sm{display:flex;align-items:center;justify-content:center;white-space:nowrap;width:100%}
+.keys-table-wrap .row-actions>:last-child:nth-child(3n+1){grid-column:1/-1}
 .keys-table-wrap .btn-sm{font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:.08em;padding:4px 9px;border-width:1px;border-radius:2px;background:transparent;position:relative;overflow:hidden;transition:transform .18s cubic-bezier(.2,.7,.3,1),box-shadow .25s,background .2s,color .2s,border-color .2s;cursor:pointer}
 .keys-table-wrap .btn-sm:active{transform:translateY(1px) scale(.96)}
 .keys-table-wrap .btn-sm:hover{transform:translateY(-2px)}
@@ -372,6 +377,15 @@ table.dataTable.no-footer{border-bottom:1px solid rgba(0,255,208,.2)!important}
                                 </svg>
                                 <span class="font-medium">Generate Key</span>
                             </a>
+                            <?php if (isset($user) && (int) $user->level === 1) : ?>
+                            <a href="<?= site_url('keys/extend') ?>" class="flex items-center space-x-3 px-4 py-3">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
+                                    <circle cx="12" cy="12" r="9"></circle>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7v5l3 2"></path>
+                                </svg>
+                                <span class="font-medium">Extend Keys</span>
+                            </a>
+                            <?php endif; ?>
                             <a href="javascript:void(0)" onclick="confirmResetAllKeys()" class="flex items-center space-x-3 px-4 py-3 action-warn">
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
@@ -413,6 +427,12 @@ table.dataTable.no-footer{border-bottom:1px solid rgba(0,255,208,.2)!important}
             <button type="button" class="hud-chip" data-filter="unused">UNUSED</button>
             <button type="button" class="hud-chip" data-filter="live">LIVE</button>
             <button type="button" class="hud-chip" data-filter="expired">EXPIRED</button>
+            <?php if (isset($user) && (int) $user->level === 1) : ?>
+                <a href="<?= site_url('keys/extend') ?>" class="hud-chip extend-chip" id="extendKeysBtn">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+                    EXTEND KEYS
+                </a>
+            <?php endif; ?>
         </div>
 
         <?php if (!empty($keylist)) : ?>
@@ -826,7 +846,12 @@ table.dataTable.no-footer{border-bottom:1px solid rgba(0,255,208,.2)!important}
               var btnEdits='<a href="'+window.location.origin+'/keys/'+row.id+'" class="btn btn-outline-info btn-sm" title="Edit">EDIT</a>';
               var btnCopy='<button class="btn btn-outline-success btn-sm" onclick="copyKey(\''+row.user_key+'\')" title="Copy key only">KEY</button> <button class="btn btn-outline-info btn-sm" onclick="copyKeyDetails(\''+row.user_key+'\',\''+row.game+'\',\''+row.duration+'\',\''+row.max_devices+'\')" title="Copy">PACK</button>';
               var btnShare='<button class="btn btn-outline-primary btn-sm" onclick="shareKey(\''+row.user_key+'\',\''+row.game+'\',\''+row.duration+'\')" title="Share">SHARE</button>';
-              return '<div class="row-actions">'+btnReset+' '+btnalterOne+' '+btnEdits+' '+btnCopy+' '+btnShare+'</div>';
+              <?php if (isset($user) && (int) $user->level === 1) : ?>
+              var btnExtend='<a href="'+window.location.origin+'/keys/extend?id='+row.id+'" class="btn btn-outline-secondary btn-sm" title="Extend or reduce time">EXTEND</a>';
+              <?php else : ?>
+              var btnExtend='';
+              <?php endif; ?>
+              return '<div class="row-actions">'+btnReset+' '+btnalterOne+' '+btnEdits+' '+btnCopy+' '+btnShare+' '+btnExtend+'</div>';
             }
           }
         ]

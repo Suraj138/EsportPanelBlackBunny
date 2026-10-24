@@ -524,6 +524,154 @@ class Keys extends BaseController
         return redirect()->to('keys')->with('msgDanger', $msgDanger);
     }
 
+    public function extend()
+    {
+        $user = $this->user;
+        if (!$user) {
+            return redirect()->to('login')->with('msgWarning', 'Please login first');
+        }
+        if ((int) $user->level !== 1) {
+            return redirect()->to('keys')->with('msgDanger', 'Owner access only.');
+        }
+
+        if ($this->request->getPost()) {
+            return $this->extend_action();
+        }
+
+        $prefillId = (int) $this->request->getGet('id');
+        $prefillKey = trim((string) $this->request->getGet('key'));
+        $selected = null;
+        if ($prefillId) {
+            $selected = $this->model->getKeys($prefillId, 'id_keys');
+        } elseif ($prefillKey !== '') {
+            $selected = $this->model->getKeys($prefillKey);
+        }
+
+        $keys = $this->model->select('id_keys,user_key,game,duration,expired_date,max_devices,devices,status,registrator,last_ping')
+            ->orderBy('id_keys', 'DESC')
+            ->findAll();
+        $keys = array_map(static function ($k) {
+            return (object) $k;
+        }, $keys);
+
+        $data = [
+            'title' => 'Extend Keys',
+            'user' => $user,
+            'time' => $this->time,
+            'keys' => $keys,
+            'selected' => $selected,
+            'stats' => $this->extendStats(),
+            'messages' => setMessage('Owner control: move any license time up or down.'),
+            'validation' => Services::validation(),
+        ];
+        return view('Keys/extend', $data);
+    }
+
+    private function extendStats()
+    {
+        $db = db_connect();
+        $now = date('Y-m-d H:i:s');
+        $total = $db->table('keys_code')->countAllResults();
+        $live = $db->table('keys_code')->where('expired_date >', $now)->countAllResults();
+        $expired = $db->table('keys_code')
+            ->where('expired_date IS NOT NULL', null, false)
+            ->where('expired_date <=', $now)
+            ->countAllResults();
+        $unstarted = $db->table('keys_code')->where('expired_date', null)->countAllResults();
+
+        return [
+            'total' => (int) $total,
+            'live' => (int) $live,
+            'expired' => (int) $expired,
+            'unstarted' => (int) $unstarted,
+        ];
+    }
+
+    private function extend_action()
+    {
+        $user = $this->user;
+        if (!$user || (int) $user->level !== 1) {
+            return redirect()->to('keys')->with('msgDanger', 'Owner access only.');
+        }
+
+        $scope = $this->request->getPost('scope') === 'all' ? 'all' : 'single';
+        $mode = (string) $this->request->getPost('mode');
+        if (!in_array($mode, ['add', 'subtract', 'set'], true)) {
+            return redirect()->back()->withInput()->with('msgDanger', 'Pick a valid time operation.');
+        }
+
+        $key = null;
+        if ($scope === 'single') {
+            $targetId = (int) $this->request->getPost('target_id');
+            $key = $targetId ? $this->model->getKeys($targetId, 'id_keys') : null;
+            if (!$key) {
+                return redirect()->back()->withInput()->with('msgDanger', 'Select a valid license key.');
+            }
+        }
+
+        $hours = 0;
+        $exactDate = null;
+        if ($mode === 'set') {
+            $raw = trim((string) $this->request->getPost('exact_date'));
+            $ts = $raw === '' ? false : strtotime($raw);
+            if ($ts === false) {
+                return redirect()->back()->withInput()->with('msgDanger', 'Enter a valid exact date and time.');
+            }
+            $exactDate = date('Y-m-d H:i:s', $ts);
+        } else {
+            $raw = $this->request->getPost('amount');
+            if (!is_numeric($raw) || (float) $raw <= 0) {
+                return redirect()->back()->withInput()->with('msgDanger', 'Amount must be greater than zero.');
+            }
+            $unit = $this->request->getPost('unit') === 'days' ? 'days' : 'hours';
+            $hours = (int) round((float) $raw * ($unit === 'days' ? 24 : 1));
+            if ($hours < 1) {
+                $hours = 1;
+            }
+        }
+
+        $db = db_connect();
+        $builder = $db->table('keys_code');
+        if ($scope === 'single') {
+            $builder->where('id_keys', (int) $key->id_keys);
+        }
+
+        $nowPhp = date('Y-m-d H:i:s');
+        if ($mode === 'set') {
+            $builder->set('expired_date', $exactDate);
+        } elseif ($mode === 'add') {
+            $builder->set('duration', 'CASE WHEN expired_date IS NULL THEN duration + ' . $hours . ' ELSE duration END', false);
+            $builder->set('expired_date', 'CASE WHEN expired_date IS NULL THEN NULL ELSE DATE_ADD(expired_date, INTERVAL ' . $hours . ' HOUR) END', false);
+        } else {
+            $builder->set('duration', 'CASE WHEN expired_date IS NULL THEN GREATEST(1, duration - ' . $hours . ') ELSE duration END', false);
+            $builder->set('expired_date', "CASE WHEN expired_date IS NULL THEN NULL ELSE GREATEST('" . $nowPhp . "', DATE_SUB(expired_date, INTERVAL " . $hours . ' HOUR)) END', false);
+        }
+        $builder->set('updated_at', $nowPhp);
+        $builder->update();
+
+        $affected = (int) $db->affectedRows();
+        $label = $mode === 'set' ? ('set ' . $exactDate) : (($mode === 'add' ? '+' : '-') . $hours . 'h');
+        $target = $scope === 'single' ? (string) $key->user_key : 'all keys';
+
+        writeAudit('extend_keys', $scope . ' / ' . $mode . ' / ' . $label . ' / affected=' . $affected, $user->username);
+        session()->setFlashdata([
+            'extend_count' => $affected,
+            'extend_scope' => $scope,
+            'extend_label' => $label,
+            'extend_target' => $target,
+        ]);
+
+        $redirect = 'keys/extend';
+        if ($scope === 'single') {
+            $redirect .= '?id=' . (int) $key->id_keys;
+        }
+
+        if ($affected > 0) {
+            return redirect()->to($redirect)->with('msgSuccess', $affected . ' license' . ($affected === 1 ? '' : 's') . ' time updated.');
+        }
+        return redirect()->to($redirect)->with('msgWarning', 'No license time was changed.');
+    }
+
     public function generate()
     {
         if ($this->request->getPost())
