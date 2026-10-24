@@ -232,6 +232,8 @@ table.dataTable.no-footer{border-bottom:1px solid rgba(0,255,208,.2)!important}
 .dk-panel p.muted{color:var(--dk-dim);font-family:'Share Tech Mono',monospace;letter-spacing:.14em}
 
 /* row action buttons - cyber override */
+.keys-table-wrap .row-actions{display:grid;grid-template-columns:repeat(3,minmax(46px,1fr));gap:4px;min-width:168px;align-items:stretch}
+.keys-table-wrap .row-actions .btn-sm{display:flex;align-items:center;justify-content:center;white-space:nowrap;width:100%}
 .keys-table-wrap .btn-sm{font-family:Orbitron,sans-serif;font-size:9px;letter-spacing:.08em;padding:4px 9px;border-width:1px;border-radius:2px;background:transparent;position:relative;overflow:hidden;transition:transform .18s cubic-bezier(.2,.7,.3,1),box-shadow .25s,background .2s,color .2s,border-color .2s;cursor:pointer}
 .keys-table-wrap .btn-sm:active{transform:translateY(1px) scale(.96)}
 .keys-table-wrap .btn-sm:hover{transform:translateY(-2px)}
@@ -824,7 +826,7 @@ table.dataTable.no-footer{border-bottom:1px solid rgba(0,255,208,.2)!important}
               var btnEdits='<a href="'+window.location.origin+'/keys/'+row.id+'" class="btn btn-outline-info btn-sm" title="Edit">EDIT</a>';
               var btnCopy='<button class="btn btn-outline-success btn-sm" onclick="copyKey(\''+row.user_key+'\')" title="Copy key only">KEY</button> <button class="btn btn-outline-info btn-sm" onclick="copyKeyDetails(\''+row.user_key+'\',\''+row.game+'\',\''+row.duration+'\',\''+row.max_devices+'\')" title="Copy">PACK</button>';
               var btnShare='<button class="btn btn-outline-primary btn-sm" onclick="shareKey(\''+row.user_key+'\',\''+row.game+'\',\''+row.duration+'\')" title="Share">SHARE</button>';
-              return '<div class="d-flex flex-wrap gap-1">'+btnReset+' '+btnalterOne+' '+btnEdits+' '+btnCopy+' '+btnShare+'</div>';
+              return '<div class="row-actions">'+btnReset+' '+btnalterOne+' '+btnEdits+' '+btnCopy+' '+btnShare+'</div>';
             }
           }
         ]
