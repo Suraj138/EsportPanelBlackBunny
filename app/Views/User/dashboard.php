@@ -6,14 +6,6 @@
 body.dk-body{cursor:none}
 @media(hover:none){body.dk-body{cursor:auto}}
 
-.dk-boot{position:fixed;inset:0;z-index:10000;background:#03080e;display:grid;place-items:center;transition:opacity .55s ease,visibility .55s}
-.dk-boot.out{opacity:0;visibility:hidden}
-.dk-boot-in{width:250px;text-align:center;font-family:'Share Tech Mono',monospace}
-.dk-boot-in small{display:block;color:var(--dk-dim);letter-spacing:.3em;font-size:10px;margin-bottom:12px;animation:dkBlink 1.1s infinite}
-.dk-boot-bar{height:3px;background:rgba(0,255,208,.12);overflow:hidden}
-.dk-boot-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--dk-cyan),var(--dk-lime));box-shadow:0 0 12px rgba(0,255,208,.7);transition:width .12s}
-.dk-boot-in b{display:block;margin-top:10px;color:var(--dk-cyan);font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:.2em}
-
 /* cursor */
 #dkDot,#dkRing{position:fixed;top:0;left:0;pointer-events:none;z-index:9999;border-radius:50%;transform:translate(-50%,-50%)}
 #dkDot{width:8px;height:8px;background:var(--dk-cyan);box-shadow:0 0 12px var(--dk-cyan)}
@@ -292,10 +284,10 @@ body.dk-down #dkRing{width:22px;height:22px;border-color:var(--dk-rose)}
 </style>
 <?= $this->endSection() ?>
 <?= $this->section('content') ?>
+<?= view('Layout/WelcomeSplash', ['spKey' => 'bb_splash_dashboard', 'spSub' => 'C O M M A N D   D E C K']) ?>
 <canvas id="dk3d"></canvas>
 <div class="dk-torch" id="dkTorch"></div>
 <div id="dkDot"></div><div id="dkRing"></div>
-<div class="dk-boot" id="dkBoot"><div class="dk-boot-in"><small>INITIALIZING NODE DECK</small><div class="dk-boot-bar"><i></i></div><b id="dkBootPct">0%</b></div></div>
 
 <div class="dk-wrap">
     <div class="mb-3"><?= $this->include('Layout/msgStatus') ?></div>
@@ -719,20 +711,6 @@ body.dk-down #dkRing{width:22px;height:22px;border-color:var(--dk-rose)}
     var c=document.getElementById('dkConsole');if(!c)return;
     c.classList.add('gl');setTimeout(function(){c.classList.remove('gl')},320);
   },9000);
-
-  /* ---------- boot sequence ---------- */
-  (function(){
-    var b=document.getElementById('dkBoot'),p=document.getElementById('dkBootPct'),bar=b?b.querySelector('.dk-boot-bar i'):null;
-    if(!b)return;
-    if(reduce){b.classList.add('out');setTimeout(function(){b.remove()},80);return;}
-    var v=0;
-    var iv=setInterval(function(){
-      v=Math.min(100,v+4+Math.random()*9);
-      if(bar)bar.style.width=v+'%';
-      if(p)p.textContent=Math.round(v)+'%';
-      if(v>=100){clearInterval(iv);setTimeout(function(){b.classList.add('out');setTimeout(function(){b.remove()},680)},200)}
-    },55);
-  })();
 
   /* ---------- ticker duplicate ---------- */
   var tk=document.getElementById('dkTk');

@@ -1,3 +1,9 @@
+<?php
+$spTitle = $spTitle ?? 'BLACK BUNNY';
+$spSub   = $spSub   ?? 'P U B L I C   S T O R E';
+$spKey   = $spKey   ?? 'bb_splash_seen';
+$spMs    = (int) ($spMs ?? 3500);
+?>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Share+Tech+Mono&display=swap');
 html.bb-splash-on,html.bb-splash-on body{overflow:hidden!important}
@@ -37,8 +43,9 @@ html.bb-splash-on,html.bb-splash-on body{overflow:hidden!important}
 </style>
 <script>
 (function(){
+  var KEY=<?= json_encode($spKey) ?>;
   var skip=false;
-  try{ skip=!!sessionStorage.getItem('bb_splash_seen'); }catch(e){}
+  try{ skip=!!sessionStorage.getItem(KEY); }catch(e){}
   window.__bbSplashSkip=skip;
   if(skip) document.write('<style>#bbWelcome,#bbFlash{display:none!important}</style>');
   else document.documentElement.className+=' bb-splash-on';
@@ -69,6 +76,10 @@ html.bb-splash-on,html.bb-splash-on body{overflow:hidden!important}
 <div id="bbFlash"></div>
 <script>
 (function(){
+  var KEY=<?= json_encode($spKey) ?>;
+  var TITLE=<?= json_encode($spTitle) ?>;
+  var SUB=<?= json_encode($spSub) ?>;
+  var SPLASH_MS=<?= $spMs ?>;
   var splash=document.getElementById('bbWelcome');
   var flash=document.getElementById('bbFlash');
   if(!splash) return;
@@ -127,14 +138,14 @@ html.bb-splash-on,html.bb-splash-on body{overflow:hidden!important}
 
   var title=document.getElementById('sTitle');
   if(title){
-    'BLACK BUNNY'.split('').forEach(function(ch,i){
+    TITLE.split('').forEach(function(ch,i){
       var s=document.createElement('span');
       s.textContent=ch===' '?'\u00A0':ch;
       s.style.setProperty('--i',i);
       title.appendChild(s);
     });
   }
-  var SUB='P U B L I C   S T O R E';
+
   var si=0;
   setTimeout(function type(){
     var el=document.getElementById('sSub');
@@ -158,7 +169,7 @@ html.bb-splash-on,html.bb-splash-on body{overflow:hidden!important}
   var MSGS=[[0,'INITIALIZING...'],[30,'LOADING ASSETS...'],[60,'DECRYPTING CHANNEL...'],[90,'ACCESS GRANTED']];
   var MILE={25:'beep',50:'beep',75:'beep',100:'success'};
   var sp=0;
-  var SPLASH_MS=3500;
+
   var pIv=setInterval(function(){
     sp=Math.min(100,sp+Math.random()*3.2+1.2);
     if(sFill) sFill.style.width=sp+'%';
@@ -175,7 +186,7 @@ html.bb-splash-on,html.bb-splash-on body{overflow:hidden!important}
     if(sFill) sFill.style.width='100%';
     if(sPct) sPct.textContent='100%';
     if(sStatus) sStatus.textContent='ACCESS GRANTED';
-    try{ sessionStorage.setItem('bb_splash_seen','1'); }catch(e){}
+    try{ sessionStorage.setItem(KEY,'1'); }catch(e){}
     Sound.whoosh();
     if(flash) flash.className='on';
     setTimeout(function(){
