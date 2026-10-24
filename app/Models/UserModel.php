@@ -9,7 +9,7 @@ class UserModel extends Model
 {
     protected $table      = 'users';
     protected $primaryKey = 'id_users';
-    protected $allowedFields = ['username', 'fullname', 'saldo', 'level', 'status', 'uplink', 'password','user_ip', 'expiration_date'];
+    protected $allowedFields = ['username', 'fullname', 'saldo', 'level', 'status', 'uplink', 'password','user_ip', 'expiration_date', 'email', 'login_devices', 'ref_accounts', 'reset_link_token', 'exp_date', 'role', 'otp_secret', 'bound_logins', 'tg_chat_id', 'tg_link_code', 'tg_link_exp', 'tg_access', 'avatar', 'bound_reset_at'];
     protected $useTimestamps = true;
     
     /*=================================================================*/
@@ -23,6 +23,9 @@ class UserModel extends Model
 
     public function getUser($userid = false, $where = 'default')
     {
+        if (function_exists('ensureAvatarColumn')) {
+            ensureAvatarColumn();
+        }
         $userid = $userid ?: session()->userid;
         $where = ($where == 'default' ? 'id_users' : $where);
         $wfind = $this->where($where, $userid)
@@ -44,7 +47,9 @@ class UserModel extends Model
         $builder = $connect->table('users');
 
         $user = $this->getUser();
-        if ($user->level != 1) {
+        if (!$user) {
+            $builder->where('id_users', 0);
+        } elseif ($user->level != 1) {
             $builder->where('uplink', $user->username);
         }
 
@@ -68,7 +73,9 @@ class UserModel extends Model
         $time_ex = $session->time_login;
         if ($time::now()->isBefore($time_ex)) {
             $userCek = $this->getUser($session->userid);
-            if ($userCek->level > 3) {
+            if (!$userCek) {
+                $msg = 'Account no longer exists!';
+            } elseif ($userCek->level > 3) {
                 $msg = 'Level account invalid!';
             } elseif ($userCek->status != 1) {
                 $msg = 'Status account changed!';

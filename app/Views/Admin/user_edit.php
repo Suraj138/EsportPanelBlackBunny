@@ -1,5 +1,4 @@
 <?php
-include('mail.php');
 ?>
 
 <?= $this->extend('Layout/Starter') ?>
@@ -12,7 +11,11 @@ include('mail.php');
             <?= $this->include('Layout/msgStatus') ?>
         </div>
         
-        <!-- User Edit Card -->
+        <section class="page-hero">
+            <div class="hero-kicker">OPERATOR PATCH</div>
+            <h1>EDIT ACCOUNT</h1>
+            <p>Role, saldo and expiration for <?= esc(getName($target)) ?>.</p>
+        </section>
         <div class="glass-card rounded-2xl p-6 sm:p-8 animate-fade-in-up">
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center">
@@ -35,9 +38,31 @@ include('mail.php');
                 </a>
             </div>
             
-            <?= form_open('', ['class' => 'space-y-6']) ?>
+            <?= form_open('', ['class' => 'space-y-6', 'enctype' => 'multipart/form-data']) ?>
                 <input type="hidden" name="user_id" value="<?= $target->id_users ?>">
-                
+
+                <!-- Avatar + Email -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Profile Pic</label>
+                        <div class="flex items-center gap-4">
+                            <?php $curPic = function_exists('userAvatarUrl') ? userAvatarUrl($target) : ''; ?>
+                            <span class="top-avatar">
+                                <?php if ($curPic) : ?><img src="<?= esc($curPic) ?>" alt=""><?php else : ?><?= esc(strtoupper(substr((string) ($target->fullname ?: $target->username), 0, 1))) ?><?php endif; ?>
+                            </span>
+                            <input type="file" name="avatar" accept="image/png,image/jpeg,image/webp,image/gif" class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all">
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">JPG, PNG, WEBP or GIF, max 2 MB. Leave empty to keep current.</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" name="email" value="<?= old('email') ?: $target->email ?>" class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all" placeholder="name@example.com">
+                        <?php if ($validation->hasError('email')) : ?>
+                            <small class="text-red-500 text-xs mt-1"><?= $validation->getError('email') ?></small>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Username -->
                     <div>
@@ -56,19 +81,35 @@ include('mail.php');
                             <small class="text-red-500 text-xs mt-1"><?= $validation->getError('fullname') ?></small>
                         <?php endif; ?>
                     </div>
+
+                    <!-- New Password -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                        <input type="text" name="new_password" value="" autocomplete="new-password" class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all" placeholder="Leave empty to keep current">
+                        <p class="text-xs text-gray-500 mt-1">Min 6 characters. Owner can reset any account password.</p>
+                        <?php if ($validation->hasError('new_password')) : ?>
+                            <small class="text-red-500 text-xs mt-1"><?= $validation->getError('new_password') ?></small>
+                        <?php endif; ?>
+                    </div>
                     
                     <!-- Roles -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Roles</label>
-                        <?php $sel_level = ['' => '— Select Roles —', '1' => 'Owner', '2' => 'Admin', '3' => 'Reseller']; ?>
+                        <?php $sel_level = ['' => '— Select Roles —', '1' => 'Owner', '2' => 'Admin', '3' => 'User']; ?>
                         <?= form_dropdown(['class' => 'w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all', 'name' => 'level', 'id' => 'level'], $sel_level, $target->level) ?>
                     </div>
                     
                     <!-- Status -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                        <?php $sel_status = ['' => '— Select Status —', '2' => 'Banned/Block', '1' => 'Active', '3' => 'Expired',]; ?>
-                        <?= form_dropdown(['class' => 'w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all', 'name' => 'status', 'id' => 'status'], $sel_status, $target->status) ?>
+                        <?php
+                            $sel_status = ['' => '— Select Status —', '2' => 'Banned/Block', '1' => 'Active', '3' => 'Expired'];
+                            $curStatus = (int) $target->status;
+                            if ($curStatus === 0) {
+                                $curStatus = 3;
+                            }
+                        ?>
+                        <?= form_dropdown(['class' => 'w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all', 'name' => 'status', 'id' => 'status'], $sel_status, $curStatus) ?>
                     </div>
                     
                     <!-- Saldo -->
@@ -95,11 +136,42 @@ include('mail.php');
                             <small class="text-red-500 text-xs mt-1"><?= $validation->getError('uplink') ?></small>
                         <?php endif; ?>
                     </div>
+
+                    <!-- Panel login devices -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Panel Login Devices</label>
+                        <input type="number" name="login_devices" value="<?= old('login_devices') ?: (int) ($target->login_devices ?? 1) ?>" min="1" max="99" class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all">
+                        <p class="text-xs text-gray-500 mt-1">1 = sirf ek device login. Dusre device ke liye owner reset karega.</p>
+                    </div>
+
+                    <!-- Referral quota -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Referral Quota</label>
+                        <input type="number" name="ref_accounts" value="<?= old('ref_accounts') ?: (int) ($target->ref_accounts ?? 0) ?>" min="0" max="999" class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all">
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <span class="hud-chip">USED <?= (int) ($ref_used ?? 0) ?></span>
+                            <span class="hud-chip">LEFT <?= (int) ($ref_left ?? 0) ?></span>
+                            <span class="hud-chip">QUOTA <?= (int) ($ref_quota ?? 0) ?></span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Is account ne kitne referral mint kiye, kitne bache hain. Quota badhao/ghatao yahan se.</p>
+                    </div>
+
+                    <!-- Telegram access -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Telegram Bot Access</label>
+                        <label class="toggle-row"><input type="checkbox" name="tg_access" value="1" <?= !empty($target->tg_access) ? 'checked' : '' ?>> Allow this account to open the Telegram bot deck</label>
+                        <p class="text-xs text-gray-500 mt-1">Admin request bhejega, Owner yahan se grant karega.</p>
+                    </div>
                     
                     <!-- Expiration -->
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Expiration Date</label>
                         <input type="text" name="expiration" value="<?= old('expiration') ?: $target->expiration_date ?>" class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all" placeholder="YYYY-MM-DD HH:MM:SS">
+                        <p class="text-xs text-gray-500 mt-2">Bound devices: <b><?= (int) ($bound_count ?? 0) ?></b> / <?= (int) ($target->login_devices ?? 1) ?></p>
+                        <?php if (!empty($bound_reset_wait)) : ?>
+                            <p class="text-xs text-orange-600 mt-1">Device reset locked: <?= (int) floor($bound_reset_wait / 3600) ?>h <?= (int) floor(($bound_reset_wait % 3600) / 60) ?>m left (24h cooldown).</p>
+                        <?php endif; ?>
+                        <label class="toggle-row" style="margin-top:12px"><input type="checkbox" name="reset_bound" value="1" <?= !empty($bound_reset_wait) ? 'disabled' : '' ?>> Reset bound panel logins</label>
                         <?php if ($validation->hasError('expiration')) : ?>
                             <small class="text-red-500 text-xs mt-1"><?= $validation->getError('expiration') ?></small>
                         <?php endif; ?>
@@ -107,10 +179,26 @@ include('mail.php');
                 </div>
                 
                 <!-- Submit Button -->
-                <button type="submit" class="w-full py-4 px-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300 shadow-lg">
-                    Update Account Information
+                <button type="submit" class="w-full py-4 px-6 submit">
+                    LOCK ACCOUNT PATCH
                 </button>
             <?= form_close() ?>
+
+            <?php if ((int) $target->id_users !== (int) $user->id_users) : ?>
+            <div class="mt-8 pt-6 border-t border-red-200">
+                <h3 class="text-red-600 font-bold mb-2">DANGER ZONE</h3>
+                <p class="text-sm text-gray-600 mb-4">Permanently remove <b><?= esc($target->username) ?></b>. This cannot be undone.</p>
+                <form method="post" action="<?= site_url('admin/user/' . $target->id_users . '/delete') ?>" onsubmit="return confirm('Delete <?= esc($target->username) ?> permanently?');">
+                    <?= csrf_field() ?>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <input type="text" name="confirm" placeholder="Type DELETE to confirm" class="flex-1 px-4 py-3 bg-white/50 border border-red-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 transition-all">
+                        <button type="submit" class="px-6 py-3 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl hover:from-red-500 hover:to-rose-500 transition-all">
+                            DELETE ACCOUNT
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -131,16 +219,7 @@ include('mail.php');
         animation: fadeInUp 0.6s ease-out forwards;
     }
     
-    .glass-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-    }
-    
-    .gradient-bg {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
+     .gradient-bg { background: linear-gradient(135deg, #083048 0%, #00ffd0 100%); }
 </style>
 
 <?= $this->endSection() ?>

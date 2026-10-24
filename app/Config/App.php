@@ -23,7 +23,19 @@ class App extends BaseConfig
 	 *
 	 * @var string
 	 */
-	public $baseURL = 'http://localhost:8080/';
+	public $baseURL = 'http://localhost:8000/';
+
+	public function __construct()
+	{
+		parent::__construct();
+		$host = $_SERVER['HTTP_HOST'] ?? '';
+		if ($host !== '') {
+			$https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+				|| (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+				|| strpos($host, 'monkeycode-ai.live') !== false;
+			$this->baseURL = ($https ? 'https://' : 'http://') . $host . '/';
+		}
+	}
 
 	/**
 	 * --------------------------------------------------------------------------
