@@ -1,257 +1,154 @@
 <?= $this->extend('Layout/Starter') ?>
+<?= $this->section('css') ?>
+<?= view('Layout/HudCss') ?>
+<?= $this->endSection() ?>
 <?= $this->section('content') ?>
-
-<div class="container-fluid px-4 py-6">
-    <!-- Message Status -->
-    <div class="mb-6">
-        <?= $this->include('Layout/msgStatus') ?>
-    </div>
-    
-    <section class="page-hero">
-        <div class="hero-kicker">ONLINE SYSTEM</div>
-        <h1>SERVER CONTROL</h1>
-        <p>Maintenance, features, and live loader status.</p>
-    </section>
+<?= view('Layout/HudHero', [
+    'hudKick' => 'ONLINE SYSTEM · SERVER CONTROL',
+    'hudTitle' => 'SERVER',
+    'hudAccent' => 'CONTROL',
+    'hudOrbit' => 'LIVE CORE',
+    'hudIcon' => 'server',
+    'hudClocks' => [
+        ['label' => 'VAULT CLOCK', 'id' => 'hudClock', 'value' => '--'],
+        ['label' => 'STATUS', 'value' => strtoupper((string) ($userDetails1['status'] ?? 'off'))],
+        ['label' => 'MOD', 'value' => (string) ($row['modname'] ?? '—')],
+    ],
+    'hudCta' => [
+        ['label' => 'LOADER PACKAGES', 'href' => site_url('store')],
+        ['label' => 'DASHBOARD', 'href' => site_url('dashboard')],
+    ],
+]) ?>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <?php if((int) $user->level === 1) : ?>
-        <div class="glass-card rounded-2xl p-6 sm:p-8 animate-fade-in-up">
-            <div class="flex items-center mb-6">
-                <div class="gradient-bg w-12 h-12 rounded-xl flex items-center justify-center mr-4">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path>
-                    </svg>
-                </div>
-                <h2 class="text-2xl font-bold text-gray-800">Server Maintenance</h2>
-            </div>
-            
+        <div class="glass-card rounded-2xl p-6 sm:p-8 dk-reveal d1">
+            <h2>SERVER MAINTENANCE</h2>
             <?= form_open('', ['class' => 'space-y-6']) ?>
                 <input type="hidden" name="status_form" value="1">
-                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Current Status: <span class="text-purple-600 font-semibold"><?php echo $userDetails1['status']; ?></span>
-                    </label>
-                    
-                    <div class="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl">
-                        <span class="text-gray-800 font-medium">Maintenance Mode</span>
+                    <label>Current Status: <span><?php echo $userDetails1['status']; ?></span></label>
+                    <div class="toggle-row">
+                        <span>Maintenance Mode</span>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="radios" value="on" class="sr-only peer" <?php if ($userDetails1['status'] == "on"){?> checked <?php } ?>>
                             <div class="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-purple-600"></div>
                         </label>
                     </div>
                 </div>
-                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Offline Message: <span class="text-gray-500 text-xs"><?php echo $userDetails1['myinput']; ?></span>
-                    </label>
-                    <textarea 
-                        name="myInput" 
-                        rows="3" 
-                        class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
-                        placeholder="Server is Under Maintenance"
-                    ></textarea>
+                    <label>Offline Message: <span class="muted"><?php echo $userDetails1['myinput']; ?></span></label>
+                    <textarea name="myInput" rows="3" placeholder="Server is Under Maintenance"></textarea>
                 </div>
-                
-                <button type="submit" class="w-full py-3 px-6 submit">
-                    LOCK MAINTENANCE
-                </button>
+                <button type="submit" class="w-full py-3 px-6 submit">LOCK MAINTENANCE</button>
             <?= form_close() ?>
         </div>
         <?php endif; ?>
-        
-        <!-- Mod Features Card -->
-        <div class="glass-card rounded-2xl p-6 sm:p-8 animate-fade-in-up" style="animation-delay: 0.1s">
-            <div class="flex items-center mb-6">
-                <div class="gradient-bg-3 w-12 h-12 rounded-xl flex items-center justify-center mr-4">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
-                    </svg>
-                </div>
-                <h2 class="text-2xl font-bold text-gray-800">Mod Features</h2>
-            </div>
-            
+
+        <div class="glass-card rounded-2xl p-6 sm:p-8 dk-reveal d1">
+            <h2>MOD FEATURES</h2>
             <?= form_open('', ['class' => 'space-y-4']) ?>
                 <input type="hidden" name="feature_form" value="1">
-                
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <!-- ESP -->
-                    <div class="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
-                        <span class="text-gray-800 font-medium text-sm">ESP</span>
+                    <div class="toggle-row">
+                        <span>ESP</span>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="ESP" value="on" class="sr-only peer" <?php if ($ModFeatureStatus['ESP'] == "on"){?> checked <?php } ?>>
                             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                         </label>
                     </div>
-                    
-                    <!-- Items -->
-                    <div class="flex items-center justify-between p-3 bg-gradient-to-r from-green-50 to-teal-50 rounded-lg">
-                        <span class="text-gray-800 font-medium text-sm">Items</span>
+                    <div class="toggle-row">
+                        <span>Items</span>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="Item" value="on" class="sr-only peer" <?php if ($ModFeatureStatus['Item'] == "on"){?> checked <?php } ?>>
                             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
                         </label>
                     </div>
-                    
-                    <!-- AIM Bot -->
-                    <div class="flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg">
-                        <span class="text-gray-800 font-medium text-sm">Aim-Bot</span>
+                    <div class="toggle-row">
+                        <span>Aim-Bot</span>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="AIM" value="on" class="sr-only peer" <?php if ($ModFeatureStatus['AIM'] == "on"){?> checked <?php } ?>>
                             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
                         </label>
                     </div>
-                    
-                    <!-- Silent Aim -->
-                    <div class="flex items-center justify-between p-3 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg">
-                        <span class="text-gray-800 font-medium text-sm">Silent Aim</span>
+                    <div class="toggle-row">
+                        <span>Silent Aim</span>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="SilentAim" value="on" class="sr-only peer" <?php if ($ModFeatureStatus['SilentAim'] == "on"){?> checked <?php } ?>>
                             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
                         </label>
                     </div>
-                    
-                    <!-- Bullet Track -->
-                    <div class="flex items-center justify-between p-3 bg-gradient-to-r from-red-50 to-pink-50 rounded-lg">
-                        <span class="text-gray-800 font-medium text-sm">Bullet Track</span>
+                    <div class="toggle-row">
+                        <span>Bullet Track</span>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="BulletTrack" value="on" class="sr-only peer" <?php if ($ModFeatureStatus['BulletTrack'] == "on"){?> checked <?php } ?>>
                             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
                         </label>
                     </div>
-                    
-                    <!-- Memory -->
-                    <div class="flex items-center justify-between p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg">
-                        <span class="text-gray-800 font-medium text-sm">Memory</span>
+                    <div class="toggle-row">
+                        <span>Memory</span>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="Memory" value="on" class="sr-only peer" <?php if ($ModFeatureStatus['Memory'] == "on"){?> checked <?php } ?>>
                             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                         </label>
                     </div>
-                    
-                    <!-- Floating Texts -->
-                    <div class="flex items-center justify-between p-3 bg-gradient-to-r from-teal-50 to-cyan-50 rounded-lg">
-                        <span class="text-gray-800 font-medium text-sm">Floating Texts</span>
+                    <div class="toggle-row">
+                        <span>Floating Texts</span>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="Floating" value="on" class="sr-only peer" <?php if ($ModFeatureStatus['Floating'] == "on"){?> checked <?php } ?>>
                             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
                         </label>
                     </div>
-                    
-                    <!-- Settings -->
-                    <div class="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg">
-                        <span class="text-gray-800 font-medium text-sm">Settings</span>
+                    <div class="toggle-row">
+                        <span>Settings</span>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="Setting" value="on" class="sr-only peer" <?php if ($ModFeatureStatus['Setting'] == "on"){?> checked <?php } ?>>
                             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-600"></div>
                         </label>
                     </div>
                 </div>
-                
-                <button type="submit" class="w-full py-3 px-6 submit mt-6">
-                    LOCK FEATURES
-                </button>
+                <button type="submit" class="w-full py-3 px-6 submit mt-6">LOCK FEATURES</button>
             <?= form_close() ?>
         </div>
-        
-        <!-- Change Mod Name Card -->
-        <div class="glass-card rounded-2xl p-6 sm:p-8 animate-fade-in-up" style="animation-delay: 0.2s">
-            <div class="flex items-center mb-6">
-                <div class="gradient-bg-2 w-12 h-12 rounded-xl flex items-center justify-center mr-4">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                    </svg>
-                </div>
-                <h2 class="text-2xl font-bold text-gray-800">Change Mod Name</h2>
-            </div>
-            
+
+        <div class="glass-card rounded-2xl p-6 sm:p-8 dk-reveal d2">
+            <h2>CHANGE MOD NAME</h2>
             <?= form_open('', ['class' => 'space-y-6']) ?>
                 <input type="hidden" name="modname_form" value="1">
-                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                         Current Mod Name: <span class="text-pink-600 font-semibold"><?php echo esc($row['modname'] ?? ''); ?></span>
-                    </label>
-                    <input 
-                        type="text" 
-                        name="modname" 
-                        required
-                        class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 transition-all"
-                        placeholder="Enter Your New Mod Name"
-                    >
+                    <label>Current Mod Name: <span><?php echo esc($row['modname'] ?? ''); ?></span></label>
+                    <input type="text" name="modname" required placeholder="Enter Your New Mod Name">
                 </div>
-                
-                <button type="submit" class="w-full py-3 px-6 submit">
-                    LOCK MOD NAME
-                </button>
+                <button type="submit" class="w-full py-3 px-6 submit">LOCK MOD NAME</button>
             <?= form_close() ?>
         </div>
-        
-        <!-- Change Floating Text Card -->
-        <div class="glass-card rounded-2xl p-6 sm:p-8 animate-fade-in-up" style="animation-delay: 0.3s">
-            <div class="flex items-center mb-6">
-                <div class="gradient-bg-4 w-12 h-12 rounded-xl flex items-center justify-center mr-4">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
-                    </svg>
-                </div>
-                <h2 class="text-2xl font-bold text-gray-800">Floating Text</h2>
-            </div>
-            
+
+        <div class="glass-card rounded-2xl p-6 sm:p-8 dk-reveal d2">
+            <h2>FLOATING TEXT</h2>
             <?= form_open('', ['class' => 'space-y-6']) ?>
                 <input type="hidden" name="_ftext_form" value="1">
-                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Current Status: <span class="text-green-600 font-semibold"><?php echo $userDetails2['_status']; ?></span>
-                    </label>
-                    
-                    <div class="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-teal-50 rounded-xl">
-                        <span class="text-gray-800 font-medium">Safe Mode</span>
+                    <label>Current Status: <span><?php echo $userDetails2['_status']; ?></span></label>
+                    <div class="toggle-row">
+                        <span>Safe Mode</span>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="_ftextr" value="Safe" class="sr-only peer" <?php if ($userDetails2['_status'] == "Safe"){?> checked <?php } ?>>
                             <div class="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600"></div>
                         </label>
                     </div>
                 </div>
-                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Current Text: <span class="text-gray-500 text-xs"><?php echo $userDetails2['_ftext']; ?></span>
-                    </label>
-                    <input 
-                        type="text" 
-                        name="_ftext" 
-                        required
-                        class="w-full px-4 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
-                        placeholder="Give Feedback Else Key Removed!"
-                    >
+                    <label>Current Text: <span class="muted"><?php echo $userDetails2['_ftext']; ?></span></label>
+                    <input type="text" name="_ftext" required placeholder="Give Feedback Else Key Removed!">
                 </div>
-                
-                <button type="submit" class="w-full py-3 px-6 submit">
-                    LOCK FLOAT TEXT
-                </button>
+                <button type="submit" class="w-full py-3 px-6 submit">LOCK FLOAT TEXT</button>
             <?= form_close() ?>
         </div>
     </div>
 </div>
-
-<style>
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    .animate-fade-in-up {
-        animation: fadeInUp 0.6s ease-out forwards;
-    }
-    
-</style>
-
+<?= $this->endSection() ?>
+<?= $this->section('js') ?>
+<?= view('Layout/HudJs', [
+    'hudShape' => 'icosa',
+    'hudPhrases' => ['Maintenance, features, and live loader status.', 'Owner locks the bay. Features push to the client.', 'Safe mode floating text stays on the overlay.'],
+]) ?>
 <?= $this->endSection() ?>

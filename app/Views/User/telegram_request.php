@@ -1,15 +1,26 @@
 <?= $this->extend('Layout/Starter') ?>
+<?= $this->section('css') ?>
+<?= view('Layout/HudCss') ?>
+<?= $this->endSection() ?>
 <?= $this->section('content') ?>
-<div class="container-fluid px-4 py-6">
-    <section class="page-hero">
-        <div class="hero-kicker">RESTRICTED MODULE</div>
-        <h1>TELEGRAM BOT</h1>
-        <p>Bot control Owner ke paas hai. Access chahiye to request bhejo.</p>
-    </section>
-    <div class="mb-6"><?= $this->include('Layout/msgStatus') ?></div>
+<?= view('Layout/HudHero', [
+    'hudKick' => 'RESTRICTED MODULE',
+    'hudTitle' => 'TELEGRAM',
+    'hudAccent' => 'LOCKED',
+    'hudOrbit' => 'GATE',
+    'hudIcon' => 'lock',
+    'hudClocks' => [
+        ['label' => 'VAULT CLOCK', 'id' => 'hudClock', 'value' => '--'],
+        ['label' => 'ROLE', 'value' => getLevel((int) $user->level)],
+        ['label' => 'ACCESS', 'value' => 'DENIED', 'class' => 'rose'],
+    ],
+    'hudCta' => [
+        ['label' => 'DASHBOARD', 'href' => site_url('dashboard')],
+    ],
+]) ?>
 
-    <div class="glass-card rounded-2xl p-8" style="border:1px solid rgba(0,255,208,.25)">
-        <h2 style="font-family:Orbitron,sans-serif;letter-spacing:.12em;color:#00ffd0;margin:0 0 10px">ACCESS LOCKED</h2>
+    <div class="glass-card rounded-2xl p-8 dk-reveal d1">
+        <h2>ACCESS LOCKED</h2>
         <p class="muted">Aapka role is module ko manage nahi kar sakta. Owner ko request bhejne par wo Manage Users se Telegram access de sakta hai.</p>
 
         <div style="display:flex;flex-wrap:wrap;gap:10px;margin:18px 0">
@@ -29,4 +40,10 @@
         <p class="muted" style="margin-top:14px">Owner Telegram chat linked ho to request seedha owner ke bot par jayegi. Warna request audit log me record hogi.</p>
     </div>
 </div>
+<?= $this->endSection() ?>
+<?= $this->section('js') ?>
+<?= view('Layout/HudJs', [
+    'hudShape' => 'octa',
+    'hudPhrases' => ['Bot control Owner ke paas hai. Access chahiye to request bhejo.', 'Owner Manage Users se Telegram access de sakta hai.'],
+]) ?>
 <?= $this->endSection() ?>

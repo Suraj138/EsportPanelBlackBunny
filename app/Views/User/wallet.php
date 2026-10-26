@@ -1,5 +1,6 @@
 <?= $this->extend('Layout/Starter') ?>
 <?= $this->section('css') ?>
+<?= view('Layout/HudCss') ?>
 <link rel="stylesheet" href="<?= base_url('assets/css/shop.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/shop.css') ?: time() ?>">
 <style>
 .wallet-row{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid rgba(0,255,208,.12)}
@@ -14,16 +15,25 @@ $pn = rawurlencode((string) ($cfg['upi_name'] ?? 'BLACK BUNNY'));
 $amt = (int) old('amount', 100);
 $upiLink = $upi ? ('upi://pay?pa=' . rawurlencode($upi) . '&pn=' . $pn . '&am=' . $amt . '&cu=INR&tn=' . rawurlencode('BLACK BUNNY WALLET')) : '';
 ?>
-<div class="container-fluid px-4 py-6">
-    <section class="page-hero">
-        <div class="hero-kicker">WALLET</div>
-        <h1>SALDO TOP-UP</h1>
-        <p>UPI pay, paste txn id. Owner credits saldo after verify.</p>
-    </section>
-    <div class="mb-6"><?= $this->include('Layout/msgStatus') ?></div>
+<?= view('Layout/HudHero', [
+    'hudKick' => 'WALLET · SALDO TOP-UP',
+    'hudTitle' => 'SALDO',
+    'hudAccent' => 'TOP-UP',
+    'hudOrbit' => 'UPI CORE',
+    'hudIcon' => 'wallet',
+    'hudClocks' => [
+        ['label' => 'VAULT CLOCK', 'id' => 'hudClock', 'value' => '--'],
+        ['label' => 'SALDO', 'value' => 'Rs ' . (int) $user->saldo, 'class' => 'gold'],
+        ['label' => 'QUEUE', 'value' => (string) (is_countable($mine) ? count($mine) : 0)],
+    ],
+    'hudCta' => [
+        ['label' => 'PUBLIC STORE', 'href' => site_url('shop'), 'blank' => true],
+        ['label' => 'SETTINGS', 'href' => site_url('settings')],
+    ],
+]) ?>
 
-    <div class="glass-card rounded-2xl p-8 mb-6" style="border:2px solid #00ffd0">
-        <h2 style="font-family:Orbitron,sans-serif;letter-spacing:.12em;color:#00ffd0;margin:0 0 8px">YOUR SALDO</h2>
+    <div class="glass-card rounded-2xl p-8 mb-6 dk-reveal d1">
+        <h2>YOUR SALDO</h2>
         <p class="hud-chip" style="margin:12px 0">Rs <?= (int) $user->saldo ?></p>
         <div class="pay-box">
             <strong>UPI / QR</strong>
@@ -59,8 +69,8 @@ $upiLink = $upi ? ('upi://pay?pa=' . rawurlencode($upi) . '&pn=' . $pn . '&am=' 
         <?= form_close() ?>
     </div>
 
-    <div class="glass-card rounded-2xl p-8 mb-6">
-        <h2 style="font-family:Orbitron,sans-serif;letter-spacing:.12em;color:#00ffd0;margin:0 0 12px">MY REQUESTS</h2>
+    <div class="glass-card rounded-2xl p-8 mb-6 dk-reveal d2">
+        <h2>MY REQUESTS</h2>
         <?php if (!$mine) : ?><p class="muted">No top-ups yet.</p><?php endif; ?>
         <?php foreach ($mine as $r) : ?>
             <div class="wallet-row">
@@ -74,8 +84,8 @@ $upiLink = $upi ? ('upi://pay?pa=' . rawurlencode($upi) . '&pn=' . $pn . '&am=' 
     </div>
 
     <?php if ((int) $user->level === 1) : ?>
-    <div class="glass-card rounded-2xl p-8">
-        <h2 style="font-family:Orbitron,sans-serif;letter-spacing:.12em;color:#00ffd0;margin:0 0 12px">OWNER QUEUE</h2>
+    <div class="glass-card rounded-2xl p-8 dk-reveal d2">
+        <h2>OWNER QUEUE</h2>
         <?php if (!$queue) : ?><p class="muted">No wallet requests.</p><?php endif; ?>
         <?php foreach ($queue as $r) : ?>
             <div class="wallet-row">
@@ -99,6 +109,10 @@ $upiLink = $upi ? ('upi://pay?pa=' . rawurlencode($upi) . '&pn=' . $pn . '&am=' 
 </div>
 <?= $this->endSection() ?>
 <?= $this->section('js') ?>
+<?= view('Layout/HudJs', [
+    'hudShape' => 'torus',
+    'hudPhrases' => ['UPI pay, paste txn id. Owner credits saldo after verify.', 'Pay then paste UPI txn id.', 'Owner approve equals saldo credit.'],
+]) ?>
 <script>
 (function(){
   var b=document.getElementById('copyUpi');

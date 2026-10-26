@@ -1,12 +1,64 @@
 <?= $this->extend('Layout/Starter') ?>
+<?= $this->section('css') ?>
+<?= view('Layout/HudCss') ?>
+<style>
+.scan-key-list { display: grid; gap: 12px; }
+.scan-key {
+    border: 1px solid rgba(0,255,208,.22);
+    background: rgba(4,12,24,.72);
+    padding: 14px 16px;
+    min-width: 0;
+}
+.scan-key.is-used { border-color: rgba(182,255,59,.35); }
+.scan-key header { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+.scan-op {
+    margin: 0 0 12px;
+    padding: 8px 10px;
+    border: 1px solid rgba(0,255,208,.28);
+    color: #00ffd0;
+    font-family: Orbitron, sans-serif;
+    letter-spacing: .12em;
+    font-size: 12px;
+}
+.scan-op b { color: #b6ff3b; }
+.scan-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.scan-meta small { display: block; color: #8aa3c2; font-size: 10px; letter-spacing: .16em; font-family: Orbitron, sans-serif; }
+.scan-meta b { color: #e8f6ff; }
+.scan-used code {
+    display: block;
+    margin-top: 4px;
+    color: #b6ff3b;
+    word-break: break-all;
+    font-size: 12px;
+}
+.scan-key .ghost-btn { margin-top: 0; height: 36px; padding: 0 14px; font-size: 10px; width: auto; }
+.scan-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.scan-actions .scan-del { border-color: rgba(255,45,106,.45); color: #ff6b9d; }
+</style>
+<?= $this->endSection() ?>
 <?= $this->section('content') ?>
-<div class="container-fluid px-4 py-6">
-    <section class="page-hero">
-        <div class="hero-kicker">LOCATOR</div>
-        <h1>SEARCH GRID</h1>
-        <p>Find keys, licenses, operators, and live device binds.</p>
-    </section>
-    <div class="glass-card rounded-2xl p-6 mb-6">
+<?= view('Layout/HudHero', [
+    'hudKick' => 'LOCATOR · SEARCH GRID',
+    'hudTitle' => 'SEARCH',
+    'hudAccent' => 'GRID',
+    'hudOrbit' => 'SCAN CORE',
+    'hudIcon' => 'scan',
+    'hudClocks' => [
+        ['label' => 'VAULT CLOCK', 'id' => 'hudClock', 'value' => '--'],
+        ['label' => 'QUERY', 'value' => strlen((string) $q) ? $q : 'IDLE'],
+        ['label' => 'HITS', 'value' => (string) ((is_countable($keys) ? count($keys) : 0) + (is_countable($users) ? count($users) : 0))],
+    ],
+    'hudCta' => [
+        ['label' => 'OPEN VAULT', 'href' => site_url('keys')],
+        ['label' => 'GENERATE', 'href' => site_url('keys/generate'), 'fill' => true],
+    ],
+]) ?>
+    <div class="glass-card rounded-2xl p-6 mb-6 dk-reveal d1">
         <form method="get" action="<?= site_url('search') ?>" class="hud-search scan-form">
             <span class="scan-line"></span>
             <input type="text" name="q" value="<?= esc($q) ?>" placeholder="SCAN KEY / OPERATOR / DEVICE">
@@ -14,7 +66,7 @@
         </form>
     </div>
     <div class="grid grid-cols-1 gap-6">
-        <div class="glass-card rounded-2xl p-6">
+        <div class="glass-card rounded-2xl p-6 dk-reveal d2">
             <h2 class="mb-4">KEYS</h2>
             <?php if ($keys) : ?>
                 <div class="scan-key-list">
@@ -64,7 +116,7 @@
                 <p class="muted"><?= strlen($q) >= 2 ? 'No keys matched.' : 'Type at least 2 characters to scan.' ?></p>
             <?php endif; ?>
         </div>
-        <div class="glass-card rounded-2xl p-6">
+        <div class="glass-card rounded-2xl p-6 dk-reveal d2">
             <h2 class="mb-4">OPERATORS (KEY GENERATORS)</h2>
             <?php if ($users) : ?>
                 <div class="overflow-x-auto">
@@ -87,48 +139,12 @@
         </div>
     </div>
 </div>
-<style>
-.scan-key-list { display: grid; gap: 12px; }
-.scan-key {
-    border: 1px solid rgba(0,255,208,.22);
-    background: rgba(4,12,24,.72);
-    padding: 14px 16px;
-    min-width: 0;
-}
-.scan-key.is-used { border-color: rgba(182,255,59,.35); }
-.scan-key header { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
-.scan-code { font-family: Orbitron, sans-serif; letter-spacing: .06em; word-break: break-all; }
-.scan-op {
-    margin: 0 0 12px;
-    padding: 8px 10px;
-    border: 1px solid rgba(0,255,208,.28);
-    color: #00ffd0;
-    font-family: Orbitron, sans-serif;
-    letter-spacing: .12em;
-    font-size: 12px;
-}
-.scan-op b { color: #b6ff3b; }
-.scan-meta {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 10px;
-    margin-bottom: 10px;
-}
-.scan-meta small { display: block; color: #8aa3c2; font-size: 10px; letter-spacing: .16em; font-family: Orbitron, sans-serif; }
-.scan-meta b { color: #e8f6ff; }
-.scan-used code {
-    display: block;
-    margin-top: 4px;
-    color: #b6ff3b;
-    word-break: break-all;
-    font-size: 12px;
-}
-.scan-key .ghost-btn { margin-top: 0; height: 36px; padding: 0 14px; font-size: 10px; width: auto; }
-.scan-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-.scan-actions .scan-del { border-color: rgba(255,45,106,.45); color: #ff6b9d; }
-</style>
 <?= $this->endSection() ?>
 <?= $this->section('js') ?>
+<?= view('Layout/HudJs', [
+    'hudShape' => 'octa',
+    'hudPhrases' => ['Find keys, licenses, operators, and live device binds.', 'Scan a license string or operator handle.', 'HWID reset and delete stay on the hit card.'],
+]) ?>
 <script>
 function bbClip(v, toast) {
     v = String(v || '');

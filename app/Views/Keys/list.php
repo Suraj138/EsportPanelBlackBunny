@@ -291,7 +291,6 @@ table.dataTable.no-footer{border-bottom:1px solid rgba(0,255,208,.2)!important}
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
-<?= view('Layout/WelcomeSplash', ['spKey' => 'bb_splash_keys', 'spSub' => 'T A C T I C A L   V A U L T']) ?>
 <canvas id="dk3d"></canvas>
 <div class="dk-torch" id="dkTorch"></div>
 <div id="dkDot"></div><div id="dkRing"></div>

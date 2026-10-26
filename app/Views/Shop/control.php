@@ -1,5 +1,6 @@
 <?= $this->extend('Layout/Starter') ?>
 <?= $this->section('css') ?>
+<?= view('Layout/HudCss') ?>
 <link rel="stylesheet" href="<?= base_url('assets/css/shop.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/shop.css') ?: time() ?>">
 <?= $this->endSection() ?>
 <?= $this->section('content') ?>
@@ -27,16 +28,23 @@ foreach ($plans as $p) {
     $planMap[(int) $p['id']] = $p;
 }
 ?>
+<?= view('Layout/HudHero', [
+    'hudKick' => 'OWNER CONTROL · PUBLIC WEBSITE DECK',
+    'hudTitle' => 'PUBLIC',
+    'hudAccent' => 'CONTROL',
+    'hudOrbit' => 'STORE CORE',
+    'hudIcon' => 'shop',
+    'hudClocks' => [
+        ['label' => 'VAULT CLOCK', 'id' => 'hudClock', 'value' => '--'],
+        ['label' => 'STORE', 'value' => $storeOn ? 'LIVE' : 'OFF', 'class' => $storeOn ? 'lime' : 'rose'],
+        ['label' => 'QUEUE', 'value' => (string) (int) $pendingCount, 'class' => $pendingCount ? 'rose' : ''],
+    ],
+    'hudCta' => [
+        ['label' => 'OPEN PUBLIC STORE', 'href' => site_url('shop'), 'blank' => true, 'fill' => true],
+        ['label' => 'LOADER PACKAGES', 'href' => site_url('store')],
+    ],
+]) ?>
 <div class="control-deck">
-    <div class="mb-4"><?= $this->include('Layout/msgStatus') ?></div>
-    <section class="ctrl-hero">
-        <div>
-            <div class="hero-kicker">OWNER CONTROL</div>
-            <h1>PUBLIC WEBSITE DECK</h1>
-            <p>Store copy, loader, plans, gallery and UPI queue in one aligned lane.</p>
-        </div>
-        <a class="ghost-btn" href="<?= site_url('shop') ?>" target="_blank" rel="noopener">OPEN PUBLIC STORE</a>
-    </section>
 
     <?php if ($pendingCount > 0) : ?>
     <a class="hud-alert warn ctrl-pend-banner" href="#ctrl-queue" data-stamp="QUEUE">
@@ -296,8 +304,13 @@ foreach ($plans as $p) {
     <button type="button" class="shop-lightbox-x" id="lbClose">CLOSE</button>
     <div id="lbBody"></div>
 </div>
+</div>
 <?= $this->endSection() ?>
 <?= $this->section('js') ?>
+<?= view('Layout/HudJs', [
+    'hudShape' => 'torus',
+    'hudPhrases' => ['Store copy, loader, plans, gallery and UPI queue in one aligned lane.', 'Pending orders jump straight to the payment queue.', 'Public GET LOADER follows the live APK path.'],
+]) ?>
 <?php $waPing = session()->getFlashdata('shop_wa_ping'); ?>
 <?php if ($waPing) : ?>
 <script>window.open(<?= json_encode($waPing) ?>, '_blank', 'noopener');</script>

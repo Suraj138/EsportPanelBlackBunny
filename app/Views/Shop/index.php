@@ -409,8 +409,6 @@ footer .cp{color:var(--dim);font-family:'Share Tech Mono';font-size:12px;letter-
 </style>
 </head>
 <body>
-<?= view('Layout/WelcomeSplash') ?>
-
 <div id="curDot"></div><div id="curRing"></div>
 <div id="sProg"></div>
 

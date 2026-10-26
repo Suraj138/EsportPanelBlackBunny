@@ -284,7 +284,6 @@ body.dk-down #dkRing{width:22px;height:22px;border-color:var(--dk-rose)}
 </style>
 <?= $this->endSection() ?>
 <?= $this->section('content') ?>
-<?= view('Layout/WelcomeSplash', ['spKey' => 'bb_splash_dashboard', 'spSub' => 'C O M M A N D   D E C K']) ?>
 <canvas id="dk3d"></canvas>
 <div class="dk-torch" id="dkTorch"></div>
 <div id="dkDot"></div><div id="dkRing"></div>

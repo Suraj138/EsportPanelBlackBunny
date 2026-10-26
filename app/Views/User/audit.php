@@ -1,34 +1,46 @@
 <?= $this->extend('Layout/Starter') ?>
+<?= $this->section('css') ?>
+<?= view('Layout/HudCss') ?>
+<?= $this->endSection() ?>
 <?= $this->section('content') ?>
-<div class="container-fluid px-4 py-6">
-    <div class="mb-6"><?= $this->include('Layout/msgStatus') ?></div>
-    <section class="page-hero">
-        <div class="hero-kicker">TRACE</div>
-        <h1>AUDIT LOG</h1>
-        <p>Portal logins, key generation, HWID resets, store uploads, recoveries.</p>
-    </section>
-    <div class="glass-card rounded-2xl p-6">
+<?= view('Layout/HudHero', [
+    'hudKick' => 'TRACE · AUDIT LOG',
+    'hudTitle' => 'AUDIT',
+    'hudAccent' => 'LOG',
+    'hudOrbit' => 'TRACE CORE',
+    'hudIcon' => 'audit',
+    'hudClocks' => [
+        ['label' => 'VAULT CLOCK', 'id' => 'hudClock', 'value' => '--'],
+        ['label' => 'ENTRIES', 'value' => (string) (is_countable($logs) ? count($logs) : 0)],
+        ['label' => 'FEED', 'value' => 'LIVE', 'class' => 'lime'],
+    ],
+    'hudCta' => [
+        ['label' => 'DASHBOARD', 'href' => site_url('dashboard')],
+        ['label' => 'MANAGE USERS', 'href' => site_url('admin/manage-users')],
+    ],
+]) ?>
+    <div class="glass-card rounded-2xl p-6 dk-reveal d1">
         <div class="overflow-x-auto">
             <table class="w-full">
                 <thead>
                     <tr>
-                        <th class="text-left px-3 py-2">ID</th>
-                        <th class="text-left px-3 py-2">Operator</th>
-                        <th class="text-left px-3 py-2">Action</th>
-                        <th class="text-left px-3 py-2">Detail</th>
-                        <th class="text-left px-3 py-2">IP</th>
-                        <th class="text-left px-3 py-2">Time</th>
+                        <th>ID</th>
+                        <th>Operator</th>
+                        <th>Action</th>
+                        <th>Detail</th>
+                        <th>IP</th>
+                        <th>Time</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($logs as $log) : ?>
                         <tr>
-                            <td class="px-3 py-2"><?= $log->id ?></td>
-                            <td class="px-3 py-2"><?= esc($log->username) ?></td>
-                            <td class="px-3 py-2"><span class="hud-chip"><?= esc($log->action) ?></span></td>
-                            <td class="px-3 py-2"><?= esc($log->detail) ?></td>
-                            <td class="px-3 py-2"><?= esc($log->ip) ?></td>
-                            <td class="px-3 py-2"><?= esc($log->created_at) ?></td>
+                            <td><?= $log->id ?></td>
+                            <td><?= esc($log->username) ?></td>
+                            <td><span class="hud-chip"><?= esc($log->action) ?></span></td>
+                            <td><?= esc($log->detail) ?></td>
+                            <td><?= esc($log->ip) ?></td>
+                            <td><?= esc($log->created_at) ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -36,4 +48,10 @@
         </div>
     </div>
 </div>
+<?= $this->endSection() ?>
+<?= $this->section('js') ?>
+<?= view('Layout/HudJs', [
+    'hudShape' => 'icosa',
+    'hudPhrases' => ['Portal logins, key generation, HWID resets, store uploads, recoveries.', 'Every operator action lands in this trace.', 'IP and timestamp stay attached to the row.'],
+]) ?>
 <?= $this->endSection() ?>

@@ -1,16 +1,28 @@
 <?= $this->extend('Layout/Starter') ?>
+<?= $this->section('css') ?>
+<?= view('Layout/HudCss') ?>
+<?= $this->endSection() ?>
 <?= $this->section('content') ?>
-<div class="container-fluid px-4 py-6">
-    <section class="page-hero">
-        <div class="hero-kicker">TELEGRAM</div>
-        <h1>BOT COMMAND DECK</h1>
-        <p>Owner token yahan paste. Phir har user LINK CODE se bot bind kare.</p>
-    </section>
-    <div class="mb-6"><?= $this->include('Layout/msgStatus') ?></div>
+<?= view('Layout/HudHero', [
+    'hudKick' => 'TELEGRAM · BOT COMMAND DECK',
+    'hudTitle' => 'BOT',
+    'hudAccent' => 'DECK',
+    'hudOrbit' => 'LINK CORE',
+    'hudIcon' => 'bot',
+    'hudClocks' => [
+        ['label' => 'VAULT CLOCK', 'id' => 'hudClock', 'value' => '--'],
+        ['label' => 'OPERATOR', 'value' => $user->username],
+        ['label' => 'CHAT', 'value' => !empty($tg_chat_id) ? 'LINKED' : 'OPEN'],
+    ],
+    'hudCta' => [
+        ['label' => 'SETTINGS', 'href' => site_url('settings')],
+        ['label' => 'DASHBOARD', 'href' => site_url('dashboard')],
+    ],
+]) ?>
 
     <?php if ((int) $user->level == 1) : ?>
-    <div class="glass-card rounded-2xl p-8 mb-6" style="border:2px solid #00ffd0">
-        <h2 style="font-family:Orbitron,sans-serif;letter-spacing:.12em;color:#00ffd0;margin:0 0 8px">OWNER BOT TOKEN</h2>
+    <div class="glass-card rounded-2xl p-8 mb-6 dk-reveal d1">
+        <h2>OWNER BOT TOKEN</h2>
         <p class="muted">@BotFather se /newbot karke token lo. Yahan paste + SAVE.</p>
         <?php
             $h = $tg_health ?? [];
@@ -34,8 +46,7 @@
             <div class="field">
                 <label>PASTE BOT TOKEN HERE</label>
                 <input name="tg_bot_token" type="text" autocomplete="off" spellcheck="false"
-                       placeholder="123456789:AAHxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                       style="width:100%;height:56px;font-size:16px;font-family:monospace;letter-spacing:.04em">
+                       placeholder="123456789:AAHxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
             </div>
             <button class="submit" type="submit" style="margin-top:8px">SAVE BOT + WEBHOOK</button>
         <?= form_close() ?>
@@ -45,8 +56,8 @@
     </div>
     <?php endif; ?>
 
-    <div class="glass-card rounded-2xl p-8 mb-6">
-        <h2 style="font-family:Orbitron,sans-serif;letter-spacing:.12em;color:#00ffd0;margin:0 0 8px">LINK YOUR ACCOUNT</h2>
+    <div class="glass-card rounded-2xl p-8 mb-6 dk-reveal d1">
+        <h2>LINK YOUR ACCOUNT</h2>
         <p class="muted">Bot me login nahi. Settings nahi. Yahan code banao, Telegram pe bhejo.</p>
         <?php if (!empty($tg_chat_id)) : ?>
             <p class="hud-chip" style="margin:12px 0">LINKED CHAT <?= esc($tg_chat_id) ?></p>
@@ -66,11 +77,17 @@
         <?php endif; ?>
     </div>
 
-    <div class="glass-card rounded-2xl p-8">
-        <h2 style="font-family:Orbitron,sans-serif;letter-spacing:.12em;color:#00ffd0;margin:0 0 8px">BOT PAD</h2>
+    <div class="glass-card rounded-2xl p-8 dk-reveal d2">
+        <h2>BOT PAD</h2>
         <p class="muted">Bottom pad always on: GENERATE · MY KEYS · RADAR · PRICES · QUICK 5H/1D/7D · ACCOUNT · UNLINK.</p>
         <p class="muted" style="margin-top:10px">GENERATE wizard: duration → devices → count → FIRE. MY KEYS: BLOCK / RESET / COPY / DELETE. UNUSED + LIVE filters.</p>
         <p class="muted">Owner sare keys. Admin / User sirf apni + saldo cut.</p>
     </div>
 </div>
+<?= $this->endSection() ?>
+<?= $this->section('js') ?>
+<?= view('Layout/HudJs', [
+    'hudShape' => 'torus',
+    'hudPhrases' => ['Owner token yahan paste. Phir har user LINK CODE se bot bind kare.', 'Bot me login nahi. Settings nahi.', 'GENERATE wizard: duration, devices, count, FIRE.'],
+]) ?>
 <?= $this->endSection() ?>
