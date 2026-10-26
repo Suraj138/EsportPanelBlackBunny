@@ -8,7 +8,7 @@ class CodeModel extends Model
 {
     protected $table      = 'referral_code';
     protected $primaryKey = 'id_reff';
-    protected $allowedFields = ['code', 'Referral', 'set_saldo', 'level', 'used_by', 'created_by', 'acc_expiration'];
+    protected $allowedFields = ['code', 'Referral', 'set_saldo', 'level', 'used_by', 'created_by', 'acc_expiration', 'login_devices', 'ref_accounts'];
     protected $useTimestamps = true;
 
     public function getCode($limit = 10, $order_by = 'DESC')
@@ -20,13 +20,51 @@ class CodeModel extends Model
 
     public function useReferral($code, $username = true)
     {
-        $code = $this->checkCode($code);
-        //$username = $this->request->getPost('username');
-        if ($code and $username) {
-            $ok = $this->update($code->id_reff, ['used_by' => $username]);
+        $row = $this->checkCode($code);
+        if ($row and $username) {
+            $ok = $this->update($row->id_reff, ['used_by' => $username === true ? 'used' : $username]);
             if ($ok) return true;
         }
         return false;
+    }
+
+    public function countCreatedBy($username)
+    {
+        return $this->where('created_by', $username)->countAllResults();
+    }
+
+    public function countCreatedByMap($usernames)
+    {
+        $out = [];
+        $names = [];
+        foreach ((array) $usernames as $name) {
+            $name = trim((string) $name);
+            if ($name !== '') {
+                $names[$name] = true;
+                $out[$name] = 0;
+            }
+        }
+        if (!$names) {
+            return $out;
+        }
+        $rows = $this->select('created_by, COUNT(*) AS total')
+            ->whereIn('created_by', array_keys($names))
+            ->groupBy('created_by')
+            ->get()
+            ->getResult();
+        foreach ($rows as $row) {
+            $out[(string) $row->created_by] = (int) $row->total;
+        }
+        return $out;
+    }
+
+    public function getCodeBy($username, $limit = 10, $order_by = 'DESC')
+    {
+        return $this->where('created_by', $username)
+            ->orderBy($this->primaryKey, $order_by)
+            ->limit($limit)
+            ->get()
+            ->getResultObject();
     }
     /*
      * Made by @DARKESPYT

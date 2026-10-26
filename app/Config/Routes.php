@@ -31,23 +31,51 @@ $routes->setAutoRoute(false);
 
 // We get a performance increase by specifying the default
 // route since we don't have to scan directories.
-$routes->get('dbg', 'Auth::index');
+$routes->get('dbg', 'Connect::gone');
 $routes->get('logout', 'Auth::logout');
 $routes->get('dashboard', 'User::index');
-$routes->match(['get', 'post'], '/', 'Auth::login');
+$routes->get('pulse', 'User::pulse');
+$routes->get('/', 'Shop::index');
 $routes->match(['get', 'post'], 'login', 'Auth::login');
 $routes->match(['get', 'post'], 'register', 'Auth::register'); // Server
 
 $routes->match(['get', 'post'], 'settings', 'User::settings');
 $routes->match(['get', 'post'], 'Server', 'User::Server');
+$routes->match(['get', 'post'], 'store', 'User::lib');
+$routes->match(['get', 'post'], 'lib', 'User::lib');
+$routes->match(['get', 'post'], 'recover', 'Auth::recover');
+$routes->match(['get', 'post'], 'recover/reset', 'Auth::recoverReset');
+$routes->match(['get', 'post'], 'recover/reset/(:segment)', 'Auth::recoverReset');
+$routes->match(['get', 'post'], 'search', 'User::search');
+$routes->get('audit', 'User::audit');
+$routes->get('shop', 'Shop::index');
+$routes->get('shop/loader', 'Shop::loader');
+$routes->get('shop/legal/(:segment)', 'Shop::legal/$1');
+$routes->get('shop/buy/(:num)', 'Shop::buy/$1');
+$routes->post('shop/order', 'Shop::order');
+$routes->get('shop/thanks/(:num)', 'Shop::thanks/$1');
+$routes->get('shop/status/(:num)', 'Shop::status/$1');
+$routes->match(['get', 'post'], 'shop/lookup', 'Shop::lookup');
+$routes->get('shop/lang/(:segment)', 'Shop::lang/$1');
+$routes->match(['get', 'post'], 'public-control', 'Shop::control');
+$routes->get('keys/share/(:segment)', 'Keys::share/$1');
+$routes->match(['get', 'post'], 'telegram', 'Telegram::index');
+$routes->post('telegram/request', 'Telegram::requestAccess');
+$routes->post('telegram/hook', 'Telegram::hook');
+$routes->match(['get', 'post'], 'telegram/setup', 'Telegram::setup');
+$routes->match(['get', 'post'], 'telegram/link', 'Telegram::link');
+$routes->get('wallet', 'Wallet::index');
+$routes->post('wallet/topup', 'Wallet::topup');
+$routes->post('wallet/decide', 'Wallet::decide');
 
 // Testing
-$routes->match(['get', 'post'], 'New', 'Home::index');
+$routes->match(['get', 'post'], 'New', 'Connect::gone');
 
 /* --------------------------- Keys Grouping -------------------------- */
 $routes->group('keys', function ($routes) {
 	$routes->match(['get', 'post'], '/', 'Keys::index');
 	$routes->match(['get', 'post'], 'generate', 'Keys::generate');
+	$routes->match(['get', 'post'], 'extend', 'Keys::extend');
 	$routes->match(['get', 'post'], 'deleteUnused', 'Keys::deleteUnused');
 	$routes->match(['get', 'post'], 'deleteExp', 'Keys::deleteExpired');
 	$routes->match(['get', 'post'], 'deleteAll', 'Keys::deleteAll'); // <-- Added Delete All Route
@@ -56,6 +84,10 @@ $routes->group('keys', function ($routes) {
 	$routes->post('edit', 'Keys::edit_key');
 	$routes->match(['get', 'post'], 'api', 'Keys::api_get_keys');
 	$routes->match(['get', 'post'], 'resetAll', 'Keys::resetAllKeys');
+	$routes->match(['get', 'post'], 'resetHwids', 'Keys::resetAllHwids');
+	$routes->get('copyUnused', 'Keys::copyUnused');
+	$routes->get('download', 'Keys::download_all_Keys');
+	$routes->get('download/unused', 'Keys::download_new_Keys');
 });
 
 /* --------------------------- Admin Grouping -------------------------- */
@@ -63,6 +95,7 @@ $routes->group('admin', ['filter' => 'admin'], function ($routes) {
 	$routes->match(['get', 'post'], 'create-referral', 'User::ref_index');
 	$routes->match(['get', 'post'], 'manage-users', 'User::manage_users');
 	$routes->match(['get', 'post'], 'user/(:num)', 'User::user_edit/$1');
+	$routes->post('user/(:num)/delete', 'User::user_delete/$1');
 	
 	/* --------------------------- Admin API Grouping -------------------------- */
 	$routes->group('api', function ($routes) {
@@ -70,7 +103,12 @@ $routes->group('admin', ['filter' => 'admin'], function ($routes) {
 	});
 });
 
-$routes->match(['get', 'post'], 'connect', 'Connect::index');
+$routes->post('connect', 'Connect::index');
+$routes->match(['get', 'options', 'put', 'patch', 'delete', 'head'], 'connect', 'Connect::gone');
+$routes->match(['get', 'post'], 'env', 'Connect::gone');
+$routes->match(['get', 'post'], 'conn', 'Connect::gone');
+$routes->match(['get', 'post'], 'conn.php', 'Connect::gone');
+$routes->match(['get', 'post'], '.env', 'Connect::gone');
 
 /*
  * --------------------------------------------------------------------

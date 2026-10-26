@@ -80,5 +80,5 @@ defined('EXIT__AUTO_MAX')      || define('EXIT__AUTO_MAX', 125); // highest auto
 
 /* ------------------------ My base website constant start ------------------------ */
 
-define('BASE_NAME', 'VIP OWNER');
-define('BASE_NAME_FULL', '©WalterBlack');
+define('BASE_NAME', 'BLACK BUNNY');
+define('BASE_NAME_FULL', '©Black Bunny');

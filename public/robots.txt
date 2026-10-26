@@ -1,2 +1,11 @@
 User-agent: *
-Disallow: 
+Disallow: /connect
+Disallow: /env
+Disallow: /conn
+Disallow: /.env
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /keys
+Disallow: /settings
+Disallow: /telegram
+Disallow: /wallet 

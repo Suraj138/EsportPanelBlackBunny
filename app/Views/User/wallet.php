@@ -1,0 +1,149 @@
+<?= $this->extend('Layout/Starter') ?>
+<?= $this->section('css') ?>
+<?= view('Layout/HudCss') ?>
+<link rel="stylesheet" href="<?= base_url('assets/css/shop.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/shop.css') ?: time() ?>">
+<style>
+.wallet-row{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid rgba(0,255,208,.12)}
+.wallet-row form{display:flex;gap:8px;flex-wrap:wrap}
+@media (max-width:720px){.wallet-row{flex-direction:column;align-items:stretch}}
+</style>
+<?= $this->endSection() ?>
+<?= $this->section('content') ?>
+<?php
+$upi = trim((string) ($cfg['upi_id'] ?? ''));
+$pn = rawurlencode((string) ($cfg['upi_name'] ?? 'BLACK BUNNY'));
+$amt = (int) old('amount', 100);
+$upiLink = $upi ? ('upi://pay?pa=' . rawurlencode($upi) . '&pn=' . $pn . '&am=' . $amt . '&cu=INR&tn=' . rawurlencode('BLACK BUNNY WALLET')) : '';
+?>
+<?= view('Layout/HudHero', [
+    'hudKick' => 'WALLET · SALDO TOP-UP',
+    'hudTitle' => 'SALDO',
+    'hudAccent' => 'TOP-UP',
+    'hudOrbit' => 'UPI CORE',
+    'hudIcon' => 'wallet',
+    'hudClocks' => [
+        ['label' => 'VAULT CLOCK', 'id' => 'hudClock', 'value' => '--'],
+        ['label' => 'SALDO', 'value' => 'Rs ' . (int) $user->saldo, 'class' => 'gold'],
+        ['label' => 'QUEUE', 'value' => (string) (is_countable($mine) ? count($mine) : 0)],
+    ],
+    'hudCta' => [
+        ['label' => 'PUBLIC STORE', 'href' => site_url('shop'), 'blank' => true],
+        ['label' => 'SETTINGS', 'href' => site_url('settings')],
+    ],
+]) ?>
+
+    <div class="glass-card rounded-2xl p-8 mb-6 dk-reveal d1">
+        <h2>YOUR SALDO</h2>
+        <p class="hud-chip" style="margin:12px 0">Rs <?= (int) $user->saldo ?></p>
+        <div class="pay-box">
+            <strong>UPI / QR</strong>
+            <p><?= esc($cfg['upi_name'] ?? 'BLACK BUNNY') ?></p>
+            <p class="upi-id" id="upiId"><?= esc($upi) ?></p>
+            <div class="shop-cta" style="display:flex;gap:10px;flex-wrap:wrap;margin:12px 0">
+                <?php if ($upi) : ?>
+                    <button type="button" class="ghost-btn" id="copyUpi">COPY UPI</button>
+                <?php endif; ?>
+                <?php if ($upi) : ?>
+                    <a class="submit shop-btn" id="payUpi" href="<?= esc($upiLink) ?>" data-pa="<?= esc($upi, 'attr') ?>" data-pn="<?= esc($cfg['upi_name'] ?? 'BLACK BUNNY', 'attr') ?>">PAY UPI</a>
+                <?php endif; ?>
+            </div>
+            <?php if (!empty($cfg['qr_image'])) : ?>
+                <img class="qr" src="<?= base_url($cfg['qr_image']) ?>" alt="UPI QR" style="max-width:220px">
+            <?php endif; ?>
+            <small>Pay then paste UPI txn id. Owner approve = saldo credit.</small>
+        </div>
+        <?= form_open('wallet/topup', ['class' => 'login-form']) ?>
+            <div class="field">
+                <label>AMOUNT Rs</label>
+                <input type="number" name="amount" id="walletAmt" min="50" max="50000" required value="<?= esc(old('amount', '100')) ?>" placeholder="100">
+            </div>
+            <div class="field">
+                <label>UPI TXN ID</label>
+                <input type="text" name="txn_id" required value="<?= esc(old('txn_id')) ?>" placeholder="UPI reference">
+            </div>
+            <div class="field">
+                <label>NOTE</label>
+                <input type="text" name="note" value="<?= esc(old('note')) ?>" placeholder="Optional">
+            </div>
+            <button class="submit" type="submit">SUBMIT TOP-UP</button>
+        <?= form_close() ?>
+    </div>
+
+    <div class="glass-card rounded-2xl p-8 mb-6 dk-reveal d2">
+        <h2>MY REQUESTS</h2>
+        <?php if (!$mine) : ?><p class="muted">No top-ups yet.</p><?php endif; ?>
+        <?php foreach ($mine as $r) : ?>
+            <div class="wallet-row">
+                <div>
+                    <strong>#<?= (int) $r['id'] ?> · Rs <?= (int) $r['amount'] ?></strong>
+                    <small style="display:block">txn <?= esc($r['txn_id']) ?> · <?= esc($r['created_at']) ?></small>
+                </div>
+                <span class="hud-chip"><?= esc(strtoupper($r['status'])) ?></span>
+            </div>
+        <?php endforeach; ?>
+    </div>
+
+    <?php if ((int) $user->level === 1) : ?>
+    <div class="glass-card rounded-2xl p-8 dk-reveal d2">
+        <h2>OWNER QUEUE</h2>
+        <?php if (!$queue) : ?><p class="muted">No wallet requests.</p><?php endif; ?>
+        <?php foreach ($queue as $r) : ?>
+            <div class="wallet-row">
+                <div>
+                    <strong>#<?= (int) $r['id'] ?> · <?= esc($r['username']) ?> · Rs <?= (int) $r['amount'] ?></strong>
+                    <small style="display:block">txn <?= esc($r['txn_id']) ?><?= $r['note'] ? ' · ' . esc($r['note']) : '' ?></small>
+                    <span class="hud-chip"><?= esc(strtoupper($r['status'])) ?></span>
+                </div>
+                <?php if ($r['status'] === 'pending') : ?>
+                <form method="post" action="<?= site_url('wallet/decide') ?>">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="topup_id" value="<?= (int) $r['id'] ?>">
+                    <button class="submit" name="approve_topup" value="1" type="submit">CREDIT</button>
+                    <button class="ghost-btn" name="reject_topup" value="1" type="submit">REJECT</button>
+                </form>
+                <?php endif; ?>
+            </div>
+        <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
+</div>
+<?= $this->endSection() ?>
+<?= $this->section('js') ?>
+<?= view('Layout/HudJs', [
+    'hudShape' => 'torus',
+    'hudPhrases' => ['UPI pay, paste txn id. Owner credits saldo after verify.', 'Pay then paste UPI txn id.', 'Owner approve equals saldo credit.'],
+]) ?>
+<script>
+(function(){
+  var b=document.getElementById('copyUpi');
+  var t=document.getElementById('upiId');
+  if(!b||!t) return;
+  function copyText(v){
+    if(navigator.clipboard&&navigator.clipboard.writeText) return navigator.clipboard.writeText(v);
+    var a=document.createElement('textarea'); a.value=v; document.body.appendChild(a); a.select();
+    try{document.execCommand('copy');}catch(e){}
+    document.body.removeChild(a);
+  }
+  if(b) b.addEventListener('click', function(){
+    var v=(t.textContent||'').trim();
+    if(!v) return;
+    copyText(v);
+    b.textContent='COPIED';
+    if(window.bbToast) window.bbToast('UPI COPIED','ok');
+    setTimeout(function(){ b.textContent='COPY UPI'; }, 1400);
+  });
+  var amt=document.getElementById('walletAmt');
+  var pay=document.getElementById('payUpi');
+  function syncPay(){
+    if(!amt||!pay) return;
+    var n=parseInt(amt.value,10)||100;
+    var pa=pay.getAttribute('data-pa')||'';
+    var pn=encodeURIComponent(pay.getAttribute('data-pn')||'BLACK BUNNY');
+    pay.href='upi://pay?pa='+encodeURIComponent(pa)+'&pn='+pn+'&am='+n+'&cu=INR&tn='+encodeURIComponent('BLACK BUNNY WALLET');
+    pay.textContent='PAY Rs '+n;
+  }
+  if(amt) amt.addEventListener('input', syncPay);
+  syncPay();
+})();
+</script>
+<?= $this->endSection() ?>

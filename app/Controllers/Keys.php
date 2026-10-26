@@ -16,6 +16,12 @@ class Keys extends BaseController
         $this->userModel = new UserModel();
         $this->user = $this->userModel->getUser();
         $this->model = new KeysModel();
+        if (function_exists('ensureKeysKeyColumn')) {
+            ensureKeysKeyColumn();
+        }
+        if (!$this->user && session()->has('userid')) {
+            session()->remove(['userid', 'unames', 'time_login', 'time_since']);
+        }
         $this->time = new \CodeIgniter\I18n\Time;
 
         $this->userId = session()->get('userid');
@@ -57,10 +63,13 @@ class Keys extends BaseController
         $model = $this->model;
         $user = $this->user;
 
+        if (!$user) {
+            return redirect()->to('login')->with('msgWarning', 'Please login first');
+        }
         if ($user->level != 1) {
             $keys = $model->where('registrator', $user->username)->findAll();
         } else {
-            $keys = $model->select('user_key')->findAll();
+            $keys = $model->findAll();
         }
         $data = [
             'title' => 'Keys',
@@ -73,43 +82,53 @@ class Keys extends BaseController
     
     public function download_all_Keys()
     {
-        $model = $this->model;
-        $user = $this->user;
-        $keys = $model->select('user_key')->findAll();
-        $data = '';
-        for ($i = 0; $i < count($keys); $i++) {
-            $data .= $keys[$i]['user_key'] . "\n";
-        }
-        $this->downloadFile('Newkeys.txt');
+        return $this->streamKeys('all');
     }
-   
+
     public function download_new_Keys()
     {
-        $this->downloadFile('new.txt');
+        return $this->streamKeys('unused');
     }
 
-    function downloadFile($yourFile)
+    private function streamKeys($mode = 'all')
     {
-        $file = @fopen($yourFile, "rb");
-
-        header('Content-Description: File Transfer');
-        header('Content-Type: application/octet-stream');
-        header('Content-Disposition: attachment; filename=Allkeys.txt');
-        header('Expires: 0');
-        header('Cache-Control: must-revalidate');
-        header('Pragma: public');
-        header('Content-Length: ' . filesize($yourFile));
-        while (!feof($file)) {
-            print(@fread($file, 1024 * 8));
-            ob_flush();
-            flush();
+        $user = $this->user;
+        if (!$user) {
+            return redirect()->to('login')->with('msgWarning', 'Please login first');
         }
+        $q = $this->model->select('user_key, duration, max_devices, devices, expired_date, registrator');
+        if ((int) $user->level != 1) {
+            $q->where('registrator', $user->username);
+        }
+        if ($mode === 'unused') {
+            $q->groupStart()->where('devices', null)->orWhere('devices', '')->groupEnd();
+        }
+        $rows = $q->orderBy('id_keys', 'DESC')->findAll();
+        $lines = [];
+        foreach ($rows as $row) {
+            $lines[] = (string) ($row['user_key'] ?? '');
+        }
+        $body = implode("\n", array_filter($lines)) . "\n";
+        $name = $mode === 'unused' ? 'blackbunny-unused-keys.txt' : 'blackbunny-keys.txt';
+        writeAudit('keys_download', $mode . ' count=' . count($lines), $user->username);
+        return $this->response
+            ->setHeader('Content-Type', 'text/plain; charset=utf-8')
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $name . '"')
+            ->setHeader('Cache-Control', 'no-store')
+            ->setBody($body);
     }
 
     public function alterKeys()
     {
+        $user = $this->user;
+        if (!$user) {
+            return redirect()->to('login')->with('msgWarning', 'Please login first');
+        }
         $model = $this->model;
-        $data = $model->where('expired_date <', date('Y-m-d H:i:s'))->delete();
+        if ($user->level != 1) {
+            $model->where('registrator', $user->username);
+        }
+        $model->where('expired_date <', date('Y-m-d H:i:s'))->delete();
 
         return redirect()->back()->with('msgSuccess', 'Expired keys successfully removed.');
     }
@@ -119,9 +138,11 @@ class Keys extends BaseController
     {
         $model = $this->model;
         $user = $this->user;
+        if (!$user) {
+            return redirect()->to('login')->with('msgWarning', 'Please login first');
+        }
 
         if ($user->level == 1) {
-            // Admin: पूरी टेबल साफ़ करेगा
             $model->emptyTable('keys_code');
         } else {
             // Reseller: केवल अपनी बनाई हुई keys डिलीट करेगा
@@ -136,13 +157,86 @@ class Keys extends BaseController
         return $this->deleteAll();
     }
 
+    public function resetAllHwids()
+    {
+        $user = $this->user;
+        if (!$user) {
+            return redirect()->to('login')->with('msgWarning', 'Please login first');
+        }
+        $builder = $this->model->builder();
+        if ((int) $user->level != 1) {
+            $builder->where('registrator', $user->username);
+        }
+        $builder->update(['devices' => null]);
+        writeAudit('key_reset_all', 'hwid', $user->username);
+        return redirect()->back()->with('msgSuccess', 'All key devices reset.');
+    }
+
+    public function copyUnused()
+    {
+        $user = $this->user;
+        if (!$user) {
+            return $this->response->setStatusCode(401)->setJSON(['ok' => false]);
+        }
+        $q = $this->model->select('user_key, duration, max_devices');
+        if ((int) $user->level != 1) {
+            $q->where('registrator', $user->username);
+        }
+        $q->groupStart()->where('devices', null)->orWhere('devices', '')->groupEnd();
+        $rows = $q->orderBy('id_keys', 'DESC')->findAll(500);
+        $keys = [];
+        $hours = 0;
+        $devs = null;
+        foreach ($rows as $row) {
+            $k = trim((string) ($row['user_key'] ?? ''));
+            if ($k === '') {
+                continue;
+            }
+            $keys[] = $k;
+            $hours = (int) ($row['duration'] ?? $hours);
+            $md = (int) ($row['max_devices'] ?? 0);
+            $devs = $devs === null ? $md : ($devs === $md ? $devs : '-');
+        }
+        writeAudit('keys_copy_unused', 'count=' . count($keys), $user->username);
+        return $this->response->setJSON([
+            'ok' => true,
+            'count' => count($keys),
+            'duration' => $hours,
+            'devices' => $devs === null ? '-' : $devs,
+            'keys' => $keys,
+        ]);
+    }
+
     public function resetAllKeys()
     {
-        $model = $this->model;
+        if (!session()->has('userid') || !$this->user) {
+            return $this->response->setStatusCode(401)->setJSON(['registered' => false]);
+        }
+        if (!hudRateLimit('key_delete', 20, 60)) {
+            return $this->response->setStatusCode(429)->setJSON(['registered' => false, 'reason' => 'rate']);
+        }
         $keys = $this->request->getGet('userkey');
-        $data = $model->where('user_key', $keys)->delete();
-
-        return redirect()->back()->with('msgSuccess', 'Key deleted successfully.');
+        $db_key = $this->model->getKeys($keys);
+        if (!$db_key) {
+            return $this->response->setJSON(['registered' => false, 'keys' => $keys]);
+        }
+        $user = $this->user;
+        if ($user->level != 1 && $db_key->registrator != $user->username) {
+            return $this->response->setJSON([
+                'registered' => true,
+                'reset' => false,
+                'devices_total' => 1,
+                'keys' => $keys,
+            ]);
+        }
+        $this->model->where('user_key', $keys)->delete();
+        writeAudit('key_delete', $keys, $user->username);
+        return $this->response->setJSON([
+            'registered' => true,
+            'reset' => true,
+            'devices_max' => (int) $db_key->max_devices,
+            'keys' => $keys,
+        ]);
     }
 
     public function startDate()
@@ -155,6 +249,15 @@ class Keys extends BaseController
 
     public function api_get_keys()
     {
+        if (!$this->request->isAJAX() && $this->request->getHeaderLine('X-Requested-With') !== 'XMLHttpRequest') {
+            $accept = (string) $this->request->getHeaderLine('Accept');
+            if (stripos($accept, 'json') === false && !$this->request->getGet('draw')) {
+                return $this->response->setStatusCode(403)->setJSON(['status' => false, 'reason' => 'Forbidden']);
+            }
+        }
+        if (!session()->has('userid')) {
+            return $this->response->setStatusCode(401)->setJSON(['status' => false]);
+        }
         $model = $this->model;
         return $model->API_getKeys();
     }
@@ -163,6 +266,9 @@ class Keys extends BaseController
     {
         $model = $this->model;
         $user = $this->user;
+        if (!$user) {
+            return redirect()->to('login')->with('msgWarning', 'Please login first');
+        }
 
         if ($user->level != 1) {
             $model->where('registrator', $user->username);
@@ -182,6 +288,9 @@ class Keys extends BaseController
     {
         $model = $this->model;
         $user = $this->user;
+        if (!$user) {
+            return redirect()->to('login')->with('msgWarning', 'Please login first');
+        }
 
         if ($user->level != 1) {
             $model->where('registrator', $user->username);
@@ -193,6 +302,12 @@ class Keys extends BaseController
 
     public function api_key_reset()
     {
+        if (!session()->has('userid') || !$this->user) {
+            return $this->response->setStatusCode(401)->setJSON(['registered' => false]);
+        }
+        if (!hudRateLimit('key_reset', 20, 60)) {
+            return $this->response->setStatusCode(429)->setJSON(['registered' => false, 'reason' => 'rate']);
+        }
         sleep(1);
         $model = $this->model;
         $keys = $this->request->getGet('userkey');
@@ -204,7 +319,7 @@ class Keys extends BaseController
             $total = $db_key->devices ? explode(',', $db_key->devices) : [];
             $rules = ['devices_total' => count($total), 'devices_max' => (int) $db_key->max_devices];
             $user = $this->user;
-            if ($db_key->devices and $reset) {
+            if ($user && $db_key->devices and $reset) {
                 if ($user->level == 1 or $db_key->registrator == $user->username) {
                     $model->set('devices', NULL)
                         ->where('user_key', $keys)
@@ -220,7 +335,25 @@ class Keys extends BaseController
         ];
 
         $real_response = array_merge($data, $rules);
+        if (!empty($rules['reset'])) {
+            writeAudit('hwid_reset', $keys, $this->user->username);
+        }
         return $this->response->setJSON($real_response);
+    }
+
+    public function share($key = '')
+    {
+        $dKey = $this->model->getKeys($key);
+        $user = $this->user;
+        if (!$dKey || ($user->level != 1 && $dKey->registrator != $user->username)) {
+            return redirect()->to('keys')->with('msgDanger', 'Key not found.');
+        }
+        $text = tgKeyPackHtml($dKey->user_key, $dKey->max_devices, $dKey->duration);
+        return $this->response->setJSON([
+            'status' => true,
+            'user_key' => $dKey->user_key,
+            'share' => $text,
+        ]);
     }
 
     public function edit_key($key = false)
@@ -263,6 +396,10 @@ class Keys extends BaseController
             $msgDanger = "The user key no longer exists~";
         } else {
             if ($user->level == 1 or $dKey->registrator == $user->username) {
+                $postedKey = sanitizeLicenseKey($this->request->getPost('user_key'));
+                $postBag = $this->request->getPost() ?: [];
+                $postBag['user_key'] = $postedKey;
+                $this->request->setGlobal('post', $postBag);
                 $form_reseller = [
                     'status' => [
                         'label' => 'status',
@@ -273,7 +410,7 @@ class Keys extends BaseController
                         ]
                     ]
                 ];
-                $form_admin = [
+                $form_key_patch = [
                     'id_keys' => [
                         'label' => 'keys',
                         'rules' => 'required|is_not_unique[keys_code.id_keys]|numeric',
@@ -290,9 +427,10 @@ class Keys extends BaseController
                     ],
                     'user_key' => [
                         'label' => 'User keys',
-                        'rules' => "required|is_unique[keys_code.user_key,user_key,$dKey->user_key]|alpha_numeric",
+                        'rules' => 'required|min_length[4]|max_length[64]',
                         'errors' => [
-                            'is_unique' => '{field} has been taken.'
+                            'min_length' => '{field} min 4 chars.',
+                            'max_length' => '{field} max 64 chars.'
                         ],
                     ],
                     'duration' => [
@@ -311,6 +449,8 @@ class Keys extends BaseController
                             'numeric' => 'Invalid max of {field}.'
                         ]
                     ],
+                ];
+                $form_owner = [
                     'registrator' => [
                         'label' => 'registrator',
                         'rules' => 'permit_empty|alpha_numeric_space|min_length[4]'
@@ -328,20 +468,43 @@ class Keys extends BaseController
                     ]
                 ];
 
-                if ($user->level == 1) {
-                    $form_rules = array_merge($form_reseller, $form_admin);
+                $level = (int) $user->level;
+                $canPatchKey = ($level === 1 || $level === 2);
+                if ($canPatchKey) {
+                    if ($postedKey === '' || !licenseKeyOk($postedKey)) {
+                        return redirect()->back()->withInput()->with('msgDanger', 'Key 4–64 chars. Letters, numbers, symbols OK. No space / quotes / < >.');
+                    }
+                    if ($postedKey !== (string) $dKey->user_key) {
+                        $taken = $this->model->where('user_key', $postedKey)->where('id_keys !=', (int) $dKey->id_keys)->first();
+                        if ($taken) {
+                            return redirect()->back()->withInput()->with('msgDanger', 'User key already taken.');
+                        }
+                    }
+                }
+                if ($level == 1) {
+                    $form_rules = array_merge($form_reseller, $form_key_patch, $form_owner);
                     $devices = $this->request->getPost('devices');
                     $max_devices = $this->request->getPost('max_devices');
+                    $exp = trim((string) $this->request->getPost('expired_date'));
 
                     $data_saves = [
                         'game' => $this->request->getPost('game'),
-                        'user_key' => $this->request->getPost('user_key'),
+                        'user_key' => $postedKey,
                         'duration' => $this->request->getPost('duration'),
                         'max_devices' => $max_devices,
                         'status' => $this->request->getPost('status'),
                         'registrator' => $this->request->getPost('registrator'),
-                        'expired_date' => $this->request->getPost('expired_date') ?: NULL,
+                        'expired_date' => $exp !== '' ? $exp : NULL,
                         'devices' => setDevice($devices, $max_devices),
+                    ];
+                } elseif ($canPatchKey) {
+                    $form_rules = array_merge($form_reseller, $form_key_patch);
+                    $data_saves = [
+                        'game' => $this->request->getPost('game'),
+                        'user_key' => $postedKey,
+                        'duration' => $this->request->getPost('duration'),
+                        'max_devices' => $this->request->getPost('max_devices'),
+                        'status' => $this->request->getPost('status'),
                     ];
                 } else {
                     $form_rules = $form_reseller;
@@ -359,6 +522,154 @@ class Keys extends BaseController
             }
         }
         return redirect()->to('keys')->with('msgDanger', $msgDanger);
+    }
+
+    public function extend()
+    {
+        $user = $this->user;
+        if (!$user) {
+            return redirect()->to('login')->with('msgWarning', 'Please login first');
+        }
+        if ((int) $user->level !== 1) {
+            return redirect()->to('keys')->with('msgDanger', 'Owner access only.');
+        }
+
+        if ($this->request->getPost()) {
+            return $this->extend_action();
+        }
+
+        $prefillId = (int) $this->request->getGet('id');
+        $prefillKey = trim((string) $this->request->getGet('key'));
+        $selected = null;
+        if ($prefillId) {
+            $selected = $this->model->getKeys($prefillId, 'id_keys');
+        } elseif ($prefillKey !== '') {
+            $selected = $this->model->getKeys($prefillKey);
+        }
+
+        $keys = $this->model->select('id_keys,user_key,game,duration,expired_date,max_devices,devices,status,registrator,last_ping')
+            ->orderBy('id_keys', 'DESC')
+            ->findAll();
+        $keys = array_map(static function ($k) {
+            return (object) $k;
+        }, $keys);
+
+        $data = [
+            'title' => 'Extend Keys',
+            'user' => $user,
+            'time' => $this->time,
+            'keys' => $keys,
+            'selected' => $selected,
+            'stats' => $this->extendStats(),
+            'messages' => setMessage('Owner control: move any license time up or down.'),
+            'validation' => Services::validation(),
+        ];
+        return view('Keys/extend', $data);
+    }
+
+    private function extendStats()
+    {
+        $db = db_connect();
+        $now = date('Y-m-d H:i:s');
+        $total = $db->table('keys_code')->countAllResults();
+        $live = $db->table('keys_code')->where('expired_date >', $now)->countAllResults();
+        $expired = $db->table('keys_code')
+            ->where('expired_date IS NOT NULL', null, false)
+            ->where('expired_date <=', $now)
+            ->countAllResults();
+        $unstarted = $db->table('keys_code')->where('expired_date', null)->countAllResults();
+
+        return [
+            'total' => (int) $total,
+            'live' => (int) $live,
+            'expired' => (int) $expired,
+            'unstarted' => (int) $unstarted,
+        ];
+    }
+
+    private function extend_action()
+    {
+        $user = $this->user;
+        if (!$user || (int) $user->level !== 1) {
+            return redirect()->to('keys')->with('msgDanger', 'Owner access only.');
+        }
+
+        $scope = $this->request->getPost('scope') === 'all' ? 'all' : 'single';
+        $mode = (string) $this->request->getPost('mode');
+        if (!in_array($mode, ['add', 'subtract', 'set'], true)) {
+            return redirect()->back()->withInput()->with('msgDanger', 'Pick a valid time operation.');
+        }
+
+        $key = null;
+        if ($scope === 'single') {
+            $targetId = (int) $this->request->getPost('target_id');
+            $key = $targetId ? $this->model->getKeys($targetId, 'id_keys') : null;
+            if (!$key) {
+                return redirect()->back()->withInput()->with('msgDanger', 'Select a valid license key.');
+            }
+        }
+
+        $hours = 0;
+        $exactDate = null;
+        if ($mode === 'set') {
+            $raw = trim((string) $this->request->getPost('exact_date'));
+            $ts = $raw === '' ? false : strtotime($raw);
+            if ($ts === false) {
+                return redirect()->back()->withInput()->with('msgDanger', 'Enter a valid exact date and time.');
+            }
+            $exactDate = date('Y-m-d H:i:s', $ts);
+        } else {
+            $raw = $this->request->getPost('amount');
+            if (!is_numeric($raw) || (float) $raw <= 0) {
+                return redirect()->back()->withInput()->with('msgDanger', 'Amount must be greater than zero.');
+            }
+            $unit = $this->request->getPost('unit') === 'days' ? 'days' : 'hours';
+            $hours = (int) round((float) $raw * ($unit === 'days' ? 24 : 1));
+            if ($hours < 1) {
+                $hours = 1;
+            }
+        }
+
+        $db = db_connect();
+        $builder = $db->table('keys_code');
+        if ($scope === 'single') {
+            $builder->where('id_keys', (int) $key->id_keys);
+        }
+
+        $nowPhp = date('Y-m-d H:i:s');
+        if ($mode === 'set') {
+            $builder->set('expired_date', $exactDate);
+        } elseif ($mode === 'add') {
+            $builder->set('duration', 'CASE WHEN expired_date IS NULL THEN duration + ' . $hours . ' ELSE duration END', false);
+            $builder->set('expired_date', 'CASE WHEN expired_date IS NULL THEN NULL ELSE DATE_ADD(expired_date, INTERVAL ' . $hours . ' HOUR) END', false);
+        } else {
+            $builder->set('duration', 'CASE WHEN expired_date IS NULL THEN GREATEST(1, duration - ' . $hours . ') ELSE duration END', false);
+            $builder->set('expired_date', "CASE WHEN expired_date IS NULL THEN NULL ELSE GREATEST('" . $nowPhp . "', DATE_SUB(expired_date, INTERVAL " . $hours . ' HOUR)) END', false);
+        }
+        $builder->set('updated_at', $nowPhp);
+        $builder->update();
+
+        $affected = (int) $db->affectedRows();
+        $label = $mode === 'set' ? ('set ' . $exactDate) : (($mode === 'add' ? '+' : '-') . $hours . 'h');
+        $target = $scope === 'single' ? (string) $key->user_key : 'all keys';
+
+        writeAudit('extend_keys', $scope . ' / ' . $mode . ' / ' . $label . ' / affected=' . $affected, $user->username);
+        session()->setFlashdata([
+            'extend_count' => $affected,
+            'extend_scope' => $scope,
+            'extend_label' => $label,
+            'extend_target' => $target,
+        ]);
+
+        $redirect = 'keys/extend';
+        if ($scope === 'single') {
+            $redirect .= '?id=' . (int) $key->id_keys;
+        }
+
+        if ($affected > 0) {
+            return redirect()->to($redirect)->with('msgSuccess', $affected . ' license' . ($affected === 1 ? '' : 's') . ' time updated.');
+        }
+        return redirect()->to($redirect)->with('msgWarning', 'No license time was changed.');
     }
 
     public function generate()
@@ -397,18 +708,18 @@ class Keys extends BaseController
         $cuslicense = $this->request->getPost('cuslicense');
         $getPrice = getPrice($this->price, $drtn, $maxd);
         
-        $loopcount = $this->request->getPost('loopcount');
-        
-        if ($loopcount == "1") {
-            $loopcount = 6;
-        } else if ($loopcount == "2") {
-            $loopcount = 11;
-        } else if ($loopcount == "3") {
-            $loopcount = 51;
-        } else if ($loopcount == "4") {
-            $loopcount = 101;
-        } else if ($loopcount == "5") {
-            $loopcount = 2;
+        $bulkMap = [
+            '1' => 1,
+            '5' => 5,
+            '10' => 10,
+            '25' => 25,
+            '50' => 50,
+            '100' => 100,
+        ];
+        $loopRaw = (string) $this->request->getPost('loopcount');
+        $loopcount = isset($bulkMap[$loopRaw]) ? $bulkMap[$loopRaw] : 1;
+        if ($this->request->getPost('custominput') === 'custom') {
+            $loopcount = 1;
         }
 
         $game_list = implode(",", array_keys($this->game_list));
@@ -439,8 +750,9 @@ class Keys extends BaseController
         ];
 
         $validation = Services::validation();
-        $reduceCheck = ($user->saldo - $getPrice);
-        
+        $previewFees = $getPrice * max(1, (int) $loopcount);
+        $reduceCheck = ($user->saldo - $previewFees);
+
         if ($reduceCheck < 0) {
             $validation->setError('duration', 'Insufficient balance');
             return redirect()->back()->withInput()->with('msgWarning', 'Please top up to your beloved admin.');
@@ -449,37 +761,45 @@ class Keys extends BaseController
                 return redirect()->back()->withInput()->with('msgDanger', 'Failed! Please check the error');
             } else {
                 $msg = "Successfuly Generated.";
-                $data = '';
+                $generated = [];
+                $idKeys = 0;
+                $license = '';
+                $unitPrice = $getPrice;
+                $totalFees = $unitPrice * $loopcount;
+                $reduceCheck = ($user->saldo - $totalFees);
+                if ($reduceCheck < 0) {
+                    $validation->setError('duration', 'Insufficient balance');
+                    return redirect()->back()->withInput()->with('msgWarning', 'Please top up to your beloved admin.');
+                }
 
-                for ($i = 1; $i < $loopcount; $i++) {
-                    $license = $user->username . '-' . $drtn . '-' . random_string('alnum', 5);
+                for ($i = 0; $i < $loopcount; $i++) {
                     $model = $this->model;
+                    $tag = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', (string) $user->username), 0, 6) ?: 'BB');
+                    $license = uniqueLicenseKey($model, $drtn, $tag);
                     if ($twst == "custom") {
-                        if (strlen($cuslicense) > 3 && strlen($cuslicense) < 20) {
-                            $findKey = $model->getKeysGame(['user_key' => $cuslicense, 'game' => $game]);
-                            if ($findKey) {
-                                return redirect()->back()->with('msgDanger', 'Key already exists!!');
-                            } else {
-                                $license = $cuslicense;
-                            }
-                        } else {
-                            return redirect()->back()->with('msgDanger', 'Custom Key is too Short/Long');
+                        $cuslicense = sanitizeLicenseKey($cuslicense);
+                        if (!licenseKeyOk($cuslicense)) {
+                            return redirect()->back()->with('msgDanger', 'Custom key must be 4-64 chars, no spaces or quotes.');
                         }
+                        $findKey = $model->getKeysGame(['user_key' => $cuslicense]);
+                        if ($findKey) {
+                            return redirect()->back()->with('msgDanger', 'Key already exists!!');
+                        }
+                        $license = $cuslicense;
                     }
-                       
+
                     $data_response = [
                         'game' => $game,
                         'user_key' => $license,
                         'duration' => $drtn,
                         'max_devices' => $maxd,
                         'registrator' => $user->username,
-                        'admin_id' => $this->userId
+                        'created_by' => (int) $this->userId,
                     ];
-                    $data .= $license . "\n";
-                  
+                    $generated[] = $license;
                     $idKeys = $this->model->insert($data_response);
                 }
-                
+
                 $this->userModel->update(session('userid'), ['saldo' => $reduceCheck]);
 
                 $history = new HistoryModel();
@@ -488,13 +808,16 @@ class Keys extends BaseController
                     'user_do' => $user->username,
                     'info' => "$game|" . substr($license, 0, 5) . "|$drtn|$maxd"
                 ]);
+                writeAudit('generate_keys', count($generated) . " keys / $game / {$drtn}h", $user->username);
 
                 $other_response = [
-                    'fees' => $getPrice
+                    'fees' => $totalFees,
+                    'user_key' => $generated[0],
+                    'generated_keys' => implode("\n", $generated),
+                    'bulk_count' => count($generated),
                 ];
 
                 session()->setFlashdata(array_merge($data_response, $other_response));
-                 
                 return redirect()->back()->with('msgSuccess', $msg);
             }
         }
