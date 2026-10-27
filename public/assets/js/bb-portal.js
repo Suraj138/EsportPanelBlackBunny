@@ -12,6 +12,20 @@
     setInterval(tick, 1000);
   })();
 
+  (function telemetry() {
+    var ping = $('#bbPing'), lat = $('#bbLat'), ping2 = $('#bbPing2'), ch = $('#bbCh');
+    if (!ping && !lat && !ping2) return;
+    var tick = function () {
+      var ms = 8 + Math.floor(Math.random() * 18);
+      if (ping) ping.textContent = ms + 'ms';
+      if (lat) lat.textContent = ms + 'ms';
+      if (ping2) ping2.textContent = ms + 'ms';
+      if (ch) ch.textContent = (Math.floor(Math.random() * 4) + 1).toString().padStart(2, '0');
+    };
+    tick();
+    setInterval(tick, 1600);
+  })();
+
   (function bg() {
     var mount = $('#bbWebgl');
     if (!mount) return;
@@ -21,7 +35,7 @@
       return;
     }
     var scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x05070d, 0.05);
+    scene.fog = new THREE.FogExp2(0x05070d, 0.042);
     var cam = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.1, 100);
     cam.position.set(0, 2.7, 7.6);
     cam.lookAt(0, -0.4, 0);
@@ -30,15 +44,16 @@
     ren.setSize(innerWidth, innerHeight);
     mount.appendChild(ren.domElement);
 
-    var COLS = 130, ROWS = 80, SEP = 0.22, N = COLS * ROWS;
+    var COLS = 150, ROWS = 92, SEP = 0.2, N = COLS * ROWS;
     var pos = new Float32Array(N * 3), col = new Float32Array(N * 3);
-    var cA = new THREE.Color(0x00ffd0), cB = new THREE.Color(0xff2d6a), tmp = new THREE.Color();
+    var cA = new THREE.Color(0x00ffd0), cB = new THREE.Color(0xff2d6a), cC = new THREE.Color(0xb6ff3b), tmp = new THREE.Color();
     var k = 0;
     for (var ix = 0; ix < COLS; ix++) {
       for (var iz = 0; iz < ROWS; iz++) {
         var x = (ix - COLS / 2) * SEP, z = (iz - ROWS / 2) * SEP;
         pos[k * 3] = x; pos[k * 3 + 1] = 0; pos[k * 3 + 2] = z;
         tmp.copy(cA).lerp(cB, ix / COLS);
+        if (iz / ROWS > 0.72) tmp.lerp(cC, 0.35);
         col[k * 3] = tmp.r; col[k * 3 + 1] = tmp.g; col[k * 3 + 2] = tmp.b; k++;
       }
     }
@@ -46,30 +61,45 @@
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
     var pts = new THREE.Points(geo, new THREE.PointsMaterial({
-      size: 0.045, vertexColors: true, transparent: true, opacity: 0.5,
+      size: 0.048, vertexColors: true, transparent: true, opacity: 0.55,
       blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true
     }));
     pts.position.y = -2;
     scene.add(pts);
 
-    function wire(g, c, x, y, z, s) {
-      var m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: c, wireframe: true, transparent: true, opacity: 0.16 }));
+    function wire(g, c, x, y, z, s, op) {
+      var m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: c, wireframe: true, transparent: true, opacity: op || 0.18 }));
       m.position.set(x, y, z); m.scale.setScalar(s); scene.add(m); return m;
     }
     var w1 = wire(new THREE.IcosahedronGeometry(1.5, 0), 0x00ffd0, -4.4, 1.6, -3, 1);
     var w2 = wire(new THREE.TorusKnotGeometry(0.9, 0.28, 80, 12), 0xff2d6a, 4.6, 1.2, -4, 1);
     var w3 = wire(new THREE.OctahedronGeometry(1.1, 0), 0xb6ff3b, 2.8, 3.1, -6, 0.9);
+    var w4 = wire(new THREE.TetrahedronGeometry(1.05, 0), 0x00ffd0, -3.2, 3.4, -5.2, 0.85, 0.14);
+    var w5 = wire(new THREE.TorusGeometry(1.15, 0.035, 8, 48), 0xff2d6a, 0, 0.35, -2.2, 1.6, 0.22);
 
-    var DN = 420, dp = new Float32Array(DN * 3);
+    var rings = [];
+    for (var ri = 0; ri < 3; ri++) {
+      var rg = new THREE.RingGeometry(1.6 + ri * 0.7, 1.64 + ri * 0.7, 64);
+      var rm = new THREE.Mesh(rg, new THREE.MeshBasicMaterial({
+        color: ri === 1 ? 0xff2d6a : 0x00ffd0, side: THREE.DoubleSide,
+        transparent: true, opacity: 0.12 - ri * 0.02
+      }));
+      rm.rotation.x = -Math.PI / 2;
+      rm.position.set(0, -1.85, -0.4);
+      scene.add(rm);
+      rings.push(rm);
+    }
+
+    var DN = 560, dp = new Float32Array(DN * 3);
     for (var i = 0; i < DN; i++) {
-      dp[i * 3] = (Math.random() - 0.5) * 24;
-      dp[i * 3 + 1] = Math.random() * 9 - 2;
-      dp[i * 3 + 2] = (Math.random() - 0.5) * 20;
+      dp[i * 3] = (Math.random() - 0.5) * 26;
+      dp[i * 3 + 1] = Math.random() * 10 - 2;
+      dp[i * 3 + 2] = (Math.random() - 0.5) * 22;
     }
     var dg = new THREE.BufferGeometry();
     dg.setAttribute('position', new THREE.BufferAttribute(dp, 3));
     var dust = new THREE.Points(dg, new THREE.PointsMaterial({
-      size: 0.03, color: 0x00ffd0, transparent: true, opacity: 0.35,
+      size: 0.032, color: 0x00ffd0, transparent: true, opacity: 0.38,
       blending: THREE.AdditiveBlending, depthWrite: false
     }));
     scene.add(dust);
@@ -98,6 +128,14 @@
       w1.rotation.x = T * 0.18; w1.rotation.y = T * 0.24;
       w2.rotation.x = T * 0.14; w2.rotation.y = -T * 0.2;
       w3.rotation.y = T * 0.3; w3.rotation.x = -T * 0.12;
+      w4.rotation.y = -T * 0.22; w4.rotation.z = T * 0.16;
+      w5.rotation.z = T * 0.35;
+      w5.scale.setScalar(1.55 + Math.sin(T * 1.4) * 0.08);
+      for (var ri = 0; ri < rings.length; ri++) {
+        var pulse = 1 + Math.sin(T * 1.6 + ri * 1.1) * 0.04;
+        rings[ri].scale.set(pulse, pulse, 1);
+        rings[ri].material.opacity = 0.1 + Math.sin(T * 2 + ri) * 0.04;
+      }
       dust.rotation.y = T * 0.02;
       mx += (tx - mx) * 0.045; my += (ty - my) * 0.045;
       cam.position.x += (mx * 0.85 - cam.position.x) * 0.05;
@@ -154,8 +192,8 @@
   function typeSub() {
     var el = $('#bbType');
     if (!el) return;
-    if (REDUCED) { el.textContent = 'SECURE CHANNEL // ESTABLISHED'; return; }
-    var msg = 'SECURE CHANNEL // ESTABLISHED';
+    if (REDUCED) { el.textContent = 'SQUAD QUEUE // READY TO DROP'; return; }
+    var msg = 'SQUAD QUEUE // READY TO DROP';
     var i = 0;
     (function step() {
       if (i < msg.length) { el.textContent += msg.charAt(i++); setTimeout(step, 34); }

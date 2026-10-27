@@ -17,35 +17,87 @@ $err = function ($field) use ($validation) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?= esc(defined('BASE_NAME') ? BASE_NAME : 'BLACK BUNNY') ?> - <?= $isLogin ? 'Login' : 'Register' ?></title>
-<link rel="stylesheet" href="<?= base_url('assets/css/bb-portal.css') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/bb-portal.css') ?>?v=<?= @filemtime(FCPATH . 'assets/css/bb-portal.css') ?: time() ?>">
 </head>
 <body class="bb-portal" data-bb-flash="<?= esc($flash) ?>" data-bb-flash-kind="<?= esc($flashKind) ?>">
 <?= view('Layout/WelcomeSplash') ?>
 
 <div id="bbWebgl"></div>
+<div class="bb-hexgrid" aria-hidden="true"></div>
 <div class="bb-scan" aria-hidden="true"></div>
+<div class="bb-vignette" aria-hidden="true"></div>
 <div class="bb-cur-dot" aria-hidden="true"></div>
 <div class="bb-cur-ring" aria-hidden="true"></div>
 
 <header class="bb-hud">
-  <div>BLACK BUNNY // SECURE PORTAL</div>
+  <div class="bb-hud-left">
+    <span class="bb-pulse-dot" aria-hidden="true"></span>
+    BLACK BUNNY // ESPORTS GATE
+  </div>
   <div class="bb-hud-right">
-    <span class="chip">v3.0</span>
+    <span class="chip live">LIVE MATCH</span>
+    <span class="chip dim" id="bbPing">--ms</span>
     <span class="clock" id="bbClock">--:--:--</span>
   </div>
 </header>
+<div class="bb-ticker" aria-hidden="true">
+  <div class="bb-ticker-track">
+    <span>SEASON 09</span><span>RANKED QUEUE OPEN</span><span>DROP ZONE: BB ARENA</span><span>SQUAD LOCK IN</span><span>PRO CIRCUIT</span>
+    <span>SEASON 09</span><span>RANKED QUEUE OPEN</span><span>DROP ZONE: BB ARENA</span><span>SQUAD LOCK IN</span><span>PRO CIRCUIT</span>
+  </div>
+</div>
 
 <main class="bb-stage">
+  <div class="bb-rail left" aria-hidden="true"><i></i><i></i><i></i></div>
+  <div class="bb-rail right" aria-hidden="true"><i></i><i></i><i></i></div>
   <section class="bb-card" id="bbCard" aria-label="Authentication portal">
+    <div class="bb-card-fx" aria-hidden="true">
+      <i class="bb-cscan"></i>
+      <i class="bb-cbeam"></i>
+      <span class="bb-ccorners"><i></i><i></i><i></i><i></i></span>
+    </div>
+    <aside class="bb-wing" aria-hidden="true">
+      <div class="bb-stripes"></div>
+      <div class="bb-jersey">09</div>
+      <div class="bb-logo-wrap lg">
+        <div class="bb-orbit">
+          <i class="r1"></i><i class="r2"></i><i class="r3"></i>
+          <i class="sonar"></i>
+        </div>
+        <div class="bb-logo-mini"><?= view('Layout/HexBadge', ['hbSize' => 72]) ?></div>
+      </div>
+      <div class="bb-rank">
+        <span class="bb-rank-tag">TIER</span>
+        <strong>PREDATOR</strong>
+      </div>
+      <div class="bb-wing-kicker">PRO CIRCUIT</div>
+      <h2 class="bb-wing-title">LOCK IN<br>DROP NOW</h2>
+      <ul class="bb-status">
+        <li><span>QUEUE</span><b class="ok">RANKED</b></li>
+        <li><span>REGION</span><b>ASIA</b></li>
+        <li><span>PING</span><b id="bbLat">12ms</b></li>
+        <li><span>SEASON</span><b>S09</b></li>
+      </ul>
+      <div class="bb-eq" id="bbEq"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="bb-wing-foot">BLACK BUNNY // ESPORTS</div>
+    </aside>
+    <div class="bb-pane">
     <div class="bb-card-head">
-      <div class="bb-logo-mini"><?= view('Layout/HexBadge', ['hbSize' => 54]) ?></div>
+      <div class="bb-logo-wrap sm">
+        <div class="bb-orbit">
+          <i class="r1"></i><i class="r2"></i><i class="r3"></i>
+          <i class="sonar"></i>
+        </div>
+        <div class="bb-logo-mini"><?= view('Layout/HexBadge', ['hbSize' => 52]) ?></div>
+      </div>
+      <div class="bb-match-tag">MATCHDAY // SQUAD ACCESS</div>
       <h1><span class="bb-glitch" data-text="BLACK BUNNY">BLACK BUNNY</span></h1>
       <div class="bb-sub"><span id="bbType"></span><span class="caret" aria-hidden="true"></span></div>
     </div>
 
     <div class="bb-tabs" role="tablist">
-      <a class="bb-tab<?= $isLogin ? ' on' : '' ?>" id="tabLogin" href="<?= site_url('login') ?>" role="tab" aria-selected="<?= $isLogin ? 'true' : 'false' ?>"><span class="num">01</span>ACCESS</a>
-      <a class="bb-tab<?= $isLogin ? '' : ' on' ?>" id="tabReg" href="<?= site_url('register') ?>" role="tab" aria-selected="<?= $isLogin ? 'false' : 'true' ?>"><span class="num">02</span>NEW ID</a>
+      <a class="bb-tab<?= $isLogin ? ' on' : '' ?>" id="tabLogin" href="<?= site_url('login') ?>" role="tab" aria-selected="<?= $isLogin ? 'true' : 'false' ?>"><span class="num">01</span>LOCK IN</a>
+      <a class="bb-tab<?= $isLogin ? '' : ' on' ?>" id="tabReg" href="<?= site_url('register') ?>" role="tab" aria-selected="<?= $isLogin ? 'false' : 'true' ?>"><span class="num">02</span>JOIN SQUAD</a>
     </div>
 
     <?= form_open(site_url('login'), ['class' => 'bb-form' . ($isLogin ? ' on' : ''), 'id' => 'formLogin', 'autocomplete' => 'on']) ?>
@@ -129,6 +181,13 @@ $err = function ($field) use ($validation) {
         <a href="<?= site_url('login') ?>">BACK TO ACCESS</a>
       </div>
     <?= form_close() ?>
+    <div class="bb-telemetry" aria-hidden="true">
+        <span>CH <b id="bbCh">01</b></span>
+      <span>PING <b id="bbPing2">12ms</b></span>
+      <span>ARENA <b>BB-01</b></span>
+      <span class="bb-tel-bar"><i></i></span>
+    </div>
+    </div>
   </section>
 </main>
 
@@ -136,6 +195,6 @@ $err = function ($field) use ($validation) {
 <div id="bbToast" aria-live="polite"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="<?= base_url('assets/js/bb-portal.js') ?>"></script>
+<script src="<?= base_url('assets/js/bb-portal.js') ?>?v=<?= @filemtime(FCPATH . 'assets/js/bb-portal.js') ?: time() ?>"></script>
 </body>
 </html>
